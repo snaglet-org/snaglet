@@ -1,0 +1,50 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share an idea that is still taking shape. Other people can add to it and vote on it here. Once an idea is specific enough to build, we move it to an issue.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to get done?
+      description: The situation you are in and where Snaglet falls short today.
+      placeholder: When I …, I want to …, but …
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: What you would like Snaglet to do. A rough sketch is fine.
+    validations:
+      required: true
+
+  - type: textarea
+    id: today
+    attributes:
+      label: How do you handle this today?
+      description: A workaround in Snaglet, another tool, or nothing at all.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of Snaglet is this about?
+      multiple: true
+      options:
+        - Agents
+        - Threads
+        - Docs
+        - Tables
+        - Calendar
+        - Project folders
+        - Search and memory
+        - Models and providers
+        - MCP
+        - Setup and onboarding
+        - Something else
+    validations:
+      required: false

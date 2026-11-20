@@ -1,0 +1,50 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask anything about installing, setting up or using Snaglet. If something is broken and you can reproduce it, a [bug report](https://github.com/snaglet-org/snaglet/issues/new?template=bug_report.yml) reaches us faster.
+
+        Please remove anything private first, and never paste API keys.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: What are you trying to do?
+      description: Describe the goal, not only the step you are stuck on.
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried?
+      description: What you did, and what happened instead of what you expected.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: run-mode
+    attributes:
+      label: How do you run Snaglet?
+      options:
+        - Downloaded app
+        - Source checkout
+        - Not installed yet
+    validations:
+      required: true
+
+  - type: input
+    id: model
+    attributes:
+      label: Model provider (if the question involves an agent)
+      description: For example Anthropic, OpenAI, Ollama or LM Studio, and the model name.
+    validations:
+      required: false
+
+  - type: input
+    id: environment
+    attributes:
+      label: Mac and macOS version
+      placeholder: MacBook Air M2, 16 GB, macOS 15.1
+    validations:
+      required: false

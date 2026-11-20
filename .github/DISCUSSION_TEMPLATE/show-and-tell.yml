@@ -1,0 +1,36 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Show how you use Snaglet: a team of agents, a workspace setup, a workflow, or something you built with it. Please check your screenshots for anything private before you post.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What did you set up?
+      description: What it does and what you use it for.
+    validations:
+      required: true
+
+  - type: textarea
+    id: how
+    attributes:
+      label: How does it work?
+      description: The agents, docs, tables or tools involved, with enough detail for someone to try it.
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or links
+      description: Drag images in here.
+    validations:
+      required: false
+
+  - type: textarea
+    id: lessons
+    attributes:
+      label: What worked well, and what did not?
+    validations:
+      required: false
