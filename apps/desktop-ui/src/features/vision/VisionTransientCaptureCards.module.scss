@@ -1,0 +1,59 @@
+.list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 6px 12px;
+}
+
+.card {
+  flex: 0 0 180px;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-sunken);
+}
+
+.card img,
+.failure {
+  display: block;
+  width: 100%;
+  height: 108px;
+  object-fit: cover;
+}
+
+.failure {
+  box-sizing: border-box;
+  padding: 12px;
+  color: var(--color-error);
+}
+
+.card figcaption {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  animation: capture-pulse 600ms ease-out;
+}
+
+@keyframes capture-pulse {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 70%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}

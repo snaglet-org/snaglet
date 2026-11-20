@@ -1,0 +1,56 @@
+@use '../../../styles/abstracts' as *;
+
+.group {
+  width: 100%;
+  height: 100%;
+}
+
+// Resize handles between panes. The 6px handle is the hover band and cursor
+// zone; a centered `::before` paints the visible 2px `--color-border-strong`
+// rule, which brightens to the primary accent on hover / active. The pointer
+// hit area comes from react-resizable-panels' `resizeTargetMinimumSize`
+// (10px fine / 20px coarse), not from this element's width.
+.handleHorizontal,
+.handleVertical {
+  background: transparent;
+  flex-shrink: 0;
+  position: relative;
+  transition: background var(--transition-fast);
+
+  &::before {
+    content: '';
+    position: absolute;
+    background: var(--color-border-strong);
+    transition: background var(--transition-fast);
+  }
+
+  &:hover,
+  &:focus-visible,
+  &[data-resize-handle-active] {
+    background: var(--color-primary-bg);
+
+    &::before {
+      background: var(--color-primary-border);
+    }
+  }
+}
+
+.handleHorizontal {
+  width: 6px;
+  cursor: col-resize;
+
+  // Centered 2px vertical rule (6px handle − 2px each side).
+  &::before {
+    inset: 0 2px;
+  }
+}
+
+.handleVertical {
+  height: 6px;
+  cursor: row-resize;
+
+  // Centered 2px horizontal rule.
+  &::before {
+    inset: 2px 0;
+  }
+}

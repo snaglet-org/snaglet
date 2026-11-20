@@ -1,0 +1,27 @@
+// Rendered/raw toggle for surfaces that let the user view the markdown
+// source.
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toggleRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.raw {
+  margin: 0;
+  padding: 8px 10px;
+  background: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}

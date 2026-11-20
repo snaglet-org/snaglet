@@ -1,0 +1,32 @@
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.who {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--color-text);
+}
+
+.meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.reason {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}

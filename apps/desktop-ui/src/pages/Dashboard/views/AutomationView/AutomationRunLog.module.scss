@@ -1,0 +1,140 @@
+@use '../../../../styles/abstracts' as *;
+
+// The Runs section's log: its own scroll box under the pane's Details, so a
+// long history scrolls in place instead of stretching the pane.
+
+.scroll {
+  max-height: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  @include layout-scrollbar-thin($size: 8px, $inset: true);
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.run {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  font-size: var(--text-sm);
+
+  & + & {
+    border-top: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
+  }
+}
+
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+}
+
+.when {
+  font-variant-numeric: tabular-nums;
+}
+
+.status {
+  font-weight: 600;
+
+  .run[data-status='failed'] & {
+    color: var(--color-error);
+  }
+
+  .run[data-status='skipped'] & {
+    color: var(--color-text-muted);
+  }
+
+  .run[data-status='running'] & {
+    color: var(--color-primary);
+  }
+}
+
+.tag {
+  padding: 0 6px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.failure {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.error {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 6px 8px;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+  box-shadow: inset 2px 0 0 var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 7%, transparent);
+}
+
+.copy {
+  flex-shrink: 0;
+  padding: 3px;
+  border: 0;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.reason {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+.message {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 12px 10px;
+}
+
+.moreError {
+  color: var(--color-error);
+  font-size: var(--text-xs);
+}

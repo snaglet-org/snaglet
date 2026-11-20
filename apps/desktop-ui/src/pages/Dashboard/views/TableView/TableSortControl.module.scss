@@ -1,0 +1,128 @@
+.anchor {
+  position: relative;
+}
+
+// A quiet cue that the view is sorted, without a new color.
+.triggerActive {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.panel {
+  // Floating surface; TableSortControl places it inside the pane.
+  min-width: min(320px, calc(100vw - 16px));
+  max-width: 520px;
+  padding: 10px;
+}
+
+.hint {
+  margin: 0 0 8px;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.levels {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.level {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) minmax(90px, auto) auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.levelActions {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+// Active sorts under the header: one pill per sort, in priority order.
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+}
+
+.pillToggle,
+.pillRemove,
+.barClear {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pillToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 4px 3px 10px;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  }
+}
+
+.pillArrow {
+  font-weight: 700;
+}
+
+.pillName {
+  font-weight: 600;
+}
+
+.pillDirection {
+  color: var(--color-text-muted);
+}
+
+.pillRemove {
+  padding: 0 9px 0 5px;
+  font-size: 14px;
+  line-height: 1;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+}
+
+.barClear {
+  padding: 3px 6px;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+
+  &:hover {
+    color: var(--color-text);
+    text-decoration: underline;
+  }
+}

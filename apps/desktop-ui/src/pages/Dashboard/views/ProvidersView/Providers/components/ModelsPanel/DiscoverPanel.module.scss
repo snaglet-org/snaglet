@@ -1,0 +1,236 @@
+@use '../../../../../../../styles/abstracts' as *;
+@use '../../../../../styles/dashboard' as dash;
+
+// Action / toolbar / footer rows are <Cluster>s. What remains here is the
+// results panel surface and its content styling.
+
+.refreshNote {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-disabled);
+  font-style: italic;
+}
+
+.refreshError {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--prov-danger);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-field);
+  border: 1px solid var(--color-border);
+  border-radius: var(--prov-radius-card);
+}
+
+.count {
+  font-size: var(--text-xs);
+  color: var(--color-text-disabled);
+  margin-right: auto;
+}
+
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.loadingText {
+  color: var(--color-text-muted);
+}
+
+.empty,
+.warning {
+  font-size: var(--text-sm);
+  padding: var(--space-2);
+  margin: 0;
+  text-align: center;
+  border-radius: var(--prov-radius-row);
+}
+
+.empty {
+  color: var(--color-text-disabled);
+  background: var(--color-foreground);
+  border: 1px dashed var(--color-border);
+}
+
+.warning {
+  color: var(--prov-danger);
+  background: color-mix(in srgb, var(--prov-danger) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--prov-danger) 25%, transparent);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: var(--prov-radius-row);
+  cursor: pointer;
+  transition: border-color 0.12s;
+
+  &:hover:not([data-disabled]) {
+    border-color: var(--color-border-strong);
+  }
+
+  &[data-disabled] {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+.rowBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.rowHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.modelName {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.modelId {
+  @include dash.theme-mono-meta;
+  @include layout-truncate;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+// Calm gold plain-language reason for plan-blocked discovered models.
+.reasonStrip {
+  margin: var(--space-1) 0 0;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--prov-gold) 82%, var(--color-text));
+  background: var(--prov-gold-bg);
+  border: 1px solid var(--prov-gold-border);
+  border-radius: var(--prov-radius-tag);
+}
+
+// Ollama not installed banner
+.ollamaNotInstalled {
+  padding: var(--space-3);
+  background: color-mix(in srgb, var(--prov-danger) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--prov-danger) 25%, transparent);
+  border-radius: var(--prov-radius-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  a {
+    color: var(--prov-accent);
+    text-decoration: underline;
+  }
+}
+
+.ollamaNotInstalledTitle {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--prov-danger);
+}
+
+.ollamaNotInstalledBody {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+// Stale models section
+.staleSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: color-mix(in srgb, var(--color-text-muted) 4%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--prov-radius-card);
+  margin-top: var(--space-1);
+}
+
+.staleTitle {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.staleHint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.staleList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.staleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: var(--prov-radius-row);
+  cursor: pointer;
+  font-size: var(--text-sm);
+
+  &:hover {
+    background: var(--color-hover);
+  }
+}
+
+.staleModelName {
+  font-weight: 600;
+  color: var(--color-text);
+  flex: 1;
+  min-width: 0;
+  @include layout-truncate;
+}
+
+.staleModelId {
+  @include dash.theme-mono-meta;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}

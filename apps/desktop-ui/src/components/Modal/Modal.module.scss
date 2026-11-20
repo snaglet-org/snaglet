@@ -1,0 +1,121 @@
+@use '../../styles/abstracts' as *;
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--disabled) 65%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  // Gutter shared with the panel's max-height math below: it inherits down to
+  // `.panel`, so the cap is always `100dvh - 2 * gutter` and the two can't
+  // drift.
+  --overlay-pad: 24px;
+  padding: var(--overlay-pad);
+}
+
+// ConfirmModal: a confirmation is always the newest layer, so it sits above
+// the 1100 previews (doc chip, image, file, Mermaid) and the floating lists
+// opened inside them; a confirm asked from inside a preview must not open
+// hidden behind it.
+.overlay.confirmOverlay {
+  z-index: 1200;
+}
+
+.panel {
+  background: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-overlay);
+  width: 100%;
+  max-width: 520px;
+  max-height: min(window-vh(88), calc(#{window-dvh(100)} - 2 * var(--overlay-pad)));
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  // Dialog title bar — mono voice + a faint glass strip catching the light.
+  @include theme-mono-label;
+  font-size: 12px;
+  letter-spacing: var(--letter-spacing-wider);
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-foreground) 78%, var(--color-selected));
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  flex-shrink: 0;
+}
+
+.body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+
+  @include layout-scrollbar-thin($size: 5px, $radius: var(--radius-pill), $native: false);
+}
+
+.footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .overlay {
+    align-items: flex-start;
+    --overlay-pad: 12px;
+    padding: var(--overlay-pad);
+  }
+
+  .panel {
+    max-height: calc(#{window-dvh(100)} - 2 * var(--overlay-pad));
+  }
+}
+
+.modalContent {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalTitle {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.modalMessage {
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.errorMessage {
+  font-size: 13px;
+  color: var(--color-error, var(--color-error));
+  margin: 0;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  border-radius: var(--radius-card);
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}

@@ -1,0 +1,16 @@
+.popover {
+  position: fixed;
+  z-index: 2000;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 5px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--color-foreground);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+}

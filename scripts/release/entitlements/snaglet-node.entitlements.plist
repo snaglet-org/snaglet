@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Hardened-runtime entitlements for the bundled Node.js sidecar (snaglet-node).
+
+  Notarization requires the hardened runtime on every executable, but V8's JIT
+  writes executable memory, which the hardened runtime forbids by default.
+  Without allow-jit + allow-unsigned-executable-memory the sidecar dies on
+  startup: the Snaglet window opens and the server log stays empty (measured — see
+  the packager comment in build/scripts/package-desktop.ts).
+
+  disable-library-validation lets snaglet-node load the bundled native addons
+  (onnxruntime, sherpa-onnx, .node bindings). They are re-signed with the same
+  Developer ID during release signing, but library validation additionally pins
+  the *team* of every loaded library at dlopen time; disabling it keeps a
+  third-party prebuilt with an unexpected team identity from bricking startup.
+-->
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+</dict>
+</plist>

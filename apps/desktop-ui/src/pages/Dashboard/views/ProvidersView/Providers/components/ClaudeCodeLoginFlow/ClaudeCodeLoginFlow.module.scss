@@ -1,0 +1,25 @@
+// Root + action row are <Stack> / <Cluster>. What stays here is status text.
+
+.hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.warning {
+  font-size: var(--text-sm);
+  color: var(--prov-gold);
+  margin: 0;
+}
+
+.success {
+  font-size: var(--text-sm);
+  color: var(--prov-sage);
+  margin: 0;
+}
+
+.error {
+  font-size: var(--text-sm);
+  color: var(--prov-danger);
+  margin: 0;
+}

@@ -1,0 +1,21 @@
+// Error / warning banners shared by DetailsPanel and IndexingRulesPanel.
+// Each CSS module emits its own hashed class from these mixins so the two
+// components keep separate module files without drifting declarations.
+
+@mixin error-banner {
+  padding: 6px 8px;
+  background: var(--color-error-bg, var(--color-hover));
+  border: 1px solid var(--color-error-border, var(--color-error, var(--color-border)));
+  color: var(--color-error, var(--color-text));
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+@mixin warning-banner {
+  padding: 6px 8px;
+  background: var(--color-warning-bg, var(--color-hover));
+  border: 1px solid var(--color-warning-border, var(--color-warning, var(--color-border)));
+  color: var(--color-warning, var(--color-text));
+  font-size: 12px;
+  line-height: 1.4;
+}

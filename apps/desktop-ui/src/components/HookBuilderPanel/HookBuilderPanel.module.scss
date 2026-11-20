@@ -1,0 +1,519 @@
+@use '../../styles/abstracts' as *;
+
+// HookBuilderPanel — create/edit form for a folder-drop lifecycle hook, with
+// the same field grammar as ToolBuilderPanel. It fills a hook's whole pane
+// (HookBuilderView), so `.pane`/`.paneHeader`/`.paneBody`/`.paneFooter`
+// follow ToolBuilderPanel's sizing (height: 100%, internal scroll).
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+}
+
+.paneHeader {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--density-pane-pad-y) var(--density-pane-pad-x) 12px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.paneTitle {
+  min-width: 0;
+  @include layout-truncate;
+}
+
+// Registration state + its toggle, pinned to the trailing edge of the header.
+.enableControl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+// "Runs as" picker, just before the enable control; it takes the trailing
+// edge, so the enable control sits right after it.
+.runAsControl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  min-width: 0;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 400;
+
+  + .enableControl {
+    margin-left: 0;
+  }
+}
+
+.enabledLabel {
+  color: var(--color-text-muted);
+}
+
+.enabledDot,
+.disabledDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.enabledDot {
+  background: var(--color-success);
+}
+
+.disabledDot {
+  background: var(--color-text-muted);
+}
+
+.paneBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px var(--density-pane-pad-x);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.paneBodyCode {
+  overflow: hidden;
+}
+
+.paneFooter {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px var(--density-pane-pad-x);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.loading {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.tabs {
+  margin-bottom: 2px;
+}
+
+.tabDirtyDot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  vertical-align: middle;
+}
+
+.codeSection {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  // The editor fills the pane and scrolls internally; when the test console
+  // below it expands past the remaining space, this section scrolls instead
+  // of clipping (paneBodyCode stays overflow: hidden).
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.codeSectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.codeDirtyLabel {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.codeLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 320px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-sunken);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+// Cheap client-side "no default export" hint (see handlerEditorSupport.ts) —
+// warning-toned but non-blocking, same vocabulary as .fieldHint below.
+.codeExportHint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-warning);
+  line-height: 1.4;
+}
+
+.codeRetryBtn {
+  align-self: flex-start;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--color-text-disabled);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.fieldHint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.fieldErrorText {
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  line-height: 1.4;
+}
+
+.formError {
+  margin: 0;
+  padding: 8px 10px;
+  max-height: 160px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.schedulePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.scheduleLead {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 10px;
+  border-left: 2px solid var(--color-primary);
+}
+
+.liveDot,
+.pausedDot {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 2px 6px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-snug);
+}
+
+.resultPass {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.resultFail {
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+.scheduleCardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.scheduleList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.emptySchedule {
+  padding: 18px 12px;
+  text-align: center;
+  color: var(--color-text-muted);
+  border: 1px dashed var(--color-border-subtle);
+  font-size: var(--text-xs);
+}
+
+.scheduleCard {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-background);
+}
+
+.scheduleCard strong {
+  font-size: var(--text-sm);
+}
+
+.liveDot {
+  color: var(--color-success);
+}
+
+.pausedDot {
+  color: var(--color-text-muted);
+}
+
+.scheduleActions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.runHistory {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: 6px;
+}
+
+.runRow {
+  display: grid;
+  grid-template-columns: 72px 145px minmax(0, 1fr);
+  gap: 8px;
+  padding: 4px 0;
+  font: 11px var(--font-mono);
+  color: var(--color-text-muted);
+  overflow: hidden;
+}
+
+.runRow > :last-child {
+  @include layout-truncate;
+}
+
+@media (max-width: 620px) {
+  .scheduleCardTop {
+    flex-direction: column;
+  }
+
+  .runRow {
+    grid-template-columns: 70px 1fr;
+  }
+}
+
+.hookRunsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.hookRunsHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hookRunsActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.hookRunList {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hookRunCard {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3px minmax(0, 1fr);
+  min-width: 0;
+  background: var(--color-background);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.hookRunRail {
+  background: var(--color-error);
+}
+
+.hookRunCard[data-status='running'] .hookRunRail {
+  background: var(--color-primary);
+  animation: hook-run-pulse 1.3s ease-in-out infinite;
+}
+
+.hookRunCard[data-status='succeeded'] .hookRunRail {
+  background: var(--color-success);
+}
+
+.hookRunCard[data-status='timed_out'] .hookRunRail {
+  background: var(--color-warning);
+}
+
+.hookRunBody {
+  min-width: 0;
+  padding: 9px 10px;
+}
+
+.hookRunTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.hookRunIdentity {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-width: 0;
+}
+
+.hookRunIdentity strong {
+  @include layout-truncate;
+  color: var(--color-text);
+  font: 600 var(--text-sm) var(--font-mono);
+}
+
+.hookRunIdentity span,
+.hookRunStatus {
+  color: var(--color-text-muted);
+  font: 10px var(--font-mono);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.hookRunStatus {
+  flex-shrink: 0;
+}
+
+.hookRunCard[data-status='succeeded'] .hookRunStatus {
+  color: var(--color-success);
+}
+
+.hookRunCard[data-status='failed'] .hookRunStatus {
+  color: var(--color-error);
+}
+
+.hookRunCard[data-status='running'] .hookRunStatus {
+  color: var(--color-primary);
+}
+
+.hookRunCard[data-status='timed_out'] .hookRunStatus {
+  color: var(--color-warning);
+}
+
+.hookRunMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  margin-top: 5px;
+  color: var(--color-text-muted);
+  font: 11px var(--font-mono);
+}
+
+.hookRunOutput {
+  margin-top: 7px;
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: 6px;
+}
+
+.hookRunOutput summary {
+  width: fit-content;
+  color: var(--color-text-muted);
+  font: 11px var(--font-mono);
+  cursor: pointer;
+}
+
+.hookRunOutput pre {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 8px;
+  max-height: 160px;
+  margin: 6px 0 0;
+  overflow: auto;
+  color: var(--color-text);
+  font: 11px/1.45 var(--font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.hookRunOutput pre span {
+  color: var(--color-text-disabled);
+  text-transform: uppercase;
+}
+
+@keyframes hook-run-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hookRunCard[data-status='running'] .hookRunRail {
+    animation: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .hookRunsHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .hookRunsActions {
+    justify-content: flex-end;
+  }
+}

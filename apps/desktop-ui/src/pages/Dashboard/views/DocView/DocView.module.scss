@@ -1,0 +1,32 @@
+// The read-only version preview: its find bar sits above the rendered body,
+// which keeps the full flex slot the body had when it was a direct child.
+.snapshotPreview {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.snapshotPreviewBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+// Shown in the topbar while Properties is closed, so a failed save is never
+// hidden behind the panel.
+.saveFailed {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--color-error);
+  white-space: nowrap;
+}
+
+// Properties panel → Versions: Snapshot and the Versions list trigger.
+.versionsActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}

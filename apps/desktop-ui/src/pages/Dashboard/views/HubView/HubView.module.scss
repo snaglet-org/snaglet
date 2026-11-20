@@ -1,0 +1,938 @@
+@use '../../../../styles/abstracts' as *;
+
+// HubView — the Home pane, in the open style of the app's other views (Theme,
+// Agents, a project's lists): no boxed panels, the small mono uppercase
+// section labels, single-line rows with a hover highlight, hairlines only
+// where columns meet, square corners. The page fills the pane: the top band
+// (greeting, Pinned, the instructions card) and the Workspace row keep their
+// size and the two recent lists (threads, docs) share the rest, each
+// scrolling inside itself. In a narrow pane everything stacks and the page scrolls. Tokens
+// only, so any theme paints it.
+
+$gap: 14px;
+$row-h: 28px;
+$chip-h: 28px;
+$card-w: 300px;
+
+.shell {
+  height: 100%;
+  overflow: auto;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+
+  @include layout-scrollbar-thin($size: 8px, $inset: true, $hover: true);
+}
+
+.page {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto minmax(180px, 1fr) auto;
+  gap: $gap;
+  width: 100%;
+  max-width: 1280px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 16px 20px 10px;
+
+  @container pane (inline-size < 760px) {
+    grid-template-rows: none;
+    height: auto;
+    padding: 12px 14px 10px;
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Kind tints (the workspace tree's node colors)
+
+.kindDoc {
+  --kind-color: var(--color-node-doc);
+}
+
+.kindThread {
+  --kind-color: var(--color-node-thread);
+}
+
+.kindProject {
+  --kind-color: var(--color-container-project);
+}
+
+// Tables have no node-kind token; they take the accent, as in ContainerView.
+.kindTable {
+  --kind-color: var(--color-primary);
+}
+
+.kindGlyph {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--kind-color, var(--color-primary));
+
+  svg {
+    display: block;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// Shared bits
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+}
+
+.label {
+  @include theme-mono-label(wide);
+  margin: 0;
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.labelCount {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--color-text-disabled);
+}
+
+.labelActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.iconButton {
+  @include layout-button-reset;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+}
+
+.textButton {
+  @include layout-button-reset;
+
+  display: inline;
+  padding: 0;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.stateLine {
+  margin: 0;
+  padding: 4px 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.errorLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  padding: 4px 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--color-error);
+}
+
+.inlineError {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-error);
+}
+
+// Top band: greeting and Pinned on the left, the instructions card right
+
+.top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) $card-w;
+  gap: $gap 20px;
+  align-items: stretch;
+  padding-bottom: $gap;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+
+  @container pane (inline-size < 760px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.topMain {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+// Header
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+  min-width: 0;
+}
+
+.greeting {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  line-height: 1.3;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.greetingLead {
+  font-weight: var(--font-medium);
+  color: var(--color-text-muted);
+}
+
+.nameButton {
+  @include layout-button-reset;
+
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  max-width: 100%;
+  margin: 0 -3px;
+  padding: 0 3px;
+  border-bottom: 1px dashed transparent;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  cursor: text;
+
+  &:hover {
+    background: var(--color-hover);
+    border-bottom-color: var(--color-text-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+}
+
+.nameText {
+  overflow-wrap: anywhere;
+}
+
+.nameEditGlyph {
+  display: inline-flex;
+  color: var(--color-text-muted);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+
+  svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .nameButton:hover &,
+  .nameButton:focus-visible & {
+    opacity: 1;
+  }
+}
+
+.nameInput {
+  box-sizing: content-box;
+  min-width: 4ch;
+  max-width: 100%;
+  margin: 0 -4px;
+  padding: 0 3px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-dropdown);
+  background: var(--color-field);
+  color: var(--color-text);
+  font: inherit;
+  letter-spacing: inherit;
+  outline: none;
+}
+
+.namePlaceholder {
+  color: var(--color-text-muted);
+}
+
+.headerDate {
+  @include theme-mono-label(wide);
+  margin: 0;
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.headerError {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-error);
+}
+
+// Pinned: compact chips, two rows, then they scroll
+
+.pinned {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 6px;
+  max-height: calc(2 * #{$chip-h} + 6px + 2px);
+  margin: 0;
+  padding: 1px;
+  overflow-y: auto;
+  list-style: none;
+
+  @include layout-scrollbar-thin($size: 6px);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 240px;
+  height: $chip-h;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-background);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+
+  &:hover,
+  &:focus-within {
+    border-color: var(--color-border);
+    background: var(--color-hover);
+  }
+}
+
+.chipOpen {
+  @include layout-button-reset;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 2px 0 8px;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+}
+
+.chipTitle {
+  @include layout-truncate;
+  min-width: 0;
+}
+
+// The unpin pin keeps its place (no shift on hover) and shows on hover/focus.
+.chipUnpin {
+  @include layout-button-reset;
+
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  color: var(--color-primary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+
+  svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .chip:hover &,
+  .chip:focus-within &,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  &:hover {
+    color: var(--color-primary-dark);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -3px;
+  }
+}
+
+.missing {
+  .chipTitle {
+    color: var(--color-text-muted);
+    font-style: italic;
+    text-decoration: line-through;
+  }
+
+  .kindGlyph {
+    color: var(--color-text-disabled);
+  }
+}
+
+.chipsEmpty {
+  display: inline-flex;
+  align-items: center;
+  height: $chip-h;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.chipAddItem {
+  display: inline-flex;
+}
+
+.chipAdd {
+  @include layout-button-reset;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-width: $chip-h;
+  height: $chip-h;
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+
+  svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  &:hover,
+  &[aria-expanded='true'] {
+    border-color: var(--color-primary-border);
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+}
+
+.chipAddLabeled {
+  padding: 0 10px 0 8px;
+}
+
+// Instructions card
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 150px;
+  padding: 8px 12px 10px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-foreground);
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+
+  @container pane (inline-size < 760px) {
+    min-height: 0;
+  }
+}
+
+.cardPreview {
+  @include layout-button-reset;
+
+  // A flex column, so the text starts at the top (a button centers content).
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover .cardText,
+  &:hover .cardPrompt {
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.cardText,
+.cardPrompt {
+  display: -webkit-box;
+  overflow: hidden;
+  white-space: pre-line;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+}
+
+.cardText {
+  color: var(--color-text);
+}
+
+.cardPrompt {
+  color: var(--color-text-muted);
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+// The instructions editor (a floating surface)
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.editorNote {
+  margin: -4px 0 2px;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.editorFooter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.statusText {
+  @include theme-mono-label;
+  margin-right: auto;
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.charCount {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+// Recent lists: two equal-height columns, a hairline between them
+
+.lists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 0;
+
+  @container pane (inline-size < 760px) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: $gap;
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0 14px;
+
+  &:first-child {
+    padding-left: 0;
+  }
+
+  &:last-child {
+    padding-right: 0;
+  }
+
+  & + & {
+    border-left: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  }
+
+  @container pane (inline-size < 760px) {
+    padding: 0;
+
+    & + & {
+      padding-top: $gap;
+      border-top: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+      border-left: 0;
+    }
+  }
+}
+
+.listScroll {
+  flex: 1;
+  min-height: 0;
+  margin: 0 -4px;
+  padding: 0 4px;
+  overflow-y: auto;
+  // The bar's gutter is reserved, so rows never shift when the list overflows.
+  scrollbar-gutter: stable;
+
+  @include layout-scrollbar-thin($size: 6px, $hover: true);
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+
+  @container pane (inline-size < 760px) {
+    flex: none;
+    max-height: calc(8 * #{$row-h});
+  }
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: stretch;
+  height: $row-h;
+  min-width: 0;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+}
+
+.rowOpen {
+  @include layout-button-reset;
+
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 2px 0 6px;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: inset 2px 0 0 var(--kind-color, var(--color-primary));
+    background: var(--color-hover);
+  }
+}
+
+.rowGlyph {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--kind-color, var(--color-primary));
+
+  > svg {
+    display: block;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.rowTitle {
+  @include layout-truncate;
+  flex: 0 1 auto;
+  max-width: 62%;
+  min-width: 0;
+  font-weight: var(--font-medium);
+}
+
+.rowContext {
+  @include layout-truncate;
+  flex: 1 1 0;
+  // Keep a few readable characters; the title truncates first.
+  min-width: 7ch;
+  color: var(--color-text-muted);
+}
+
+.rowSender {
+  color: var(--color-text);
+}
+
+.rowTime {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+// The pin beside a row: shown on hover or focus, lit once pinned.
+.pinToggle {
+  @include layout-button-reset;
+
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity var(--transition-fast),
+    color var(--transition-fast);
+
+  svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .row:hover &,
+  .row:focus-within &,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  &:hover {
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -3px;
+  }
+}
+
+.pinToggleOn {
+  color: var(--color-primary);
+  opacity: 1;
+
+  &:hover {
+    color: var(--color-primary-dark);
+  }
+}
+
+// Workspace strip
+
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+.stripLinks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stripLink {
+  @include layout-button-reset;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.stripGlyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  overflow: hidden;
+  color: var(--color-primary);
+  font-size: var(--text-2xs);
+  line-height: 1;
+}
+
+// Floating surfaces (pin picker, instructions editor)
+
+.surface {
+  // useAnchoredPosition supplies top, left and width; the surface is fixed.
+  position: fixed;
+  z-index: 2000;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-dropdown);
+  background: var(--color-foreground);
+  color: var(--color-text);
+  box-shadow: var(--shadow-md);
+}
+
+.pickerBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pickerNote {
+  margin: 0;
+  padding: 8px 6px 4px;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.pickerGroupLabel {
+  @include theme-mono-label(wide);
+  margin: 0;
+  padding: 8px 6px 2px;
+  font-size: var(--text-3xs);
+  color: var(--color-text-muted);
+}
+
+.pickerOption {
+  @include layout-button-reset;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  padding: 0 6px;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    background: var(--color-hover);
+    outline: none;
+  }
+
+  &:focus-visible {
+    box-shadow: inset 2px 0 0 var(--kind-color, var(--color-primary));
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+}
+
+.pickerOptionTitle {
+  @include layout-truncate;
+  flex: 1;
+  min-width: 0;
+}
+
+.pickerOptionMeta {
+  @include layout-truncate;
+  flex-shrink: 0;
+  max-width: 40%;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}

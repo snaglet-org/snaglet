@@ -1,0 +1,12 @@
+{
+  "identifier": "default",
+  "description": "Default capabilities for the Snaglet desktop app",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "fs:default",
+    "fs:allow-read-file",
+    "fs:allow-write-file",
+    "updater:default"
+  ]
+}

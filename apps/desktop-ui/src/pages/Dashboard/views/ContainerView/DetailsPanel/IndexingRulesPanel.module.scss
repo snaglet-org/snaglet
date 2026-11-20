@@ -1,0 +1,186 @@
+@use '../../../../../styles/abstracts' as *;
+@use './banners' as *;
+
+// Indexing rules editor (snaglet.config.json) — include/exclude rule chips,
+// defaults listing, and the impact summary shown in the DetailsPanel.
+
+.indexingPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.indexingSection {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.indexingSectionLabel {
+  @include theme-mono-label(wide);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.indexingHint {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+
+.indexingSaveStatus {
+  padding: 6px 8px;
+  border-left: 2px solid color-mix(in srgb, var(--color-primary) 55%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  font-size: var(--text-2xs);
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+
+.indexingImpact {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  align-items: baseline;
+  padding: 7px 8px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 46%, transparent);
+  background: color-mix(in srgb, var(--color-field) 34%, transparent);
+}
+
+.indexingImpactLabel {
+  @include theme-mono-label(wide);
+  color: var(--color-text-muted);
+  font-size: var(--text-3xs);
+}
+
+.indexingImpactValue {
+  min-width: 0;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-align: right;
+}
+
+.indexingImpactMeta {
+  grid-column: 1 / -1;
+  color: var(--color-text-muted);
+  font-size: 9.5px;
+  text-align: right;
+}
+
+.indexingEmpty {
+  font-size: 11px;
+  font-style: italic;
+  color: color-mix(in srgb, var(--color-text-muted) 80%, transparent);
+}
+
+.ruleList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ruleChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 2px 4px 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 34%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-field));
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text);
+}
+
+.ruleChipLabel {
+  @include layout-truncate;
+}
+
+.ruleRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+
+  &:hover:not(:disabled) {
+    color: var(--color-error, var(--color-text));
+    background: color-mix(in srgb, var(--color-error, var(--color-text)) 12%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.ruleAddRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+
+  > :first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+.defaultsGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 6px;
+  min-width: 0;
+}
+
+.defaultsGroupTitle {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  min-width: 66px;
+}
+
+.defaultsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.defaultChip {
+  padding: 1px 6px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 42%, transparent);
+  background: color-mix(in srgb, var(--color-field) 30%, transparent);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: color-mix(in srgb, var(--color-text-muted) 88%, transparent);
+}
+
+.errorBanner {
+  @include error-banner;
+}
+
+.warningBanner {
+  @include warning-banner;
+}

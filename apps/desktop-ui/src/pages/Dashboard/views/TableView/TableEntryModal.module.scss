@@ -1,0 +1,280 @@
+@use '../../../../styles/abstracts' as *;
+
+// Entry preview modal. Contained by the table pane (.shell is the positioned
+// ancestor), never the window: a soft scrim over the pane and a paper card.
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(12px, 6cqh, 56px) 16px 16px;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--disabled) 55%, transparent);
+  backdrop-filter: blur(1.5px);
+}
+
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-height: 100%;
+  overflow: hidden;
+  background: var(--color-background);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: var(--radius-overlay);
+  box-shadow: var(--shadow-lg);
+  outline: none;
+  animation: entryModalIn 180ms ease-out;
+}
+
+@keyframes entryModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.titleButton {
+  @include layout-button-reset;
+  width: 100%;
+  margin: -3px -6px;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: text;
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+}
+
+.titleEditor {
+  flex: 1;
+  min-width: 0;
+}
+
+.headerActions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 2px;
+}
+
+.headerDelete:hover:not(:disabled) {
+  color: var(--color-error);
+}
+
+.headerAction {
+  @include layout-button-reset;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+
+  &:hover {
+    color: var(--color-text);
+    background: var(--color-hover);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+  }
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px 20px 20px;
+}
+
+.properties {
+  display: grid;
+  grid-template-columns: minmax(110px, 34%) 1fr;
+  margin: 0;
+}
+
+.property {
+  display: contents;
+}
+
+// Repeat sections, under the properties.
+.repeats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+// A Notify section per date-and-time field on a calendar.
+.reminders {
+  margin-top: var(--space-3);
+}
+
+.propertyName,
+.propertyValue {
+  margin: 0;
+  padding: 7px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent);
+}
+
+.propertyName {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-top: 11px;
+  padding-right: 12px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.propertyIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-top: 1px;
+
+  svg {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+.propertyValue {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--text-base);
+
+  // Long link chips truncate inside the value column instead of overflowing.
+  :global(.md-chip) {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+}
+
+.valueButton {
+  @include layout-button-reset;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 30px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  color: var(--color-text);
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: text;
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.readOnly {
+  color: var(--color-text-muted);
+}
+
+.empty {
+  color: var(--color-text-subtle);
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 0;
+
+  // The cell editors expect a cell-shaped box; give them a calm field frame.
+  > :first-child {
+    min-height: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-background);
+  }
+}
+
+.editorActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.fieldError {
+  margin: 4px 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+}
+
+.loading,
+.loadError {
+  padding: 16px 0;
+  color: var(--color-text-muted);
+}
+
+.loadError {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.deleted {
+  margin: 12px 0 0;
+  color: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+}

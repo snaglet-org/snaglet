@@ -1,0 +1,66 @@
+@use '../../styles/abstracts/controls' as controls;
+
+.bar {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  min-width: 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: 12px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  & + & {
+    margin-top: 4px;
+  }
+}
+.input {
+  flex: 1 1 110px;
+  min-width: 70px;
+  width: 110px;
+  padding: 5px 7px;
+  @include controls.field-shell;
+  color: var(--color-text);
+  background: var(--color-background);
+  font: inherit;
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+}
+.count {
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+.status {
+  margin-top: 4px;
+  color: var(--color-text-muted);
+}
+.excerpt {
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+}
+:global(.snaglet-find-match),
+.excerpt mark {
+  background: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  color: inherit;
+}
+:global(.snaglet-find-current) {
+  background: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  outline: 1px solid var(--color-primary);
+}
+:global(.snaglet-find-message) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-radius: 5px;
+}
+::highlight(snaglet-pane-find) {
+  background: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  color: inherit;
+}

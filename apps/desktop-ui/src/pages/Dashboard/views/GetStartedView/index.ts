@@ -1,0 +1,1 @@
+export { GetStartedView } from './GetStartedView';

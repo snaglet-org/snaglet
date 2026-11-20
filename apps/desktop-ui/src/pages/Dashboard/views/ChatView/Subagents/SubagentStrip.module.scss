@@ -1,0 +1,105 @@
+@use '../../../../../styles/abstracts' as *;
+
+// Subagent helpers row — sits directly on top of the composer, in the same
+// register as the AgentStatusBubbles row (mono, sharp, one line that wraps).
+
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-background);
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  user-select: none;
+}
+
+// Two classes so these win over the Chip primitive's own mono-label rules
+// regardless of stylesheet order: names and model ids read as written.
+.strip .chip {
+  gap: 5px;
+  min-width: 0;
+  max-width: 100%;
+  text-transform: none;
+  font-weight: 400;
+}
+
+.dot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+
+  &[data-status='running'] {
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.name {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.sep {
+  opacity: 0.6;
+}
+
+.model {
+  min-width: 0;
+  color: var(--color-text-muted);
+  @include layout-truncate;
+}
+
+.state {
+  font-variant-numeric: tabular-nums;
+}
+
+// A chip with its actions button: one unit, so the button reads as the
+// chip's own (and the pair wraps together).
+.chipGroup {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+}
+
+.menuButton {
+  flex: 0 0 auto;
+  margin-left: 1px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    color: var(--color-text);
+    background: var(--color-surface-raised);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+}

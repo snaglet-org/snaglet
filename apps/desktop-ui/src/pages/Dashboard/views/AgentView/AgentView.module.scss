@@ -1,0 +1,275 @@
+@use '../../../../styles/abstracts' as *;
+@use '../../styles/dashboard' as dash;
+
+// AgentView — "character sheet" layout.
+// One quiet grammar instead of stacked accent-colored boxes: sections are a
+// small label + content separated by whitespace; borders belong to editable
+// controls, not to section wrappers. Prose (identity / system prompt) gets
+// the wide column; short lists (tools / mcp / voice) live in a narrow rail
+// that stacks under the main column when the pane narrows.
+
+// Shell is the container-query root AND the full-height flex column.
+.shell {
+  container-type: inline-size;
+  container-name: agent-view;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--density-pane-pad-y) var(--density-pane-pad-x);
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+// Preview mode (mounted inside WikiLinkPreviewModal): the modal body owns
+// the scroll, so the shell flows to its content height instead of filling
+// and clipping like it does in a full-height pane.
+.shellPreview {
+  height: auto;
+  overflow: visible;
+}
+
+// Memories tab: the pane itself doesn't scroll, so the name, summary and tabs
+// stay in view while the memories scroll in their own box (the panel fills
+// what is left under the header).
+.shellFixed {
+  overflow-y: hidden;
+}
+
+// Preview on Direct messages: the modal gives the card its full height, the
+// shell fills it like a pane and the chat takes what is left under the header.
+// On a very short window the chat keeps a usable minimum and the shell scrolls
+// instead of squeezing it.
+.shellPreviewFill .panelFill {
+  min-height: 320px;
+}
+
+// Profile header: name, role, one-line summary, tabs
+
+.profile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  flex-shrink: 0;
+}
+
+// Avatar, name and the shuffle button share the title row.
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.avatar {
+  flex: none;
+  width: 76px;
+  height: 76px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nameField {
+  position: relative;
+  min-width: 0;
+  flex: 1 1 0;
+  height: 42px;
+  overflow: hidden;
+}
+
+.profileName {
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+  line-height: 1.1;
+  @include layout-truncate;
+  min-width: 0;
+}
+
+// Role + its subtle autosave indicator share one line.
+.roleLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fieldStatus {
+  @include theme-mono-label;
+  font-size: var(--text-3xs);
+  color: var(--color-text-muted);
+  opacity: 0.85;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.fieldStatusError {
+  @include theme-mono-label;
+  font-size: var(--text-3xs);
+  color: var(--color-error);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.retryBtn {
+  @include theme-mono-label;
+  font-size: var(--text-3xs);
+  color: var(--color-error);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid currentColor;
+  padding: 0;
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness(1.15);
+  }
+}
+
+// Tab panel: one centered, readable column
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 8px 0 24px;
+  min-width: 0;
+}
+
+// The panel of a tab that scrolls inside itself: it takes the room left under
+// the header (min-height 0 lets the box inside shrink and scroll).
+.panelFill {
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+// Direct messages in a pane: a list beside a reading pane needs more than the
+// 760px column. The preview modal keeps the column, aligned with the tabs.
+.panelWide {
+  max-width: none;
+}
+
+// A setting group: title + plain-English hint, then the control. Whitespace
+// separates groups; no boxes around sections.
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.groupHead {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.groupHint {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+// Collapsible sub-block (Summary model) with the shared leaf toggle.
+.advanced {
+  font-size: var(--text-sm);
+}
+
+.advancedHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.advancedToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+
+  &:hover .advancedLeaf {
+    color: var(--color-primary);
+  }
+}
+
+.advancedLeaf {
+  @include theme-disclosure-leaf;
+}
+
+.advancedBody {
+  margin-top: 8px;
+}
+
+// The Direct messages switch, with its save error beside it.
+.switchLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+// A change made somewhere else (another agent, an automation, another window)
+// lands with a brief brand tint, so it is noticed without flashing. The
+// duration matches AGENT_LIVE_PULSE_MS in useLiveAgent.ts.
+@keyframes agent-live-pulse {
+  0% {
+    background: var(--color-primary-bg-hover);
+  }
+  60% {
+    background: var(--color-selected);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.livePulse {
+  border-radius: var(--radius-md);
+  animation: agent-live-pulse 1.6s ease-out;
+
+  // The still version is the hover tint, which the field's text reads on.
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    background: var(--color-hover);
+  }
+}
+
+// Archived: the settings stay readable; the note says how to bring it back.
+.archivedNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-field);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}

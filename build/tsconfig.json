@@ -1,0 +1,20 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false,
+    "esModuleInterop": true,
+    "types": ["node"]
+  },
+  "include": [
+    "profiles/**/*.ts",
+    "scripts/**/*.ts",
+    "../scripts/ensure-dev-env.ts",
+    "../scripts/install-app.ts",
+    "../scripts/lint-docs.ts",
+    "../scripts/preview-desktop.ts",
+    "../scripts/preview-scratch.ts",
+    "../scripts/simulate-first-run.ts"
+  ]
+}

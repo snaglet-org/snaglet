@@ -1,0 +1,18 @@
+// The table's pager, pinned to the bottom of the pane. In the grid it is the
+// last child of the scrolling content, so `sticky` holds it at the bottom of
+// the visible area; in the board (a flex column) it simply sits last. Tokens only.
+.bar {
+  position: sticky;
+  // A sticky element stays inside the scroller's padding; the pane has some at
+  // the bottom, so pull the bar down by it to sit flush with the edge.
+  bottom: calc(-1 * var(--table-body-pad-bottom, 0px));
+  z-index: 5;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 6px 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  background: var(--color-background);
+}

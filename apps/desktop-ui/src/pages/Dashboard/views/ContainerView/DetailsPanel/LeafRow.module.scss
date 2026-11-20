@@ -1,0 +1,63 @@
+@use '../../../../../styles/abstracts' as *;
+
+// Collapsed leaf/details rows for the project panel (Description, the
+// embeddings explainer, indexing rules). One-line toggle, leaf glyph rotates
+// right→down when opened, content indents under the label.
+
+.leafRow {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 24%, transparent);
+}
+
+.leafToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 26px;
+  padding: 4px 2px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast);
+
+  &:hover {
+    color: var(--color-text);
+  }
+
+  @include focus-ring;
+}
+
+// Matches .headerLeaf in NodeProperties.module.scss so every disclosure in
+// the app carries the same leaf at the same size and the same motion. The
+// LeafToggle artwork is vertical by nature; the caller rotates it —
+// collapsed → tip points right (90deg), expanded → tip points down (180deg).
+.leafGlyph {
+  @include theme-disclosure-leaf;
+}
+
+.leafToggle:hover .leafGlyph {
+  color: var(--color-primary);
+}
+
+.leafLabel {
+  @include theme-mono-label(wide);
+  font-size: var(--text-3xs);
+}
+
+.leafTrailing {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.leafBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 0 8px 16px;
+  min-width: 0;
+}

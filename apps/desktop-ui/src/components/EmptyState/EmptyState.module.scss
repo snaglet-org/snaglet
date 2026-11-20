@@ -1,0 +1,74 @@
+@use '../../styles/abstracts' as *;
+
+// Shared empty-state surface for "nothing here yet" panels. Used by
+// DetailRouter (no selection), ChatView (no agents in thread),
+// ContainerView IconsMode (empty container), etc.
+//
+// Two layouts:
+//   - centered  — icon on top, full-bleed pane center (e.g. Empty container)
+//   - inline    — left-aligned card-style block (e.g. No agents in thread)
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+}
+
+.centered {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex: 1;
+  padding: 40px 24px;
+  min-height: 200px;
+  margin: auto;
+  max-width: 380px;
+}
+
+.inline {
+  align-items: flex-start;
+  text-align: left;
+  padding: 14px 18px;
+  background: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.glyph {
+  display: inline-flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-popover);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+
+  svg {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+}
+
+.body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.action {
+  margin-top: 6px;
+}

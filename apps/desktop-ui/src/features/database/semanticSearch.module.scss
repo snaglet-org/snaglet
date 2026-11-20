@@ -1,0 +1,22 @@
+// The "Search by meaning" switch's shared parts: the in-line second step a
+// table over the row cap needs (no dialog), used by the table pane and the
+// Embeddings pane.
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.confirmText {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.confirmActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}

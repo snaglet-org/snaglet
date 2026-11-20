@@ -1,0 +1,133 @@
+@use '../../../../styles/abstracts' as *;
+
+// PathHeader — `/path/to/Title` breadcrumb with an id copy chip.
+// Shared across Dashboard surfaces (doc, project, thread).
+
+.pathHeader {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-on-chrome-muted);
+  overflow: hidden;
+}
+
+.pathIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  // Color inherits — wrap the icon in a colored span (or pass an
+  // `iconClassName`) to tint per surface (doc=sky, project=purple,
+  // thread=lavender). Default tracks `--color-primary` so it reads as
+  // accentuated even without an override.
+  color: var(--color-primary);
+  margin-right: 2px;
+
+  svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.pathLeader {
+  color: var(--color-on-chrome-muted);
+  user-select: none;
+}
+
+// The ancestor path, as one run of text. In a pane too narrow for the whole
+// header it gives up its room first (the huge shrink weight), down to a bare
+// ellipsis, before the title shrinks at all.
+.pathAncestors {
+  flex: 0 1000 auto;
+  min-width: 1.2em;
+  color: var(--color-on-chrome-muted);
+  @include layout-truncate;
+}
+
+.pathSep {
+  flex: none;
+  color: var(--color-on-chrome-muted);
+  user-select: none;
+}
+
+// In a narrow pane the path drops out altogether (the header's tooltip still
+// shows it), leaving the kind icon and the name: a bare "O… /" stub reads as
+// a glitch, and the room is worth more to the title.
+@container pane-shell (inline-size < 480px) {
+  .pathAncestors,
+  .pathAncestorsSep {
+    display: none;
+  }
+}
+
+// Box around the in-flow title. Sizes to the title's own width; once the
+// ancestors are out of room it shrinks too, ending the name with an
+// ellipsis rather than clipping it. The bounded height keeps the row from
+// jumping when the rename input swaps in. The title span must stay in
+// normal flow (see the comment in PathHeader.tsx).
+.pathTitleBox {
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  height: 19px;
+  overflow: hidden;
+}
+
+.pathTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--color-on-chrome);
+  letter-spacing: var(--letter-spacing-tight);
+  @include layout-truncate;
+}
+
+// Inline rename input — sized + styled to closely match `.pathTitle` so
+// flipping into edit mode doesn't cause a visible layout shift. Wider than
+// the longest typical title (320px) so the user has room to type, but
+// constrained so it doesn't shove the actions slot off-screen.
+.pathTitleInput {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: var(--letter-spacing-tight);
+  background: var(--color-field);
+  border: 1px solid var(--color-primary, var(--color-primary));
+  box-shadow: 0 0 0 1px var(--color-primary, var(--color-primary));
+  outline: none;
+  padding: 1px 5px;
+  border-radius: var(--radius-md);
+  margin: -2px 0;
+  width: 320px;
+  max-width: 60%;
+  min-width: 0;
+}
+
+// Refused or conflicting name beside the rename field — the TextInput error
+// idiom the Database sidebar uses under its row. One line: the chrome rail
+// scrolls sideways rather than growing taller.
+.renameError {
+  @include theme-mono-label;
+
+  flex-shrink: 0;
+  margin-left: 6px;
+  font-size: var(--text-2xs);
+  color: var(--color-error);
+  white-space: nowrap;
+}
+
+.pathActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  flex-shrink: 0;
+}

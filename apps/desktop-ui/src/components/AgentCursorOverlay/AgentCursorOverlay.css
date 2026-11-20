@@ -1,0 +1,321 @@
+.snaglet-agent-cursors {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+  overflow: hidden;
+}
+.snaglet-agent-asks {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  /* Click-through; only the card inside opts back in. */
+  pointer-events: none;
+  overflow: hidden;
+}
+.snaglet-agent-cursor {
+  /* The avatar sits up and to the left of the click point, so the user's real arrow
+     (which the agent is moving) points at it without overlapping it. */
+  --snaglet-cursor-offset: 22px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: transform 450ms ease;
+  will-change: transform;
+}
+.snaglet-agent-cursor__body {
+  position: relative;
+  transform: translate(
+    calc(-40px - var(--snaglet-cursor-offset)),
+    calc(-40px - var(--snaglet-cursor-offset))
+  );
+  transition: opacity 300ms ease;
+}
+.snaglet-agent-cursor.is-waiting .snaglet-agent-cursor__body {
+  opacity: 0.45;
+}
+.snaglet-agent-cursor.is-dragging {
+  transition: none;
+}
+/* The part of the flower the person can grab. Its box comes inline from FLOWER_GRIP
+   (packages/shared), which the server mirrors: the avatar's box down to 8px above the click
+   point, so even a flower left behind by a jump never covers the spot the agent clicks.
+   It takes the mouse only while .is-live (no flower has moved for the settle time); the
+   standalone page never does, its native window forwards the mouse instead. */
+.snaglet-agent-cursor__grip {
+  position: absolute;
+  pointer-events: none;
+}
+.snaglet-agent-cursor__grip.is-live {
+  pointer-events: auto;
+  cursor: grab;
+}
+.snaglet-agent-cursor.is-dragging .snaglet-agent-cursor__grip {
+  cursor: grabbing;
+}
+.snaglet-agent-cursor__close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--text);
+  font: 600 14px/1 var(--font-sans, system-ui, sans-serif);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+.snaglet-agent-cursor__close:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--detail);
+  outline-offset: 1px;
+}
+.snaglet-agent-cursor__grip.is-live.is-hover .snaglet-agent-cursor__close {
+  opacity: 1;
+  pointer-events: auto;
+}
+.snaglet-agent-cursor.is-dragging .snaglet-agent-cursor__close {
+  opacity: 0;
+}
+.snaglet-agent-cursor__flower {
+  display: inline-flex;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-primary, var(--text)) 18%, transparent) 0%,
+    color-mix(in srgb, var(--color-primary, var(--text)) 7%, transparent) 48%,
+    transparent 72%
+  );
+  box-shadow: 0 0 20px 6px color-mix(in srgb, var(--color-primary, var(--text)) 10%, transparent);
+  width: max-content;
+  height: max-content;
+  line-height: 0;
+  transform-origin: 50% 50%;
+  filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--text) 35%, transparent));
+}
+.snaglet-agent-cursor__flower.is-click {
+  animation: snaglet-cursor-bloom 520ms ease-out;
+}
+.snaglet-agent-cursor__ring {
+  position: absolute;
+  /* Centered on the click point (the avatar is offset from it). */
+  left: calc(40px + var(--snaglet-cursor-offset) - 48px);
+  top: calc(40px + var(--snaglet-cursor-offset) - 48px);
+  width: 96px;
+  height: 96px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: 0;
+  animation: snaglet-cursor-ring 550ms ease-out;
+  pointer-events: none;
+}
+.snaglet-agent-cursor__tag {
+  position: absolute;
+  /* Above the avatar and growing upward, clear of the real arrow below and to its
+     right. The whole reason is shown: it wraps, it is never cut off or scrolled. */
+  left: 0;
+  bottom: calc(100% + 4px);
+  width: max-content;
+  max-width: 320px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  line-height: 1.35;
+  padding: 3px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+/* Near the top of the screen there is no room above: open below the avatar instead. */
+.snaglet-agent-cursor__tag.is-below {
+  bottom: auto;
+  top: calc(100% + 4px);
+  left: auto;
+  right: 0;
+}
+.snaglet-agent-cursor__tag span {
+  color: var(--text-muted);
+}
+.snaglet-agent-cursors__pill {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--background);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+@keyframes snaglet-cursor-ring {
+  0% {
+    transform: scale(0.5833);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+@keyframes snaglet-cursor-bloom {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(0.85);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .snaglet-agent-cursor,
+  .snaglet-agent-cursor__body,
+  .snaglet-agent-cursor__close {
+    transition: none;
+  }
+  .snaglet-agent-cursor__flower.is-click {
+    animation: none;
+  }
+  .snaglet-agent-cursor__ring {
+    display: none;
+  }
+}
+
+/* Finite, decorative emotes: transform only the flower, never its label or pointer. */
+.snaglet-agent-cursor__flower.emote-spin {
+  animation: snaglet-emote-spin 1.2s ease-in-out 1;
+}
+.snaglet-agent-cursor__flower.emote-hyper {
+  animation: snaglet-emote-hop 0.45s ease-in-out 4;
+}
+.snaglet-agent-cursor__flower.emote-laugh {
+  animation: snaglet-emote-laugh 0.18s ease-in-out 10;
+}
+.snaglet-agent-cursor__flower.emote-cry {
+  animation: snaglet-emote-cry 0.6s ease-in-out 3;
+}
+.snaglet-agent-cursor__flower.emote-celebrate {
+  animation: snaglet-emote-celebrate 1s ease-in-out 2;
+}
+.snaglet-agent-cursor__flower.emote-angry {
+  animation: snaglet-emote-angry 0.07s linear 18;
+}
+@keyframes snaglet-emote-angry {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0);
+  }
+  25% {
+    transform: translateX(-4px) rotate(-3deg);
+  }
+  75% {
+    transform: translateX(4px) rotate(3deg);
+  }
+}
+@keyframes snaglet-emote-spin {
+  0%,
+  100% {
+    transform: rotate(0) scale(1);
+  }
+  12% {
+    transform: rotate(-25deg) scale(0.88, 1.08);
+  }
+  55% {
+    transform: rotate(310deg) scale(1.14);
+  }
+  78% {
+    transform: rotate(380deg) scale(0.95);
+  }
+  92% {
+    transform: rotate(350deg);
+  }
+}
+@keyframes snaglet-emote-hop {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  15% {
+    transform: translateY(3px) scale(1.15, 0.8);
+  }
+  45% {
+    transform: translateY(-24px) rotate(-8deg) scale(0.9, 1.14);
+  }
+  65% {
+    transform: translateY(-17px) rotate(7deg);
+  }
+  85% {
+    transform: translateY(2px) scale(1.13, 0.88);
+  }
+}
+@keyframes snaglet-emote-laugh {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: translateY(-3px) rotate(-10deg) scale(1.08, 0.88);
+  }
+  55% {
+    transform: translateY(-7px) rotate(9deg) scale(0.96, 1.1);
+  }
+  80% {
+    transform: translateY(1px) rotate(-4deg) scale(1.06, 0.92);
+  }
+}
+@keyframes snaglet-emote-cry {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  25% {
+    transform: translateY(5px) rotate(-7deg) scale(0.96);
+  }
+  50% {
+    transform: translateY(8px) rotate(5deg) scale(0.92, 0.97);
+  }
+  75% {
+    transform: translateY(4px) rotate(-4deg);
+  }
+}
+@keyframes snaglet-emote-celebrate {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0) scale(1);
+  }
+  12% {
+    transform: translateY(3px) scale(1.15, 0.8);
+  }
+  35% {
+    transform: translateY(-30px) rotate(-22deg) scale(1.2);
+  }
+  55% {
+    transform: translateY(-22px) rotate(22deg) scale(1.12);
+  }
+  75% {
+    transform: translateY(2px) rotate(-8deg) scale(1.12, 0.88);
+  }
+  90% {
+    transform: translateY(-6px) rotate(4deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .snaglet-agent-cursor__flower[class*='emote-'] {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,39 @@
+// Calendar colors. Each CALENDAR_COLORS id gets its own `--cal-color-<id>`
+// token, built from theme tokens so a re-theme re-skins the calendar. Red and
+// pink are kept apart from the warning (Detail) and error (Thread) colors.
+// Items set `data-cal-color="<id>"`; everything else reads `--cal-accent`.
+// Theme and custom colors set `--cal-accent` inline (calendarColorProps).
+// Include inside a class block (the calendar root, sidebar, popover surface).
+
+@mixin calendar-color-tokens {
+  --cal-color-blue: var(--color-select-blue);
+  --cal-color-green: var(--color-node-task);
+  --cal-color-yellow: var(--color-select-yellow);
+  --cal-color-orange: var(--color-select-orange);
+  --cal-color-red: var(--color-node-image);
+  --cal-color-purple: var(--color-select-purple);
+  --cal-color-pink: color-mix(in srgb, var(--color-select-pink) 72%, var(--color-select-orange));
+  --cal-color-brown: color-mix(in srgb, var(--color-select-orange) 45%, var(--color-text));
+  --cal-color-gray: var(--color-select-gray);
+
+  --cal-accent: var(--cal-color-gray);
+
+  @each $id in 'blue', 'green', 'yellow', 'orange', 'red', 'purple', 'pink', 'brown', 'gray' {
+    &[data-cal-color='#{$id}'],
+    [data-cal-color='#{$id}'] {
+      --cal-accent: var(--cal-color-#{$id});
+    }
+  }
+}
+
+// Plain button: no chrome, inherits type.
+@mixin button-reset {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+}

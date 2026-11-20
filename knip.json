@@ -1,0 +1,78 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/**/*.{ts,js,mjs,cjs}", "build/scripts/*.ts"],
+      "project": ["scripts/**/*.{ts,js,mjs,cjs}", "build/**/*.{ts,mjs}"],
+      "ignoreDependencies": ["lint-staged", "@modelcontextprotocol/sdk"],
+      "ignore": ["**/*.d.ts", "**/dist/**", "**/.next/**", "tests/**"]
+    },
+    "apps/server": {
+      "entry": [
+        "src/index.ts",
+        "src/services/ToolService/tools/**/definition.ts",
+        "src/services/ToolService/tools/**/tool.ts",
+        "src/workers/**/*.ts",
+        "src/scripts/**/*.ts",
+        "src/shims/*.ts",
+        "src/services/voice/voiceEngine.ts",
+        "src/services/voice/voiceEngineWorker.ts"
+      ],
+      "ignoreDependencies": ["googleapis-common"],
+      "project": ["src/**/*.ts"],
+      "ignore": [
+        "**/*.d.ts",
+        "dist/**",
+        "**/__tests__/**",
+        "**/*.test.ts",
+        "**/*.spec.ts",
+        "src/services/ProviderChatService/providers/scripted.ts"
+      ]
+    },
+    "apps/desktop-ui": {
+      "entry": ["src/main.tsx", "index.html", "vite.config.ts"],
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignore": ["**/*.d.ts", "dist/**", "**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"]
+    },
+    "apps/desktop": {
+      "entry": ["src-tauri/**/*.{ts,js}", "scripts/**/*.mjs"],
+      "project": ["src-tauri/**/*.{ts,js}"],
+      "ignoreDependencies": ["@tauri-apps/cli"],
+      "ignore": [
+        "target/**",
+        "dist/**",
+        "src-tauri/target/**",
+        "src-tauri/binaries/**",
+        "src-tauri/resources/**"
+      ]
+    },
+    "packages/db": {
+      "entry": ["src/index.ts", "index.ts", "db-dirname.ts", "scripts/**/*.ts"],
+      "project": ["**/*.ts"],
+      "ignore": ["**/*.d.ts", "dist/**", "migrations/**"]
+    },
+    "packages/shared": {
+      "entry": ["src/index.ts", "index.ts"],
+      "project": ["**/*.ts"],
+      "ignore": ["**/*.d.ts", "dist/**"]
+    },
+    "packages/ui": {
+      "ignoreDependencies": ["@snaglet/theme"]
+    },
+    "packages/theme": {
+      "entry": ["index.js", "src/index.ts", "src/stylesheet.ts", "scripts/generate.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts"],
+      "ignore": ["index.d.ts"]
+    },
+    "packages/snaglet-sdk": {
+      "entry": ["src/index.ts", "index.ts"],
+      "project": ["**/*.ts"],
+      "ignore": ["**/*.d.ts", "dist/**"]
+    },
+    "packages/snaglet-cli": {
+      "entry": ["bin/snaglet.mjs", "src/*.mjs"],
+      "project": ["**/*.mjs"],
+      "ignore": ["src/pylib/**"]
+    }
+  }
+}

@@ -1,0 +1,92 @@
+@use '../../../styles/abstracts' as *;
+
+// Layout for the chip NodeView's include form and image card. The link pill
+// uses the global `.md-chip` rules in styles/globals/_node-chips.scss.
+
+.includeWrap {
+  // The wrapper is a `<span>` (no `<div>` inside `<p>`) but holds block
+  // content. No margin or padding: preview renders TransclusionBlock with
+  // no wrapper, so spacing comes from its `.block` to keep both modes alike.
+  display: block;
+  width: 100%;
+}
+
+// Image chips render as a preview card; clicking it opens the preview modal.
+.imageCard {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: middle;
+  max-width: 320px;
+  margin: 2px 0;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--color-background);
+  cursor: pointer;
+  box-shadow:
+    0 1px 2px rgb(var(--shadow-color) / 0.06),
+    0 2px 4px rgb(var(--shadow-color) / 0.04);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--color-primary-border);
+    box-shadow:
+      0 2px 4px rgb(var(--shadow-color) / 0.08),
+      0 4px 8px rgb(var(--shadow-color) / 0.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+
+  // Loading and error placeholders keep a minimum height before the image loads.
+  :global([role='status']),
+  :global([role='alert']) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    padding: 0 12px;
+    font-size: 0.8em;
+    color: var(--color-text-muted, var(--color-text));
+  }
+}
+
+.imageCardImg {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  background: var(--color-selected);
+}
+
+.imageCardBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.8em;
+  line-height: 1.4;
+}
+
+.imageCardTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  @include layout-truncate;
+  color: var(--color-text);
+}
+
+.imageCardAction {
+  flex: 0 0 auto;
+  cursor: pointer;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+  }
+}

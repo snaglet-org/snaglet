@@ -1,0 +1,82 @@
+.preamble {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.prompt {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.optional {
+  margin-left: 6px;
+  font-weight: 400;
+  color: var(--color-text-subtle, var(--color-text-muted));
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 5px 7px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  // Interactive answer option — floors at the interactive size (11).
+  font-size: var(--font-size-sm);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+}
+
+.optionSelected {
+  border-color: var(--color-primary-border, var(--color-primary));
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.indicator {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  border: 1px solid var(--color-border-strong, var(--color-border));
+  border-radius: 0;
+}
+
+.indicatorOn {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.otherRow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.otherInput {
+  flex: 1;
+}
+
+.textField {
+  width: 100%;
+}
+
+.nav {
+  display: flex;
+  gap: 6px;
+}

@@ -1,0 +1,39 @@
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.result,
+.muted,
+.error {
+  min-width: 0;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.result {
+  color: var(--color-text-muted);
+}
+
+.muted {
+  color: var(--color-text-subtle, var(--color-text-muted));
+}
+
+.error {
+  color: var(--color-danger);
+}
+
+.path {
+  font-family: var(--font-mono);
+  word-break: break-all;
+}

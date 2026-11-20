@@ -1,0 +1,127 @@
+// Switch — binary toggle with role="switch" semantics
+//
+// Two sizes share the primary-on / muted-off color logic but
+// differ in shape:
+//   sm → tight inline pill (16px tall) for list rows.
+//   lg → stretched header tile with state + hint stacked.
+//
+// Replaces view-specific enable controls with one canonical primitive.
+
+@use '../../../styles/abstracts/controls' as controls;
+@use '../../../styles/abstracts' as *;
+
+.switch {
+  appearance: none;
+  display: inline-flex;
+  border-radius: var(--radius-button);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  @include controls.focus-ring;
+
+  // Tactile press — gives, then releases.
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    cursor: progress;
+    opacity: 0.55;
+  }
+}
+
+// Sizes
+
+// sm — inline enable/disable pill. Stays on the same row as a list item label.
+.sizeSm {
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 16px;
+  padding: 0 5px;
+  @include theme-mono-label;
+  font-size: var(--text-3xs); // override: smaller than standard label
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-wider);
+  border: 1px solid var(--color-border);
+}
+
+// md — slightly larger inline pill for header/detail surfaces.
+.sizeMd {
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 22px;
+  padding: 0 9px;
+  @include theme-mono-label(wide);
+  font-size: var(--text-2xs); // override: slightly smaller than standard label
+  font-weight: 700;
+  border: 1px solid var(--color-border);
+}
+
+// lg — big header tile. Two-line layout with state + hint stacked.
+.sizeLg {
+  flex-shrink: 0;
+  align-self: stretch;
+  min-width: 132px;
+  padding: 14px 16px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  text-align: left;
+  border: 1.5px solid var(--color-border);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+}
+
+// State tints
+
+.on {
+  // The knob in the accent where it shows on Selected, else in the on-Selected ink.
+  color: var(--color-primary-on-selected);
+  border-color: var(--color-primary-border);
+  background: var(--color-selected);
+  // Lit toggle — soft accent glow bleeding from the on-state.
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-primary) 26%, transparent);
+
+  &:hover:not(:disabled) {
+    color: var(--color-primary-on-selected);
+  }
+}
+
+.off {
+  color: var(--color-text-muted);
+  background: var(--color-field);
+
+  &:hover:not(:disabled) {
+    color: var(--color-text);
+    border-color: var(--color-primary-border);
+  }
+}
+
+// Slots
+
+.state {
+  // lg size — stronger / larger state label
+  .sizeLg & {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+}
+
+.hint {
+  font-size: var(--text-3xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}

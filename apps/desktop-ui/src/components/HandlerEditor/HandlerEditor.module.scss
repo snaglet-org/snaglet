@@ -1,0 +1,51 @@
+@use '../../styles/abstracts' as *;
+
+// HandlerEditor — CodeMirror mounts directly into `.root`. The chrome
+// (border, sharp corners, recessed-well background) matches the
+// ToolBuilderPanel's other code-adjacent surfaces (.formError,
+// .schemaPreviewJson) so the editor reads as a sibling well, not a foreign
+// widget. Colors inside CodeMirror itself come from handlerEditorTheme.ts,
+// which reads the same --color-* tokens this border/background do.
+.root {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0; // sharp corners — house style
+  background: var(--color-surface-sunken);
+  overflow: hidden;
+  // Enough room to see the whole scaffolded handler without scrolling, while
+  // staying well short of "full IDE" — long files scroll inside CodeMirror's
+  // own .cm-scroller rather than growing the modal unbounded.
+  height: 320px;
+  min-width: 0;
+
+  :global(.cm-editor) {
+    height: 100%;
+  }
+
+  // Defensive visual guard for the same invariant HandlerEditor enforces by
+  // calling closeCompletion(): an active `@` query owns exactly one popover.
+  &[data-mention-open='true'] :global(.cm-tooltip-autocomplete) {
+    display: none;
+  }
+
+  &:focus-within {
+    border-color: var(--color-primary-border);
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+.fillHeight {
+  flex: 1;
+  height: 100%;
+  min-height: 320px;
+}
+
+@media (max-width: 720px) {
+  .root {
+    height: 240px;
+  }
+
+  .fillHeight {
+    height: 100%;
+    min-height: 240px;
+  }
+}

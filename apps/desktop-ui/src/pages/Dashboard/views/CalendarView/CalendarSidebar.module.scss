@@ -1,0 +1,562 @@
+@use '../../../../styles/abstracts' as *;
+@use '../../../../features/calendar/calendarShared' as cal;
+
+// Calendar sidebar. Rows follow the Database sidebar's tree rows
+// (`@snaglet/ui/abstracts/tree`), so calendars look like tables there.
+
+.root {
+  @include cal.calendar-color-tokens;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+
+  // The pane scrolls; its parts keep their height. Without this the heading
+  // (overflow: hidden) is squeezed to a sliver when the sidebar is short.
+  > * {
+    flex-shrink: 0;
+  }
+}
+
+.muted {
+  margin: var(--space-1) var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.link {
+  @include cal.button-reset;
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+// Mini month
+
+.mini {
+  padding: var(--space-2) var(--space-3) var(--space-3);
+}
+
+.miniHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-1);
+}
+
+.miniTitle {
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.miniNav {
+  @include cal.button-reset;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+.miniGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  row-gap: 2px;
+}
+
+.miniDow {
+  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+  text-align: center;
+}
+
+.miniDay {
+  @include cal.button-reset;
+  position: relative;
+  height: 24px;
+  font-size: var(--text-2xs);
+  text-align: center;
+  cursor: pointer;
+  border-radius: var(--radius-pill);
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+.miniOther {
+  color: var(--color-text-muted);
+}
+
+.miniInRange {
+  border-radius: 0;
+  background: var(--color-selected);
+  @include theme-on-selected;
+}
+
+.miniToday {
+  color: var(--color-background);
+  font-weight: 700;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 1px 50%;
+    z-index: -1;
+    width: 22px;
+    margin-left: -11px;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary);
+  }
+
+  isolation: isolate;
+}
+
+.miniDot {
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  margin-left: -1.5px;
+  border-radius: var(--radius-pill);
+  background: var(--color-text-muted);
+}
+
+.miniToday .miniDot {
+  background: var(--color-background);
+}
+
+// Calendars list
+
+// The leaf folds a calendar's date fields away, like a workspace tree row's,
+// in the calendar's own color (`--cal-accent` is set on the row).
+.leafButton {
+  @include cal.button-reset;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  color: var(--cal-accent);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+.leaf {
+  @include tree-leaf-toggle;
+}
+
+.sectionHead {
+  @include tree-group-label;
+  padding: var(--space-2) var(--space-3) var(--space-1);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calItem {
+  margin: 0;
+}
+
+.calRow {
+  @include tree-row;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-right: var(--space-2);
+  cursor: grab;
+  user-select: none;
+}
+
+.dragging {
+  opacity: 0.55;
+  background: var(--color-selected);
+  @include theme-on-selected;
+}
+
+.swatchStatic {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--cal-accent);
+}
+
+.calTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.calHidden {
+  color: var(--color-text-muted);
+}
+
+.iconBtn {
+  @include cal.button-reset;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  text-align: center;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+// Row controls (eye, ⋯). Where the pointer can hover (a fine pointer, a
+// viewport from the `sm` breakpoint up) they show while the row is hovered or
+// holds keyboard focus (`:focus-visible`, so a mouse click doesn't leave them
+// up), and nothing moves when they do: a calendar row keeps their room, and
+// a field or automation row lays them over its note slot ("3 undated",
+// "paused"), which is never narrower and hides meanwhile. They stay in the
+// tab order while hidden. A hidden calendar or field keeps its struck eye.
+// Elsewhere (touch, narrow) they always show, after the note.
+$hover-ui: '(hover: hover) and (pointer: fine) and (min-width: #{$breakpoint-sm})';
+
+.rowControls {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+
+  .iconBtn {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.fields {
+  margin: 0 0 var(--space-1);
+  padding: 0;
+  list-style: none;
+}
+
+.fieldRow {
+  // The note slot's least width: the controls laid over it.
+  --row-controls-width: 42px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2) 0 calc(var(--space-3) + 20px);
+}
+
+.automationRow {
+  --row-controls-width: 20px;
+}
+
+@media #{$hover-ui} {
+  .rowAction {
+    opacity: 0;
+
+    &[aria-pressed='false'],
+    &:focus-visible {
+      opacity: 1;
+    }
+  }
+
+  .calRow:hover .rowAction,
+  .calRow:has(:focus-visible) .rowAction {
+    opacity: 1;
+  }
+
+  .fieldRow {
+    position: relative;
+  }
+
+  .rowControls {
+    position: absolute;
+    top: 0;
+    right: var(--space-2);
+    bottom: 0;
+    pointer-events: none;
+  }
+
+  .itemNote {
+    min-width: var(--row-controls-width);
+  }
+
+  .fieldRow:hover,
+  .fieldRow:has(:focus-visible) {
+    .rowAction {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .itemNote {
+      visibility: hidden;
+    }
+  }
+
+  .rowPinned {
+    .rowAction[aria-pressed='false'] {
+      pointer-events: auto;
+    }
+
+    .itemNote {
+      visibility: hidden;
+    }
+  }
+
+  // Without :has, a focused control shows on its own (above); the note
+  // makes way while focus is in the row.
+  @supports not selector(:has(*)) {
+    .fieldRow:focus-within .itemNote {
+      visibility: hidden;
+    }
+  }
+}
+
+.fieldHidden .itemName,
+.fieldHidden .itemTable,
+.itemPaused .itemName {
+  color: var(--color-text-muted);
+}
+
+.fieldButton {
+  @include cal.button-reset;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  min-height: 24px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  cursor: pointer;
+
+  // The whole row, controls included, is one hover target.
+  &:hover,
+  .fieldRow:hover & {
+    background: var(--color-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+.fieldGlyph {
+  color: var(--color-text-muted);
+}
+
+.automationGlyph {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 1em;
+  color: var(--color-text-muted);
+}
+
+// A row's label: the field (or automation) name, then the table, muted. The
+// table gives up its room first; the name is cut only once the table is gone.
+.itemLabel {
+  display: flex;
+  flex: 0 1 auto;
+  gap: var(--space-1);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.itemName,
+.itemTable {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemName {
+  flex: none;
+  max-width: 100%;
+
+  // Room for the gap before the (then empty) table, so the ellipsis shows.
+  &:not(:last-child) {
+    max-width: calc(100% - var(--space-1));
+  }
+}
+
+.itemTable {
+  flex: 0 1 auto;
+  min-width: 0;
+  color: var(--color-text-muted);
+}
+
+// The note slot at the row's end: "3 undated", "archived", "paused", quiet.
+.itemNote {
+  flex: none;
+  margin-left: auto;
+  padding-left: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fieldArchived .itemName,
+.fieldArchived .itemTable {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.addField {
+  color: var(--color-text-muted);
+}
+
+// Automations on no calendar: a muted pseudo-calendar row, then the rows.
+.unplaced {
+  margin-top: var(--space-1);
+}
+
+.unplacedHead {
+  @include tree-row;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  cursor: default;
+
+  &:hover {
+    background: none;
+    border-color: transparent;
+  }
+}
+
+.unplacedSwatch {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+
+  &::before {
+    content: '';
+    box-sizing: border-box;
+    width: 10px;
+    height: 10px;
+    border: 1px dashed currentColor;
+    border-radius: var(--radius-pill);
+  }
+}
+
+// Move to calendar…
+
+.moveTitle {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.moveStatus {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.moveList {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.moveOption {
+  @include cal.button-reset;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: var(--color-hover);
+  }
+
+  &:focus-visible {
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+.moveSwatch {
+  flex: none;
+  box-sizing: border-box;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--cal-accent);
+}
+
+.moveSwatchNone {
+  border: 1px dashed var(--color-text-muted);
+  background: none;
+}
+
+.moveLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.moveMuted {
+  color: var(--color-text-muted);
+}

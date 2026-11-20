@@ -1,0 +1,33 @@
+@use '../../../../styles/abstracts' as *;
+
+// One quiet line beside a field's label: who changed it, and the two choices.
+.notice {
+  @include theme-mono-label;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  font-size: var(--text-3xs);
+  color: var(--color-text-muted);
+  min-width: 0;
+}
+
+.action {
+  @include theme-mono-label;
+  font-size: var(--text-3xs);
+  color: var(--color-primary);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid currentColor;
+  padding: 0;
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness(1.15);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}

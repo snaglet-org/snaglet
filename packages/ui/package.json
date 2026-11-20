@@ -1,0 +1,57 @@
+{
+  "name": "@snaglet/ui",
+  "private": true,
+  "license": "MIT",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./sidebar-tree": "./src/components/SidebarTree/index.ts",
+    "./leaf-toggle": "./src/components/LeafToggle/index.ts",
+    "./styles": {
+      "types": "./styles/index.d.ts",
+      "sass": "./styles/index.scss",
+      "default": "./styles/index.scss"
+    },
+    "./styles/tokens": {
+      "sass": "./styles/_tokens.scss",
+      "default": "./styles/_tokens.scss"
+    },
+    "./abstracts": {
+      "sass": "./styles/abstracts/_index.scss",
+      "default": "./styles/abstracts/_index.scss"
+    },
+    "./abstracts/spacing": {
+      "sass": "./styles/abstracts/_spacing.scss",
+      "default": "./styles/abstracts/_spacing.scss"
+    },
+    "./abstracts/tree": {
+      "sass": "./styles/abstracts/_tree.scss",
+      "default": "./styles/abstracts/_tree.scss"
+    }
+  },
+  "peerDependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^25.6.0",
+    "@types/react": "~19.1.0",
+    "@types/react-dom": "~19.1.0",
+    "jsdom": "^29.1.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.0",
+    "vitest": "^3.2.6"
+  },
+  "dependencies": {
+    "@snaglet/theme": "workspace:*"
+  }
+}

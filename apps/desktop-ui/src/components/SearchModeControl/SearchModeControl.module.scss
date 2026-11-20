@@ -1,0 +1,45 @@
+.root {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 4px 7px;
+  border: 0;
+  border-left: 2px solid var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: 1;
+}
+
+.legend {
+  padding: 0;
+  color: var(--color-text-disabled);
+  font-size: var(--text-3xs);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-widest);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.option {
+  gap: 5px;
+  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+  white-space: nowrap;
+}
+
+.divider {
+  width: 1px;
+  height: 12px;
+  background: var(--color-border);
+}
+
+@container (inline-size < 360px) {
+  .legend,
+  .divider {
+    display: none;
+  }
+}

@@ -1,0 +1,148 @@
+@use '../../../../styles/abstracts' as *;
+
+// ChatView layout:
+//   .shell
+//     .frame
+//       .topDrawer        (narrow + settingsOpen: inside frame, above body)
+//       <StatusStrip>     (hidden when narrow + settingsOpen)
+//       .body
+//         .chat
+//         .settingsSidebar  (wide + settingsOpen: slides from the right)
+
+.shell {
+  container: chat-shell / size;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-background);
+  position: relative;
+}
+
+// full-height frame that holds the StatusStrip + body
+.frame {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// body = chat + optional sidebar, side-by-side
+.body {
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// chat column (always visible)
+.chat {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// right sidebar (wide mode)
+// Slides in from the right. The animation collapses width, not position,
+// so the chat column fills the remaining space naturally.
+.settingsSidebar {
+  position: relative;
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-raised);
+
+  // Slide-in animation
+  animation: sidebarSlideIn 180ms var(--ease-out) both;
+}
+
+@keyframes sidebarSlideIn {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 260px;
+    opacity: 1;
+  }
+}
+
+// top drawer (narrow mode)
+// Sits inside .frame (flex column). flex: 0 0 78% claims 78% of the frame
+// height — the remaining 22% is the .body row which contains the composer.
+// The composer is always visible and interactive below the drawer.
+.topDrawer {
+  position: relative;
+  flex: 0 0 72%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  margin: 2px;
+  background: var(--color-surface-raised);
+
+  // Slide-down animation
+  animation: drawerSlideDown 180ms var(--ease-out) both;
+
+  // ChatSettings fills the drawer and manages its own scroll internally
+  > * {
+    flex: 1 1 0;
+    min-height: 0;
+  }
+}
+
+@keyframes drawerSlideDown {
+  from {
+    flex-basis: 0;
+    opacity: 0;
+  }
+  to {
+    flex-basis: 78%;
+    opacity: 1;
+  }
+}
+
+// Resize handles
+.drawerResizeHandle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  cursor: ns-resize;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.15s;
+
+  &:hover,
+  &:active {
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+  }
+}
+
+.sidebarResizeHandle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: ew-resize;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.15s;
+  flex-shrink: 0;
+
+  &:hover,
+  &:active {
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+  }
+}

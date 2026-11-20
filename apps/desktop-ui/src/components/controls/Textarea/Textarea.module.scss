@@ -1,0 +1,135 @@
+@use '../../../styles/abstracts' as *;
+
+// Textarea — rounded native <textarea> wrapper
+//
+// Matches the Input primitive's aesthetic: rounded (--radius-field),
+// mono uppercase label, primary focus halo. Supports label /
+// hint / error / character-count and three sizes.
+
+@use '../../../styles/abstracts/controls' as controls;
+
+.wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+// Label row
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  @include theme-mono-label(wide);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.required {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.charCount {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+// Container + element
+
+.textareaContainer {
+  display: flex;
+  width: 100%;
+  @include controls.field-shell;
+}
+
+.textarea {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  outline: none;
+
+  @include controls.field-focus-reset;
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+// Sizes
+
+.sizeSm .textarea {
+  font-size: 11px;
+  padding: 6px 8px;
+  min-height: 56px;
+}
+
+.sizeMd .textarea {
+  font-size: 12px;
+  padding: 8px 10px;
+  min-height: 80px;
+}
+
+.sizeLg .textarea {
+  font-size: 13px;
+  padding: 10px 12px;
+  min-height: 120px;
+}
+
+// Hint / error / disabled
+
+.hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.errorText {
+  margin: 0;
+  @include theme-mono-label;
+  font-size: var(--text-2xs);
+  font-size: var(--text-2xs);
+  color: var(--color-error);
+  line-height: 1.4;
+}
+
+.error {
+  border-color: var(--color-error);
+
+  &:focus-within {
+    border-color: var(--color-error);
+    box-shadow:
+      0 0 0 1px var(--color-error),
+      0 0 11px color-mix(in srgb, var(--color-error) 28%, transparent);
+  }
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

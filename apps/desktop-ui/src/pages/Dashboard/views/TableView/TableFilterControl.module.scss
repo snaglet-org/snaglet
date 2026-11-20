@@ -1,0 +1,34 @@
+.panel {
+  min-width: min(420px, calc(100vw - 16px));
+  max-width: 640px;
+}
+
+// Field · condition · value · remove; the value column takes the slack.
+.condition {
+  display: grid;
+  grid-template-columns: minmax(90px, auto) minmax(90px, auto) minmax(100px, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+}
+
+// Filter pills share the sort pills' shape; the text is static, not a toggle.
+.pill {
+  max-width: 100%;
+}
+
+.pillText {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 3px 4px 3px 10px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pillValue {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}

@@ -1,0 +1,119 @@
+@use '../../../styles/abstracts' as *;
+
+.diagram {
+  margin: 12px 0;
+  padding: 12px;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-background);
+
+  summary {
+    cursor: pointer;
+    color: var(--color-text);
+    font-size: var(--text-sm);
+  }
+
+  details {
+    margin-top: 8px;
+  }
+}
+
+.viewport {
+  position: relative;
+  width: 100%;
+  min-height: 96px;
+  // Without an intrinsic size the box falls back to a fixed height.
+  height: min(#{window-vh(60)}, 320px);
+
+  // The diagram's own shape at the column width, never taller than the
+  // diagram itself or 60% of the window: wide charts stay short, small
+  // charts keep their size, tall charts fit and can be zoomed.
+  &[data-sized] {
+    height: auto;
+    aspect-ratio: var(--mermaid-ratio);
+    max-height: min(#{window-vh(60)}, var(--mermaid-height));
+  }
+}
+
+// The pan/zoom viewer fills the box. Absolute so its 100% height never
+// depends on the box's ratio-derived height being definite.
+.viewport > .canvas {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+}
+
+// Markdown caps inline images (`.markdown img`); the viewer sizes its image
+// itself and zooming must be free to overflow the box.
+.diagram .viewport img {
+  max-width: none;
+  max-height: none;
+}
+
+// Open larger: top-right, quiet until the diagram is hovered or focused.
+.enlarge {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  background: var(--color-popover);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  opacity: 0.6;
+  transition: opacity var(--transition-fast);
+
+  .viewport:hover &,
+  .viewport:focus-within &,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+// A node chip centered in its slot over the node: the node's height, its
+// label's width plus a little (mermaidChipSlot), so the slot already keeps
+// the chip off the outline sideways. Sizes are the diagram's natural pixels
+// (its text is 16px there); the viewer scales the whole layer with the
+// zoom, so the chip grows with the picture.
+.chipSlot {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 4px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  pointer-events: auto;
+
+  // The diagram is drawn on white paper whatever the app theme: the chip
+  // keeps a light-surface look there, an opaque tint with dark ink.
+  :global(.md-chip) {
+    max-width: 100%;
+    margin: 0;
+    background: color-mix(in srgb, var(--md-chip-color, var(--color-primary)) 14%, white);
+    color: color-mix(in srgb, var(--md-chip-color, var(--color-primary)) 45%, black);
+
+    &:hover {
+      background: color-mix(in srgb, var(--md-chip-color, var(--color-primary)) 24%, white);
+    }
+  }
+
+  // The chip is the node's whole label: no ancestors path (the box already
+  // places it) and no copy, include or remove controls, so the title gets
+  // the room the node was sized for.
+  :global(.md-chip-path),
+  :global(.md-chip-actions) {
+    display: none;
+  }
+}
+
+.error {
+  color: var(--color-danger);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

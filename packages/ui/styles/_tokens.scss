@@ -1,0 +1,226 @@
+// The color layer (palette, derived tokens and every --color-* role) is
+// @snaglet/theme's tokens.scss, generated from the default theme (Soft Pastel
+// Garden). Edit colors in packages/theme/src, then run
+// `pnpm --filter @snaglet/theme generate`. This file holds everything else.
+@use '@snaglet/theme/tokens.scss';
+
+:root {
+  // Typography
+  --font-body: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-code: var(--font-mono);
+
+  // Tracking scale. `wide` is the app's default label tracking; the two
+  // steps above it are the all-caps register (mono labels, section heads).
+  --letter-spacing-display: -0.01em;
+  --letter-spacing-tight: -0.005em;
+  --letter-spacing-snug: 0.02em;
+  --letter-spacing-normal: 0.03em;
+  --letter-spacing-wide: 0.04em;
+  --letter-spacing-wider: 0.06em;
+  --letter-spacing-widest: 0.08em;
+
+  // Type scale
+  // Autofit-text bounds. Mirrored in typeScale.ts TYPE_SCALE.
+  --type-hero-min: 18px;
+  --type-hero-max: 38px;
+  --type-title-min: 12px;
+  --type-title-max: 17px;
+  --type-header-min: 13px;
+  --type-header-max: 22px;
+
+  // Radii
+  // Soft, friendly corners. Working fields (inputs, textareas, date
+  // pickers) are rounded; cards and floating surfaces soften further.
+  // Dropdowns are the exception: a select field, its option menu and the
+  // option highlights inside it are square.
+  --radius-field: 8px;
+  --radius-dropdown: 0;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-button: 3px;
+  --radius-card: 6px;
+  --radius-overlay: 10px;
+  --radius-xl: 14px;
+  --radius-pill: 9999px;
+
+  // Spacing (mirrors abstracts/_spacing.scss $spacing-scale)
+  // Runtime vars for modules that can't @use the SCSS map.
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  // Dashboard density roles
+  --density-pane-pad-x: 12px;
+  --density-pane-pad-y: 10px;
+  --density-section-gap: 8px;
+  --density-card-pad: 8px;
+  --density-row-height: 24px;
+  --density-chrome-height: 30px;
+
+  // Fluid surface zoom
+  // Pane bodies and the workspace-tree sidebar render under CSS
+  // `zoom: clamp(min, width / full, 1)`, so everything inside shrinks
+  // together as the surface narrows. The rule lives on each surface
+  // (PaneChrome `.body > *`, WorkspaceTree `.shell > *`); these are its
+  // constants: the width rendered 1:1, the floor, and (for panes) how hard
+  // the zoom follows width. Mirrors typeScale.ts PANE_ZOOM / SIDEBAR_ZOOM.
+  --pane-zoom-full: 840px;
+  --pane-zoom-min: 0.75;
+  --pane-zoom-strength: 0.5;
+  --sidebar-zoom-full: 232px;
+  --sidebar-zoom-min: 0.75;
+
+  // Type scale
+  // Fixed px; the fluid zoom above scales them with the pane. Roles: text-base
+  // body, text-lg subheads, text-sm secondary/label, text-xs metadata,
+  // font-size-sm / -xs interactive controls.
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-lg: 16px;
+
+  // Edit these to resize every badge, every dense metadata line, and
+  // every view title in the app.
+  --text-3xs: 9px; // micro badge / status caption
+  --text-2xs: 10px; // dense metadata, mono meta lines
+  --text-md: 14px; // emphasized body / compact heading
+  --text-xl: 18px; // view title
+  --text-2xl: 20px; // page / empty-state heading
+
+  // Surface-scoped reading text
+  // Docs and the system-prompt editor read at a fixed size. Chat bodies
+  // default to the thread's Small size; a thread's Text size setting
+  // overrides --chat-text-base on its chat column (ChatView/threadTextSize.ts
+  // mirrors the 14px default). Markdown headings and tables size relative to
+  // these. The pane zoom still scales the result.
+  --doc-text-base: 15px; // doc view + editor body text
+  --chat-text-base: 14px; // chat message markdown body (a thread's Small size)
+  --sysprompt-text-base: 15px; // agent system-prompt ProseMirror
+
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-bold: 700;
+  --font-weight-medium: 500;
+  --leading-relaxed: 1.6;
+
+  // Chat message geometry
+  // Bubble padding, inter-message gap, bubble max-width and side gutters for
+  // the widest pane; the `@container pane` blocks at the end of this file step
+  // them as the pane narrows. Mirrors typeScale.ts PANE_MSG_STEPS. Used by
+  // MessageRow.module.scss and MessageList.module.scss.
+  --msg-pad-y: 8px;
+  --msg-pad-x: 10px;
+  --msg-gap: 5px;
+  --msg-max: 92%;
+  --msg-gutter-user: 18%;
+  --msg-gutter-agent: 6%;
+
+  // Motion
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 240ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  // Shadows
+  // The ink every cast shadow is mixed from, as a bare RGB triplet so call
+  // sites can pick their own alpha: `rgb(var(--shadow-color) / 0.08)`.
+  --shadow-color: 0 0 0;
+  --shadow-ink: color-mix(in srgb, var(--disabled) 55%, transparent);
+  --shadow-xs: 0 1px 0 color-mix(in srgb, var(--detail) 16%, transparent);
+  // Card and popover shadows are tinted with the default ink (#30392d) and
+  // deep sage (#526d47) rather than neutral black.
+  --shadow-sm: 0 2px 4px rgba(48, 57, 45, 0.08), 0 10px 26px rgba(82, 109, 71, 0.07);
+  --shadow-md: 0 4px 10px rgba(48, 57, 45, 0.1), 0 20px 52px rgba(82, 109, 71, 0.13);
+  --shadow-lg: 0 18px 42px color-mix(in srgb, var(--disabled) 46%, transparent);
+  --shadow-xl: 0 24px 60px color-mix(in srgb, var(--disabled) 52%, transparent);
+  --shadow-brand-glow: 0 0 0 2px var(--color-focus-ring), var(--shadow-sm);
+  --shadow-inset: inset 0 1px 3px color-mix(in srgb, var(--disabled) 7%, transparent);
+  --shadow-focus-ring: 0 0 0 2px var(--color-primary);
+
+  // Chips / pills
+  // Shared by the <Chip> component (.chip) and the node-ref pills
+  // (.md-chip) through the chip-* mixins in abstracts/_chips.scss. Edit
+  // these to retint every pill in the app at once.
+  --chip-radius: var(--radius-pill);
+  --chip-bg-tint: 12%; // rest-state fill: color-mix(accent X%, transparent)
+  --chip-border-tint: 40%; // rest-state border tint
+
+  // Scrollbars
+  // Every scroll container in the app paints from these three tokens via
+  // the `scrollbar-thin` mixin. Translucent (not solid) so a bar reads as
+  // part of the glass rather than a loud stripe; brightens on hover.
+  --scrollbar-size: 6px;
+  --scrollbar-thumb: color-mix(in srgb, var(--color-primary) 38%, transparent);
+  --scrollbar-thumb-hover: var(--color-primary);
+
+  --paper-grain-opacity: 0.18;
+  --radius-scale: 1;
+}
+
+body {
+  background-color: var(--color-disabled);
+  color: var(--color-text);
+}
+
+// Pane-responsive chat geometry
+// Every pane body is the `pane` container (`.pane-body`). Zoom only scales,
+// so these blocks also change proportions in a narrow pane by redefining the
+// `--msg-*` tokens from the pane's own width. Portaled surfaces and the
+// sidebar render outside `.pane-body` and keep the `:root` defaults. Exact
+// steps (not clamp) so they mirror typeScale.ts PANE_MSG_STEPS; ordered
+// widest-first so the narrowest matching block wins.
+@container pane (inline-size < 600px) {
+  .pane-body > * {
+    --msg-pad-y: 7px;
+    --msg-pad-x: 9px;
+    --msg-gap: 5px;
+    --msg-max: 94%;
+    --msg-gutter-user: 14%;
+    --msg-gutter-agent: 5%;
+  }
+}
+@container pane (inline-size < 460px) {
+  .pane-body > * {
+    --msg-pad-y: 6px;
+    --msg-pad-x: 8px;
+    --msg-gap: 4px;
+    --msg-max: 96%;
+    --msg-gutter-user: 10%;
+    --msg-gutter-agent: 5%;
+  }
+}
+@container pane (inline-size < 340px) {
+  .pane-body > * {
+    --msg-pad-y: 5px;
+    --msg-pad-x: 6px;
+    --msg-gap: 4px;
+    --msg-max: 98%;
+    --msg-gutter-user: 6%;
+    --msg-gutter-agent: 4%;
+  }
+}
+@container pane (inline-size < 260px) {
+  .pane-body > * {
+    --msg-pad-y: 4px;
+    --msg-pad-x: 5px;
+    --msg-gap: 3px;
+    --msg-max: 100%;
+    --msg-gutter-user: 4%;
+    --msg-gutter-agent: 3%;
+  }
+}

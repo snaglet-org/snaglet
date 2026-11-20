@@ -1,0 +1,282 @@
+@use '../../../styles/abstracts' as *;
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  // No explicit height: `height: 100%` resolves to `auto` in max-height
+  // clamped hosts and lets the editor grow past the clamp. Flex grow/stretch
+  // sizes it in every host.
+  gap: 6px;
+}
+
+// Editor body: the whole box is a click target with a hairline border.
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  // `--color-popover` sets the editor apart from the card behind it; the
+  // inset shadow makes it read as a recessed input well.
+  background: var(--color-popover);
+  border: 1px solid var(--color-border-subtle, var(--color-border));
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-inset);
+  // Clip the chip-bar's bled-out corners to the body's rounded edges so
+  // the rail reads as flush instead of sticking out past the border.
+  overflow: hidden;
+  cursor: text;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  // Subtle border tint on hover so the field reads as interactive without a
+  // heavy ring at rest.
+  &:hover {
+    border-color: var(--color-primary-border, var(--color-text-muted));
+  }
+
+  // The brand color appears only on focus.
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-focus-ring);
+  }
+
+  // Real click targets inside the body keep pointer cursor.
+  button,
+  a,
+  [role='button'],
+  :global(.md-chip),
+  :global(.md-chip-toggle) {
+    cursor: pointer;
+  }
+
+  // Top rail (caller status, edit/preview toggle): quiet right-aligned
+  // pills with no band, scrolling sideways in a narrow editor. Matched by
+  // substring because ChipEditableInput's module hashes the class name;
+  // scoped under `.body` so standalone ChipEditableInputs are unaffected.
+  [class*='modeRow'] {
+    padding: 5px 6px 0;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+
+    // Same alignment behavior as ChipEditableInput's own `.modeRow`:
+    // right-aligned at rest, left-origin scroll when the pills overflow.
+    > :first-child {
+      margin-left: auto;
+    }
+
+    > * {
+      flex: 0 0 auto;
+    }
+
+    // Thin scrollbar, shown only when the row overflows.
+    @include layout-scrollbar-thin($axis: x, $size: 4px, $native: false);
+  }
+}
+
+// Explicit Save bar (saveMode="manual")
+.saveBar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 24px;
+}
+
+.saveStatus {
+  margin-right: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--color-text-muted);
+
+  &[data-state='dirty'] {
+    color: var(--color-text);
+  }
+
+  &[data-state='error'] {
+    color: var(--color-danger, var(--color-text));
+  }
+}
+
+// Raw markdown (source) mode
+// Mirrors ChipEditableInput's `.previewHost` layout so the toggle row pins
+// to the top and the textarea claims the remaining flex slot + scrolls.
+.sourceHost {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+// Source-mode toolbar row. Named `modeRow` so the `.body [class*='modeRow']`
+// rule above styles it like the rich editor's mode row.
+.modeRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+// Raw markdown with live-preview styling (SourceMarkdownArea): a styled copy
+// of the text is drawn behind the textarea, whose own glyphs are
+// transparent. Both layers share every metric below, and the styles keep
+// glyph widths (one monospace face, weights only), so the layers line up.
+%sourceText {
+  margin: 0;
+  padding: 8px 10px;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  letter-spacing: normal;
+  tab-size: 2;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.sourceStack {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+.sourceBackdrop {
+  @extend %sourceText;
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  // Copies the textarea's scrollTop on every scroll, so it must land at
+  // once: the app-wide smooth scroll-behavior would leave the styled text
+  // behind (in Chromium it never catches up).
+  scroll-behavior: auto;
+  pointer-events: none;
+  color: var(--color-text);
+
+  // The heading line an outline jump landed on.
+  [data-line-flash] {
+    @include theme-line-flash;
+  }
+}
+
+// Plain markdown textarea. No chrome of its own: `.body` owns the border,
+// focus ring and background.
+.sourceArea {
+  @extend %sourceText;
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--color-text);
+  overflow-y: auto;
+  outline: none;
+
+  &::selection {
+    background: color-mix(in srgb, var(--color-primary) 28%, transparent);
+    color: transparent;
+  }
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+// Live-preview styles. Markers (#, -, >, **, ```) stay visible but quiet.
+.hlMarker {
+  color: var(--text-muted);
+}
+
+.hlHeading {
+  font-weight: 600;
+
+  &[data-level='1'],
+  &[data-level='2'] {
+    font-weight: 700;
+  }
+
+  &[data-level='1'] {
+    color: var(--color-primary);
+  }
+
+  &[data-level='1'],
+  &[data-level='2'],
+  &[data-level='3'] {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 30%, transparent);
+    text-underline-offset: 4px;
+  }
+
+  &[data-level='4'],
+  &[data-level='5'],
+  &[data-level='6'] {
+    color: color-mix(in srgb, var(--color-text) 80%, transparent);
+  }
+}
+
+.hlList > .hlMarker:first-child {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.hlQuote {
+  font-style: italic;
+  color: color-mix(in srgb, var(--color-text) 75%, transparent);
+}
+
+.hlBold {
+  font-weight: 700;
+}
+
+.hlItalic {
+  font-style: italic;
+}
+
+.hlStrike {
+  text-decoration: line-through;
+}
+
+.hlCode,
+.hlCodeLine {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.hlFence,
+.hlRule {
+  color: var(--text-muted);
+}
+
+.hlLink {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.hlUrl {
+  color: var(--text-muted);
+}

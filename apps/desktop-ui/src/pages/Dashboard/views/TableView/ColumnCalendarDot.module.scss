@@ -1,0 +1,10 @@
+@use '../../../../features/calendar/calendarShared' as cal;
+
+.dot {
+  @include cal.calendar-color-tokens;
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--cal-accent);
+}

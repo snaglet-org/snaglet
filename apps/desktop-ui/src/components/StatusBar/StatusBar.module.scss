@@ -1,0 +1,271 @@
+@use '../../styles/abstracts' as *;
+
+// Status bar — a thin, quiet strip anchored below every pane. Token-
+// driven so it tracks light + dark. It must never compete with the
+// content above it: minimal height, muted panel background, xs text.
+
+.bar {
+  grid-column: 1 / -1; // span the sidebar + main columns
+  grid-row: 2; // the shell's second (auto-height) row, below all panes
+  display: flex;
+  align-items: stretch;
+  gap: space(2);
+  min-height: 24px;
+  padding: 0 space(2);
+  background: var(--color-status-bar);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs, 11px);
+  line-height: 1;
+  user-select: none;
+  // Too narrow for every slot: items keep their natural width and the bar
+  // scrolls sideways instead of squeezing items on top of each other.
+  // Popovers are fixed-positioned (items.tsx) so this clip can't cut them.
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  // Above pane content so popovers/edges sit over panes, but well below
+  // modals + the WS status badge (z 9999).
+  z-index: 60;
+}
+
+.zone {
+  display: flex;
+  align-items: center;
+  gap: space(2);
+  // Zones and their items never shrink below their content: when space
+  // runs out the bar scrolls (see .bar) rather than overlapping slots.
+  flex-shrink: 0;
+
+  > * {
+    flex-shrink: 0;
+  }
+}
+
+// left + right share the spare space equally so `center` stays visually
+// centered while there is room; with no room they sit at content width.
+.left {
+  flex: 1 0 auto;
+  justify-content: flex-start;
+}
+
+.center {
+  flex: 0 0 auto;
+  justify-content: center;
+}
+
+.right {
+  flex: 1 0 auto;
+  justify-content: flex-end;
+}
+
+// Shared bits
+.icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.label {
+  white-space: nowrap;
+}
+
+.text {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  min-width: 0;
+}
+
+// Toggle / menu trigger
+.anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  height: 18px;
+  padding: 0 space(1);
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--font-size-xs, 11px);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  // Pressed/open state stays monochrome — the status bar is quiet chrome;
+  // a primary-tinted press reads as an alert rather than an open toggle.
+  &.triggerActive {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+}
+
+.caret {
+  font-size: 8px;
+  opacity: 0.6;
+}
+
+// Popover (opens above the bar)
+// Fixed, placed from the trigger's rect by items.tsx, so the bar's
+// horizontal scroll clip never cuts it off. Its max-height is the window,
+// so it scrolls only when it is taller than that.
+.popover {
+  position: fixed;
+  z-index: 70;
+  box-sizing: border-box;
+  min-width: min(160px, calc(window-vw(100) - 8px));
+  max-width: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: space(2);
+  background: var(--color-surface-raised, var(--color-foreground));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-overlay, 10px);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text);
+  font-size: var(--font-size-sm, 12px);
+
+  // Focus lands on the card itself when it opens from the keyboard; the
+  // controls inside carry the ring once Tab reaches them.
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.menu {
+  padding: space(1);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.menuAction {
+  display: flex;
+  align-items: center;
+  gap: space(2);
+  width: 100%;
+  padding: space(1) space(2);
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+  }
+
+  &:disabled {
+    color: var(--color-text-disabled);
+    cursor: default;
+  }
+}
+
+@media (max-width: 640px) {
+  .bar {
+    gap: space(1);
+    padding-inline: space(1);
+    overflow-x: auto;
+  }
+
+  .left,
+  .right {
+    flex: 0 0 auto;
+  }
+
+  .center {
+    display: none;
+  }
+
+  .right {
+    margin-left: auto;
+  }
+}
+
+// Alert badge (ephemeral)
+.alert {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  padding: 1px space(2);
+  border-radius: var(--radius-pill, 999px);
+  font-size: var(--font-size-xs, 11px);
+  animation: statusbar-alert-in 160ms ease-out;
+}
+
+@keyframes statusbar-alert-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Tones — quiet by default; color tokens for the rest
+.toneNeutral {
+  color: var(--color-text);
+}
+
+.toneMuted {
+  color: var(--color-text-muted);
+}
+
+.tonePrimary {
+  color: var(--color-primary);
+}
+
+.toneSuccess {
+  color: var(--color-success);
+}
+
+.toneWarning {
+  color: var(--color-warning);
+}
+
+.toneError {
+  color: var(--color-error);
+}
+
+.toneInfo {
+  color: var(--color-info);
+}
+
+// Alert badges get a tinted background per tone (not just colored text).
+.alert.toneSuccess {
+  background: var(--color-success-bg, transparent);
+  border: 1px solid var(--color-success-border, transparent);
+}
+
+.alert.toneWarning {
+  background: var(--color-warning-bg, transparent);
+  border: 1px solid var(--color-warning-border, transparent);
+}
+
+.alert.toneError {
+  background: var(--color-error-bg, transparent);
+  border: 1px solid var(--color-error-border, transparent);
+}
+
+.alert.toneInfo {
+  background: var(--color-info-bg, transparent);
+  border: 1px solid var(--color-info-border, transparent);
+}

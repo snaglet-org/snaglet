@@ -1,0 +1,117 @@
+@use '../../styles/abstracts' as *;
+
+.toggle {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  border-radius: 0;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    color: var(--color-text);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  @include focus-ring;
+}
+
+.toggle[data-size='xs'] {
+  gap: 4px;
+  padding: 1px 6px;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.toggle[data-size='sm'] {
+  gap: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.toggle[data-chrome='bordered'] {
+  background: var(--color-popover);
+  border: 1px solid var(--color-border);
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+    border-color: var(--color-border);
+  }
+}
+
+.toggle[data-chrome='plain'] {
+  background: transparent;
+  border: none;
+
+  &:hover:not(:disabled) {
+    background: transparent;
+  }
+}
+
+// Canonical compact toolbar toggle — one shared surface for the chat
+// render-mode (`md / txt`) and doc source (`rich / md`) controls so both
+// read as the same widget. Mirrors the Properties-header control treatment
+// (DetailRouter `.docHeaderControl`) by sharing the `doc-header-pill` mixin
+// (styles/abstracts/_controls.scss): field-tinted pill, muted labels, active
+// side lit by the selected surface. The mixin's box metrics are self-contained
+// so it doesn't depend on the size preset; the doubled selector wins over the
+// `[data-size]` padding. Only `text-transform` is toggle-specific here.
+.toggle[data-chrome='pill'][data-chrome='pill'] {
+  @include doc-header-pill;
+  text-transform: none;
+}
+
+.toggle[data-font='inherit'] {
+  font-family: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+
+.toggle[data-font='mono'] {
+  font-family: var(--font-mono);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+// Either label. The idle one inherits the toggle's muted ink.
+.side {
+  color: inherit;
+}
+
+.active {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.slash {
+  color: var(--color-text-disabled);
+  opacity: 0.75;
+  user-select: none;
+}
+
+// A pill lit with the Selected surface (pressed, or held down) inks its
+// labels with the on-Selected roles: the plain accent and disabled inks read
+// at 1.3:1 and 2:1 on Selected. The idle side and the slash go muted, the
+// active side keeps its weight and takes the on-Selected accent.
+.toggle[data-chrome='pill'][aria-pressed='true']:not(:disabled),
+.toggle[data-chrome='pill']:active:not(:disabled) {
+  .side,
+  .slash {
+    color: var(--color-on-selected-muted);
+  }
+
+  .active {
+    color: var(--color-primary-on-selected);
+  }
+}

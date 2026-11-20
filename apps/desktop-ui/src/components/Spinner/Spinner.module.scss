@@ -1,0 +1,91 @@
+// Shared spinner primitive — replaces 4 hand-rolled implementations.
+// Variants:
+//   border (default) — minimal CSS ring for inline status indicators.
+//   svg              — SVG stroke-dash spinner used inside Button.
+
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.border {
+  border-style: solid;
+  border-radius: 50%;
+  border-color: var(--spinner-track, var(--color-border, currentColor));
+  border-top-color: var(--spinner-accent, var(--color-text-muted, currentColor));
+  animation: spinner-rotate 0.7s linear infinite;
+}
+
+.svg {
+  // SVG arc rotates as a whole; tone controls color via currentColor.
+  svg {
+    animation: spinner-rotate 0.7s linear infinite;
+    display: block;
+  }
+}
+
+.size-xs {
+  width: 12px;
+  height: 12px;
+  &.border {
+    border-width: 2px;
+  }
+}
+.size-sm {
+  width: 14px;
+  height: 14px;
+  &.border {
+    border-width: 2px;
+  }
+}
+.size-md {
+  width: 18px;
+  height: 18px;
+  &.border {
+    border-width: 2px;
+  }
+}
+.size-lg {
+  width: 24px;
+  height: 24px;
+  &.border {
+    border-width: 3px;
+  }
+}
+.size-xl {
+  width: 36px;
+  height: 36px;
+  &.border {
+    border-width: 3px;
+  }
+}
+
+.tone-default {
+  --spinner-track: var(--color-border);
+  --spinner-accent: var(--color-text-muted);
+}
+
+.tone-muted {
+  --spinner-track: var(--color-border);
+  --spinner-accent: var(--color-text-disabled);
+}
+
+.tone-accent {
+  --spinner-track: var(--color-border);
+  --spinner-accent: var(--color-primary);
+}
+
+.tone-currentColor {
+  --spinner-track: color-mix(in srgb, var(--text) 35%, transparent);
+  --spinner-accent: currentColor;
+  color: inherit;
+}
+
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}

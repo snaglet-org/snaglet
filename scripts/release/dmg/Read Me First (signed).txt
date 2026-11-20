@@ -1,0 +1,37 @@
+Snaglet for macOS — please read this first
+=====================================
+
+
+1. INSTALL Snaglet — drag it to Applications
+---------------------------------------
+
+In the window that opened, drag the Snaglet icon onto the Applications
+folder next to it. Then eject "Snaglet" from the sidebar of a Finder
+window, and open Snaglet from your Applications folder.
+
+Please don't run Snaglet straight from this disk image. macOS runs apps
+opened from a disk image out of a temporary, read-only copy, so Snaglet
+would stop working the moment you eject it. Snaglet detects this and
+will tell you to move it, rather than failing in a confusing way.
+
+This build is signed and notarized by Apple, so it opens normally —
+no security warnings to click through.
+
+
+2. WHAT HAPPENS ON FIRST RUN
+-----------------------------
+
+Snaglet keeps everything on your own Mac, in a folder called ".snaglet" in your
+home directory: its database, its logs, and your settings. There is no
+Snaglet account, no Snaglet server and no telemetry. What you send to agents goes
+to the model providers you connect. The very first launch takes a
+little longer than usual because Snaglet sets up its local PostgreSQL
+database, and it downloads its search model (about 137 MB) in the
+background.
+
+Snaglet requires macOS 14 (Sonoma) or later on Apple Silicon.
+
+
+Questions or trouble
+--------------------
+https://github.com/snaglet-org/snaglet/issues

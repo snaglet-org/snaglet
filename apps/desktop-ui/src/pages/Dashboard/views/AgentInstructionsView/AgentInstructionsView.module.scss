@@ -1,0 +1,84 @@
+@use '../../../../styles/abstracts' as *;
+@use '../../styles/dashboard' as dash;
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  overflow: hidden;
+}
+
+.body {
+  flex: 1;
+  overflow: auto;
+  padding: 28px 32px 40px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  box-sizing: border-box;
+}
+
+.header {
+  @include dash.theme-card;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.glyph {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-bg);
+  border: 1px solid var(--color-primary-border);
+  color: var(--color-primary-on-selected);
+  font-size: var(--text-xl);
+  flex-shrink: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.statusText {
+  @include theme-mono-label;
+  color: var(--color-text-muted);
+}
+
+.errorBanner {
+  @include dash.theme-error-banner;
+}

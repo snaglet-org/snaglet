@@ -1,0 +1,182 @@
+@use '../../styles/abstracts' as *;
+
+// Shared layout primitives — the app's one spacing/rhythm grammar, built on
+// the `--space-*` token scale. Every pane composes these instead of hand-rolling
+// flex + padding in its own module, so surfaces stay visually continuous.
+
+// Stack — vertical rhythm. `--gap` is set inline from a space token.
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap, var(--space-4));
+  min-width: 0;
+
+  &[data-align='start'] {
+    align-items: flex-start;
+  }
+  &[data-align='center'] {
+    align-items: center;
+  }
+  &[data-align='end'] {
+    align-items: flex-end;
+  }
+}
+
+// Cluster — horizontal group that wraps (button rows, chip rows, toolbars).
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap, var(--space-2));
+  min-width: 0;
+
+  &[data-align='start'] {
+    align-items: flex-start;
+  }
+  &[data-align='baseline'] {
+    align-items: baseline;
+  }
+  &[data-justify='between'] {
+    justify-content: space-between;
+  }
+  &[data-justify='end'] {
+    justify-content: flex-end;
+  }
+  &[data-nowrap='true'] {
+    flex-wrap: nowrap;
+  }
+}
+
+// Section — a small mono label + content, framed as a raised panel with an
+// outset bevel so every labeled block reads as a physical card.
+.section {
+  // Themed face with an outset bevel (light top/left, shaded bottom/right) on
+  // the theme border color. `--raised` / `--button-bevel-edge` are bound
+  // locally so the shared button-outset bevel resolves here, as on Button.
+  --raised: var(--color-surface-raised);
+  --button-bevel-edge: var(--color-border-strong);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap, var(--space-2));
+  min-width: 0;
+
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-3);
+  @include button-outset;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.sectionLabel {
+  @include theme-mono-label;
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+// Leaf-toggle settings card. It shares Section's raised surface but keeps the
+// compact header visible while mounting the heavier editor/diagnostic body
+// only on demand.
+.disclosureSection {
+  gap: 0;
+  padding: 0;
+  container-type: inline-size;
+}
+
+.disclosureHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 38px;
+  padding: var(--space-2) var(--space-3);
+}
+
+.disclosureToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+
+  @include focus-ring;
+
+  &:hover .disclosureLeaf {
+    color: var(--color-primary);
+  }
+}
+
+.disclosureLeaf {
+  @include theme-disclosure-leaf;
+}
+
+.disclosureLabel {
+  @include theme-mono-label;
+  flex-shrink: 0;
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.disclosureSummary {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 400;
+  letter-spacing: var(--letter-spacing-normal);
+  text-overflow: ellipsis;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.disclosureActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.disclosurePreview {
+  min-width: 0;
+  padding: 0 var(--space-3) var(--space-3);
+}
+
+.disclosureBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 48%, transparent);
+}
+
+@container (max-width: 360px) {
+  .disclosureHead {
+    flex-wrap: wrap;
+  }
+
+  .disclosureToggle {
+    flex-basis: calc(100% - 88px);
+  }
+
+  .disclosureSummary {
+    flex-basis: 100%;
+  }
+}

@@ -1,0 +1,1088 @@
+@use '../../../../../styles/abstracts' as *;
+
+@use '../../../styles/dashboard' as dash;
+
+// Settings surface — sidebar (sections) + body (active section's form).
+// Slots into the same vertical flex column the chat does inside .frame.
+
+.root {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  background: var(--color-foreground);
+  font-family: var(--font-mono);
+  color: var(--color-text);
+  overflow: hidden;
+}
+
+// Narrow pane (driven by useElementWidth in ChatSettings): stack the
+// tab strip on top of the body instead of beside it.
+.rootCompact {
+  flex-direction: column;
+}
+
+// Container chrome only — the navItem geometry + left-rail accent
+// ship from <Tabs orientation="vertical" size="sm">.
+.sidebar {
+  flex: 0 0 132px;
+  min-width: 0;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-hover);
+  padding: 6px 0;
+  gap: 1px;
+}
+
+// Compact: the Tabs primitive is rendered horizontal, so it already lays
+// the tabs in a row with a bottom line and scrolls them sideways when they
+// don't fit. Here we just make the strip full width and drop the vertical
+// rail's right border and side padding.
+.sidebarHorizontal {
+  flex: 0 0 auto;
+  width: 100%;
+  border-right: none;
+  padding: 0 6px;
+  gap: 2px;
+}
+
+// Body — scrollable on its own so the sidebar stays pinned.
+.body {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: var(--space-3);
+}
+
+// Column beside the tabs (below them when compact): the optional
+// "Open in sidebar" row, then the scrolling body.
+.main {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+// "Open in sidebar" row above the body; same side gutter as the body.
+.openInSidebarRow {
+  flex: none;
+  display: flex;
+  padding: var(--space-2) var(--space-3) 0;
+}
+
+// Tighter gutters for the form sections once the pane is narrow.
+.bodyCompact {
+  padding: var(--space-2);
+}
+
+// The hosted Trim view brings its own panel gutters and fills the body.
+.bodyFlush {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+// Narrow settings column — the Context / Routing panes are one Stack of
+// Sections (label + content, no boxes). This only caps the measure so prose
+// and inputs stay readable when the pane is dragged wide; the Stack owns the
+// vertical rhythm via its tokenized gap.
+.pane {
+  width: 100%;
+  max-width: 620px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+// Agents pane keeps a bespoke full-height frame (toolbar + body), so it still
+// composes this base rather than a plain Stack.
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 620px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+// Intro prose sitting above the first Section in a pane.
+.sectionDescription {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  color: var(--color-text-muted);
+
+  em {
+    font-style: italic;
+    color: var(--color-text-muted);
+  }
+}
+
+.labelWithHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+// General → Text size: the four sizes fill the row, and in a narrow settings
+// column (the sidebar goes down to 220px) the options wrap onto a second row
+// instead of being clipped by the group's `overflow: hidden`. The dividers
+// come from a 1px gap over a border-colored group, so they draw between
+// options and between rows alike. The doubled class beats the Segmented
+// module's `.option + .option` divider whatever the bundle order.
+.textSizeGroup.textSizeGroup {
+  flex-wrap: wrap;
+  gap: 1px;
+  background: var(--color-border);
+
+  > [role='radio'] {
+    flex: 1 1 auto;
+    border-left: none;
+  }
+}
+
+.maintenanceSummary,
+.maintenanceResult {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.maintenanceResult {
+  color: var(--color-success);
+}
+
+.dangerZone {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-error-border, var(--color-border));
+}
+
+.contextTrimNotice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-left: 2px solid var(--color-warning);
+  background: var(--color-field);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+// Fixed-height flex column so WorkspaceEditor's root (`flex: 1 1 auto;
+// min-height: 0`) fills it. Layout only: the editor draws its own well and
+// its Save bar sits on the card, so a background or border here would band
+// the Save bar; no overflow clip, so the well's focus ring stays visible.
+.editorHost {
+  display: flex;
+  flex-direction: column;
+  height: 220px;
+}
+
+.editorPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+// Applied to the editor's contenteditable via `bodyClassName`. It must fill
+// the well so clicks and chip drops anywhere in it reach the editor.
+// Padding, type and scrolling only: the well paints the background and its
+// inset shadow, and a color here would cover both.
+.editorBody {
+  width: 100%;
+  height: 100%;
+  padding: 9px 10px;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  outline: none;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+// Save/idle status line at the foot of a pane (e.g. Routing's "Up to date").
+.statusText {
+  font-size: var(--text-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.error {
+  @include dash.theme-error-banner;
+}
+
+// Routing section
+// The radio cards come from <Radio> + <RadioGroup>; only the loading
+// placeholder and a layout hook live here.
+
+.routingOptions {
+  // Layout hook only — RadioGroup ships gap/border via the primitive.
+}
+
+.routingPlaceholder {
+  padding: 12px 10px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+// Dispatches section
+
+// Sizing only — chrome (border/background/focus/disabled) ships from the
+// canonical TextInput container. This just fixes the field width.
+.dispatchesInput {
+  width: 132px;
+}
+
+// "Infinite" toggle — sits inline next to the number input. Functionally
+// a checkbox (binary toggle), styled to fit the same vocabulary as the
+// other settings widgets.
+.dispatchesInfiniteLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  user-select: none;
+
+  &:has(input:disabled) {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+// Agents section (two-pane: sub-sidebar + details)
+
+// Override the `.section` defaults so the agents body can stretch
+// edge-to-edge instead of inheriting the standard section padding —
+// the sub-sidebar / detail panel each manage their own padding.
+.agentsSection {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  // The other sections cap at 680px because their inputs read better
+  // narrow. Agents is a three-pane layout (picker + detail + memories),
+  // so we let it expand to the full body width — otherwise the detail
+  // column (squeezed between two fixed-width rails) ends up at ~140px
+  // and the form fields look squished.
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+}
+
+.agentsLayout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+// Topbar. Stacks the selected-agent
+// row over the Settings / Memories / Summaries tab strip. The agent picker
+// is an absolute popover anchored to the selected-agent row, so the body
+// below reclaims the full pane height for detail + memories.
+.agentsToolbar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-foreground);
+  flex-shrink: 0;
+}
+
+.agentsSelectorLabel {
+  @include theme-mono-label(wide);
+  color: var(--color-text-muted);
+}
+
+// Selected-agent row — avatar + name/role block acts as a dropdown trigger.
+// `position: relative` so the picker popover anchors to this row.
+.agentsSelectedRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+// Agent dropdown trigger — one bounded, select-like field holding avatar,
+// name, role, and the leaf caret, so the caret sits beside the name rather
+// than at the far edge of a wide pane. Field chrome matches the shared
+// <Select> (square, like every dropdown) so it reads as "pick one" at rest,
+// not only on hover.
+$agents-selector-max-w: 320px;
+
+.agentsDropdownTrigger {
+  flex: 0 1 $agents-selector-max-w;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--color-text);
+  text-align: left;
+  @include field-shell(
+    $interaction: native,
+    $background-property: background-color,
+    $radius: var(--radius-dropdown)
+  );
+
+  .agentsListItemBody {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.agentsAddBtn {
+  flex: 0 0 auto;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.agentsDropdownTriggerOpen {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface-raised);
+}
+
+// Static agent card — a home thread / DM holds a single agent, so the card
+// never switches. Same avatar + name + role layout and footprint as the
+// dropdown trigger (square corners included), but no caret, no hover/pressed
+// treatment, no cursor.
+.agentsStaticCard {
+  flex: 0 1 $agents-selector-max-w;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  font-family: inherit;
+  color: var(--color-text);
+  text-align: left;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-dropdown);
+  background-color: var(--color-field);
+
+  .agentsListItemBody {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+// Shared leaf caret, oriented like <Select>'s: tip down at rest, up while
+// the list is open.
+.agentsDropdownChevron {
+  flex-shrink: 0;
+  width: 11px;
+  height: 11px;
+  color: var(--color-text-muted);
+  transform: rotate(180deg);
+  transition:
+    transform var(--transition-fast),
+    color var(--transition-fast);
+
+  &[data-open='true'] {
+    transform: rotate(0deg);
+  }
+
+  .agentsDropdownTrigger:hover &,
+  .agentsDropdownTrigger:focus-visible &,
+  &[data-open='true'] {
+    color: var(--color-primary);
+  }
+}
+
+// Change / swap button — quiet mono HUD affordance that opens the picker.
+.agentsSwapBtn {
+  flex-shrink: 0;
+  @include theme-mono-label(wide);
+  border-color: var(--color-border);
+
+  &[aria-expanded='true'] {
+    background: var(--color-selected);
+    border-color: var(--color-primary);
+    @include theme-on-selected;
+  }
+}
+
+// Tab strip — Settings / Memories / Summaries. Switches the body between
+// the detail form (Settings) and a full scrollable list. Sits on its own
+// row beneath the selected-agent row; wraps as more tabs are added.
+.agentsContextNav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+// Each nav button: mono-uppercase HUD voice + visible-border-at-rest on
+// <Button variant="ghost" size="sm">. The pressed look is the Button's own
+// aria-pressed state (Selected fill, on-Selected text), set from the active
+// `contextView` in the consumer, so the active list reads as "selected".
+.agentsContextNavBtn {
+  flex-shrink: 0;
+  @include theme-mono-label(wide);
+  border-color: var(--color-border);
+}
+
+// Proposals waiting on you, counted on the Memories tab (they are listed at
+// the top of its list).
+.agentsContextNavCount {
+  margin-left: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground, var(--color-background));
+  font-size: var(--text-2xs);
+  line-height: 1;
+}
+
+// Picker popover — anchored to the selected-agent row it drops from, so
+// it reads as one control with the Change trigger. A high z-index floats
+// it above the tab strip and the body below (both unpositioned), so it
+// never renders behind the Settings / Memories / Summaries tabs.
+.agentsPicker {
+  position: absolute;
+  left: 0;
+  width: min(#{$agents-selector-max-w}, 100%);
+  top: calc(100% + 4px);
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  overflow: hidden;
+  background: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--disabled) 20%, transparent);
+  z-index: 40;
+}
+
+// Search field pinned to the top of the popover; the list scrolls beneath.
+.agentsPickerSearch {
+  padding: 6px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.agentsPickerList {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.agentsPickerEmpty {
+  padding: 10px 8px;
+  text-align: center;
+  font-size: var(--text-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+// Body underneath the toolbar — holds exactly one of: the agent detail
+// form, or a full-width context list (memories / summaries). The toolbar
+// nav switches between them.
+.agentsBody {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+// Sits between the toolbar and the memories list: exports every memory this
+// agent holds, which is a wider scope than the thread-scoped list below it.
+.agentsExportRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.agentsListItem {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--color-text);
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--color-primary, var(--color-primary));
+  }
+}
+
+.agentsListItemActive {
+  background: var(--color-selected);
+  @include theme-on-selected;
+  box-shadow: inset 3px 0 0 var(--color-primary, var(--color-primary));
+
+  &:hover {
+    background: var(--color-selected);
+  }
+}
+
+.agentsListItemAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-selected);
+  color: var(--color-primary-on-selected);
+  font-family: var(--font-display);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-snug);
+  flex-shrink: 0;
+}
+
+.agentsListItemBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.agentsListItemName {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  @include layout-truncate;
+  letter-spacing: var(--letter-spacing-tight, 0);
+}
+
+.agentsListItemRole {
+  @include theme-mono-label;
+  // Micro mono HUD label at the small floor — kept fixed (exempt).
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  @include layout-truncate;
+}
+
+.agentsDetail {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: var(--space-3);
+}
+
+// Narrow pane: tighten the generous wide-pane gutters on the detail form.
+.agentsDetailCompact {
+  padding: var(--space-2);
+}
+
+// Context list — full-width view that replaces the detail form when a
+// Memories / Summaries nav button is active. Fills the body; the inner
+// list caps its own width for readability on wide panes.
+.agentsMemoriesPanel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--color-foreground);
+}
+
+.agentsMemoriesBody {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  overflow-y: auto;
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  @include layout-scrollbar-thin;
+}
+
+.agentsMemoryRow {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 7px 8px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  cursor: grab;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-primary-border);
+    background: var(--color-background);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// Brief highlight pulse when the row was scrolled into view by a
+// deep-link from the WorkspaceTree (memory / summary leaf click). The
+// class is added by the panel's scroll-to-focus effect and removed
+// ~1.6s later; the animation fades out the brand border so the user's
+// eye lands on the right row without a sticky highlight after.
+@keyframes agentsMemoryRowFlash {
+  0% {
+    border-color: var(--color-primary, var(--color-primary));
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--color-primary, var(--color-primary)) 35%, transparent);
+  }
+  100% {
+    border-color: var(--color-border);
+    box-shadow: none;
+  }
+}
+
+.agentsMemoryRowFlash {
+  animation: agentsMemoryRowFlash 1600ms ease-out;
+}
+
+// A key can be long ("user.learning.history.module5.compact-caught-up").
+// It breaks after its dots (<wbr>, memoryKeyWithBreaks) and at hyphens, and
+// inside any segment too long for the line, so it never runs past the card
+// or under its buttons.
+.agentsMemoryKey {
+  @include theme-mono-label;
+  font-size: var(--text-2xs);
+  color: var(--color-primary, var(--color-primary));
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+// A saved card's key, with the "About you" marker beside it on a fact about
+// the person that they kept.
+.agentsMemoryKeyRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.agentsMemoryAboutYou {
+  padding: 0 5px;
+  border: 1px solid var(--color-border-strong, var(--color-border));
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.agentsMemoryContent {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  color: var(--color-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  // Cap individual memories so a giant blob doesn't blow the panel up;
+  // the row still scrolls horizontally if needed and the full content
+  // shows on hover via the row's `title` attribute.
+  display: -webkit-box;
+  -webkit-line-clamp: 8;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.agentsMemoryMeta {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+// A saved memory: the card (itself a button that opens the preview) with its
+// delete button floating at the top right as a sibling. The button stays in
+// the tab order but only shows while the card is hovered or anything in it
+// has focus, like the agent page's Memories tab.
+.agentsMemoryItem {
+  position: relative;
+
+  .agentsMemoryRow {
+    padding-right: 34px; // room for the delete button
+  }
+}
+
+.agentsMemoryDelete {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+
+  .agentsMemoryItem:hover &,
+  .agentsMemoryItem:focus-within & {
+    opacity: 1;
+  }
+
+  // Touch has no hover: always show it.
+  @media (hover: none) {
+    opacity: 1;
+  }
+}
+
+// Small muted label over each group of the Memories list ("Proposed (2)",
+// "Saved"); only drawn when there are proposals to separate.
+.agentsMemoryGroupHeading {
+  margin: 0;
+  padding: 2px 2px 0;
+  @include theme-mono-label(wide);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+// Proposals sit above the saved memories, set apart by a rule beneath.
+.agentsProposedGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 10px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.agentsProposedHint {
+  padding: 0 2px;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+// A proposal reads as pending: dashed border, faint primary tint, and its
+// keep / remove controls always visible (a saved card's trash only shows on
+// hover), so the two are never mistaken for each other.
+.agentsProposedRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 8px;
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-background));
+  border: 1px dashed var(--color-primary-border, var(--color-border-strong));
+}
+
+.agentsProposedText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.agentsProposedActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.agentsProposedKeep,
+.agentsProposedRemove {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 1px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+}
+
+.agentsProposedKeep {
+  color: var(--color-primary);
+  border-color: var(--color-primary-border, var(--color-border));
+
+  &:hover {
+    border-color: var(--color-primary);
+    background: var(--color-hover);
+  }
+}
+
+.agentsProposedRemove:hover {
+  color: var(--color-error, var(--color-text));
+  border-color: var(--color-error, var(--color-border));
+}
+
+.agentsMemoriesHint {
+  padding: 8px 4px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
+.agentsMemoryPreviewTitle {
+  @include theme-mono-label;
+  font-size: var(--text-sm);
+  color: var(--color-primary, var(--color-primary));
+}
+
+.agentsMemoryPreviewContent {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  color: var(--color-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.agentsMemoryPreviewMeta {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.agentsMemoryRow[role='button'] {
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-popover, color-mix(in srgb, var(--color-text) 4%, transparent));
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--color-primary, var(--color-primary));
+    outline-offset: -1px;
+  }
+}
+
+.agentsMemoriesError {
+  padding: 8px 12px;
+  font-size: var(--text-xs);
+  color: var(--color-error, var(--color-error));
+  background: color-mix(in srgb, var(--color-error, var(--color-error)) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-error, var(--color-error)) 30%, transparent);
+}
+
+.agentsDetailMissing {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  background: var(--color-hover);
+  border: 1px dashed var(--color-border);
+}
+
+// The agent detail body composes the shared Stack / Cluster / Section
+// primitives (see AgentDetail.tsx); the classes below carry per-element
+// typography and the avatar.
+
+// The remove control sits on its own row below the name/role rather than
+// beside it, so it never overlaps a long agent name or a wrapped role in
+// narrow panes. Right-aligned to the panel edge.
+.agentsDetailHeaderActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.agentsDetailAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-selected);
+  color: var(--color-primary-on-selected);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.agentsDetailHeading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.agentsDetailName {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: var(--letter-spacing-tight, 0);
+}
+
+.agentsDetailRole {
+  @include theme-mono-label(wide);
+  color: var(--color-text-muted);
+}
+
+.agentsDetailOverrideTag {
+  padding: 1px 6px;
+  @include theme-mono-label;
+  font-size: var(--text-3xs);
+  color: var(--color-on-selected);
+  background: var(--color-selected);
+  border: 1px solid var(--color-primary-border, var(--color-border));
+}
+
+// Budget / Context window / Thread addendum are shared <Section>s with no card
+// box; the controls carry their own borders, like AgentModelEditor.
+
+// Help copy under a Section label. Margin is zeroed so the Section's own
+// tokenized gap is the single source of vertical rhythm (no double-spacing).
+.agentsDetailFieldHelp {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--color-text-muted);
+
+  strong {
+    color: var(--color-text-muted);
+    font-weight: 600;
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 0 4px;
+    background: var(--color-hover);
+    border: 1px solid var(--color-border, var(--color-border));
+  }
+}
+
+// Notifications row (General tab)
+// One checkbox ("notify when a run ends", covering finished and failed)
+// with the sound picker beside it; the sound row dims while the box is off
+// (the controls are also really `disabled`, this is only the visual cue).
+
+.notifyRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+
+.notifyCheckbox {
+  flex: 1 1 220px;
+  min-width: 0;
+  // Body sans like the "No limit" checkbox below, not the panel's mono:
+  // the long sentence wrapped to three heavy lines in a narrow pane.
+  // The box pins to the first line instead of floating mid-paragraph.
+  align-items: flex-start;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--color-text);
+
+  > span:first-of-type {
+    margin-top: 0.2em;
+  }
+}
+
+.notifySoundRow {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+
+  &[data-enabled='false'] {
+    opacity: 0.5;
+  }
+}
+
+// ▶ preview beside the sound picker (mirrors ReminderSettingsControl's
+// .iconButton, which is scoped to that module).
+.notifySoundPreview {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.4;
+  }
+}

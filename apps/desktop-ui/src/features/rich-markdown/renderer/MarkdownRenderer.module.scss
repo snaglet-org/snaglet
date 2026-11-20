@@ -1,0 +1,289 @@
+@use '../../../styles/abstracts' as *;
+
+.markdown {
+  // Doc body uses --doc-text-base (15px); a host may set its own. Headings and
+  // tables are sized in `em` and follow it. The pane zoom tokens
+  // (`--pane-zoom-*` in _tokens.scss) scale it as the pane narrows.
+  font-size: var(--doc-text-base, var(--text-base));
+  line-height: 1.6;
+  color: var(--color-text);
+  word-break: break-word;
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--color-text);
+    margin: 18px 0 8px;
+    line-height: 1.3;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  // Heading sizes as px over the 15px doc body (h1=22 … h6=13), so they scale
+  // with any body size. h6 stays at least 11px for 12px hosts.
+  h1 {
+    font-size: calc(22em / 15);
+    font-weight: 600;
+  }
+  h2 {
+    font-size: calc(19em / 15);
+    font-weight: 600;
+  }
+  h3 {
+    font-size: calc(17em / 15);
+    font-weight: 600;
+  }
+  h4 {
+    font-size: calc(16em / 15);
+    font-weight: 600;
+  }
+  h5 {
+    font-size: 1em;
+    font-weight: 600;
+  }
+  h6 {
+    font-size: max(calc(13em / 15), 11px);
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+
+  p {
+    margin: 0 0 10px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  strong {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  em {
+    font-style: italic;
+    color: var(--color-text-muted);
+  }
+
+  del {
+    text-decoration: line-through;
+    color: var(--color-text-muted);
+  }
+
+  // Images are capped on both axes so large or portrait screenshots shrink
+  // proportionally.
+  img {
+    display: block;
+    max-width: 100%;
+    max-height: 400px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  // A stored image is a node link: the image itself, click opens the preview.
+  a.storedImageLink {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    cursor: zoom-in;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+
+  // Chip styles live in styles/globals/_node-chips.scss, shared by every host.
+
+  // Inline code and code blocks in the app's mono face (the browser default
+  // `monospace` is Courier), a step below the prose so a mono run doesn't
+  // tower over the sans text around it.
+  code,
+  pre {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+
+  // A block's `code` sits inside its `pre`: size it once, not twice.
+  pre code {
+    font-size: inherit;
+  }
+
+  // Code blocks own their horizontal overflow, like a table frame: a long
+  // line scrolls inside the block instead of widening or clipping the
+  // surface. A sideways gesture or Shift+wheel scrolls them; in a page that
+  // scrolls vertically, a vertical wheel scrolls the page
+  // (utils/horizontalWheelScroll.ts).
+  pre {
+    max-width: 100%;
+    overflow-x: auto;
+
+    // Thin scrollbar matching the table frame's treatment.
+    @include layout-scrollbar-thin($axis: x, $size: 4px, $native: false);
+  }
+
+  ul,
+  ol {
+    margin: 8px 0;
+    padding-left: 22px;
+  }
+
+  li {
+    margin-bottom: 4px;
+    color: var(--color-text-muted);
+
+    &::marker {
+      color: var(--color-text-disabled);
+    }
+  }
+
+  // GFM task-list checkboxes, painted to match the shared <Checkbox> (they
+  // are plain inputs inside rendered prose).
+  input[type='checkbox'] {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xs);
+    background: transparent;
+    vertical-align: middle;
+    margin: 0 6px 0 0;
+    position: relative;
+    cursor: pointer;
+    transition:
+      background var(--transition-fast),
+      border-color var(--transition-fast);
+
+    // Check glyph, revealed on :checked.
+    &::after {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 1px;
+      width: 4px;
+      height: 8px;
+      border: solid var(--color-primary);
+      border-width: 0 1.5px 1.5px 0;
+      transform: rotate(45deg) scale(0.6);
+      opacity: 0;
+      transition:
+        opacity var(--transition-fast),
+        transform var(--transition-fast);
+    }
+
+    &:checked {
+      border-color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+
+      &::after {
+        opacity: 1;
+        transform: rotate(45deg) scale(1);
+      }
+    }
+
+    &:hover {
+      border-color: var(--color-primary);
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.5;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    input[type='checkbox']::after {
+      transition: none;
+    }
+  }
+
+  blockquote {
+    border-left: 3px solid var(--color-border);
+    margin: 10px 0;
+    padding: 6px 14px;
+    color: var(--color-text-muted);
+    background: var(--color-hover);
+    border-radius: 0 6px 6px 0;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 16px 0;
+  }
+
+  // Tables
+  // Rendered tables sit in MarkdownTable's frame. The rich editor also uses
+  // this `.markdown` class, so the sizing below is shared with its tables.
+  table {
+    // Columns size to content up to the ceiling below; a table wider than
+    // the pane scrolls inside its frame.
+    width: max-content;
+    border-collapse: collapse;
+    margin: 0;
+    // A step below the body text, with tighter leading than prose.
+    font-size: 0.9em;
+    line-height: 1.4;
+  }
+
+  // Column ceiling: past it a cell wraps, so one prose column can't swallow
+  // the row. No floor. ExpandableCell repeats the ceiling and clamps long
+  // cells to two lines.
+  th,
+  td {
+    max-width: 26em;
+    padding: 5px 10px;
+  }
+
+  th {
+    text-align: left;
+    font-size: 0.92em;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+  }
+
+  td {
+    color: var(--color-text);
+    vertical-align: top;
+    // Wrap at word boundaries only, overriding the root's break-word.
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  // Rendered tables always have a `thead`; the editor styles its own header.
+  thead th {
+    background: var(--color-foreground);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  // Body cells are transparent, so stripes and hover tint whatever the table
+  // sits on.
+  thead + tbody {
+    tr + tr td {
+      border-top: 1px solid var(--color-border-subtle);
+    }
+
+    tr:nth-child(even) td {
+      background: color-mix(in srgb, var(--color-foreground) 30%, transparent);
+    }
+
+    tr:hover td {
+      background: color-mix(in srgb, var(--color-hover) 50%, transparent);
+    }
+  }
+}

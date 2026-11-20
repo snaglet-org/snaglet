@@ -1,0 +1,189 @@
+@use '../../../../../../../styles/abstracts' as *;
+@use '../../../../../styles/dashboard' as dash;
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+// The single warm title strip: warm paper wash, one connection pill, a
+// plain-language subtitle.
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-foreground);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+  margin: 0;
+  @include layout-truncate;
+  min-width: 0;
+}
+
+.link {
+  font-size: var(--text-sm);
+  color: var(--color-text-disabled);
+  text-decoration: none;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--prov-radius-row);
+  transition:
+    color 0.12s,
+    background 0.12s;
+
+  &:hover {
+    color: var(--color-text);
+    background: var(--color-hover);
+  }
+}
+
+// Body — a Stack of Sections
+
+.body {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-5);
+}
+
+// Endpoint editor (dead / hidden — kept for the LM Studio case)
+
+.endpointHelp {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-disabled);
+}
+
+// First-class Add-key card
+
+.addCard {
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--color-field);
+  border: 1px solid var(--color-border);
+  border-radius: var(--prov-radius-card);
+}
+
+// Empty state
+
+.emptyCard {
+  font-size: var(--text-sm);
+  color: var(--color-text-disabled);
+  margin: 0;
+  line-height: 1.5;
+
+  strong {
+    color: var(--color-text-muted);
+  }
+}
+
+// Keys — one list
+// The three role buckets read as a single continuous card. Slim seams between
+// buckets; roles are carried by the row pills, not by boxes.
+
+.keys {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: var(--prov-radius-card);
+  overflow: hidden;
+
+  &[data-dragging] {
+    overflow: visible;
+  }
+}
+
+.zone {
+  padding: var(--space-2);
+  transition: background 0.15s;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  // Collapse empty buckets flat so they add no height at rest.
+  &:empty {
+    padding: 0;
+    border-bottom: none;
+  }
+}
+
+.keys[data-dragging] .zone {
+  min-height: 42px;
+  padding: var(--space-2);
+}
+
+.zoneDragOver {
+  background: color-mix(in srgb, var(--prov-accent) 6%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--prov-accent) 34%, transparent);
+}
+
+.groupLabel {
+  @include dash.theme-uppercase-label;
+  margin-bottom: var(--space-2);
+}
+
+// Drop target — only rendered while a key is being dragged.
+.dropHint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed color-mix(in srgb, var(--prov-accent) 40%, var(--color-border));
+  border-radius: var(--prov-radius-row);
+  text-align: center;
+  background: color-mix(in srgb, var(--prov-accent) 4%, transparent);
+}
+
+.credList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+// Keys list while `fallback_credentials` is off: one bucket, no drop zones.
+.plainKeys {
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+
+// Pane-responsive (container-query on the pane)
+
+@container pane (inline-size < 560px) {
+  .header {
+    padding: var(--space-2) var(--space-4);
+  }
+
+  .body {
+    padding: var(--space-3) var(--space-4);
+  }
+}
+
+@container pane (inline-size < 340px) {
+  .header {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .body {
+    padding: var(--space-2) var(--space-3);
+  }
+}

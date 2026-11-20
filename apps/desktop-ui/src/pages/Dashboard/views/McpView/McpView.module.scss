@@ -1,0 +1,321 @@
+@use '../../../../styles/abstracts' as *;
+@use '../../styles/dashboard' as dash;
+
+.errorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  font-size: var(--text-sm);
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-error) 40%, transparent);
+}
+
+.serverRow {
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--color-foreground) 60%, transparent);
+}
+
+.serverHead {
+  display: grid;
+  grid-template-areas: 'identity meta actions';
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+}
+
+.expandBtn {
+  grid-area: identity;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text);
+  font-family: inherit;
+  text-align: left;
+  padding: 0;
+}
+
+.chevron {
+  display: inline-block;
+  transition: transform 0.12s ease;
+  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+
+  &[data-open='true'] {
+    transform: rotate(90deg);
+  }
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-text-disabled, var(--color-text-muted));
+
+  &[data-status='connected'] {
+    background: var(--color-success);
+  }
+  &[data-status='connecting'] {
+    background: var(--color-warning, var(--color-text-muted));
+  }
+  &[data-status='disconnected'] {
+    background: var(--color-error);
+  }
+  &[data-status='idle'] {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--color-text-muted);
+  }
+}
+
+.serverName {
+  min-width: 0;
+  @include layout-truncate;
+  font-weight: 600;
+  font-size: var(--text-base);
+}
+
+.serverId {
+  flex: 1 1 72px;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  @include layout-truncate;
+}
+
+.serverMeta {
+  grid-area: meta;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.serverActions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.statusLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.serverBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 12px 14px 16px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+}
+
+.configGrid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+
+.configKey {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.configVal {
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.statusDetail {
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--color-error);
+  overflow-wrap: anywhere;
+}
+
+.installLine {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+
+  &[data-state='npx'],
+  &[data-state='pending'],
+  &[data-state='installing'] {
+    color: var(--color-text-muted);
+  }
+}
+
+.installError {
+  font-size: var(--text-xs);
+  color: var(--color-error);
+}
+
+.credSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  background: color-mix(in srgb, var(--color-foreground) 40%, transparent);
+}
+
+.credHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.credTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.fieldHint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+
+  code {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+  }
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.serverFooter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  > * {
+    max-width: 100%;
+  }
+}
+
+.testResult {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+
+  &[data-ok='true'] {
+    color: var(--color-success);
+  }
+  &[data-ok='false'] {
+    color: var(--color-error);
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(520px, 100%);
+  min-width: min(420px, 100%);
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+@container mcp-connection (inline-size < 760px) {
+  .serverHead {
+    grid-template-areas:
+      'identity actions'
+      'meta meta';
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@container mcp-connection (inline-size < 480px) {
+  .serverHead {
+    grid-template-areas:
+      'identity'
+      'meta'
+      'actions';
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .serverActions {
+    justify-content: space-between;
+    padding-top: 2px;
+  }
+
+  .serverBody {
+    padding: 10px;
+  }
+
+  .configGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+
+    .configVal + .configKey {
+      margin-top: 8px;
+    }
+  }
+
+  .credSection {
+    padding: 10px;
+  }
+}
+
+@container mcp-connection (inline-size < 340px) {
+  .serverFooter {
+    align-items: stretch;
+    flex-direction: column;
+
+    > button {
+      width: 100%;
+    }
+  }
+}

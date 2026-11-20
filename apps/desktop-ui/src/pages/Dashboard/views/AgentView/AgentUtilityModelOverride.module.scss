@@ -1,0 +1,20 @@
+// AgentUtilityModelOverride — leaf styling only; the editor grid comes from
+// the shared AgentModelEditor. Colors from palette-derived --color-* tokens.
+
+.description {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.hint {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+.error {
+  color: var(--color-error, var(--color-error));
+  font-size: var(--text-sm);
+}

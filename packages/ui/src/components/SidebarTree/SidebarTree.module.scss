@@ -1,0 +1,145 @@
+@use '../../../styles/abstracts' as *;
+
+// SidebarTree — the stylesheet for every sidebar tree view rendered with
+// SidebarTree.tsx (Settings, Logs, Agents, Tools, …). Sizes, easings and
+// guide geometry live in abstracts/_tree.scss, shared with WorkspaceTree.
+
+.tree {
+  @include tree-body;
+}
+
+.groupHeader {
+  @include tree-group-header;
+}
+
+.groupLabel {
+  @include tree-group-label;
+}
+
+.groupCount {
+  @include tree-group-count;
+}
+
+.chevron {
+  @include tree-chevron;
+
+  &.chevronEmpty {
+    @include tree-chevron-empty;
+  }
+}
+
+.leafToggle {
+  @include tree-leaf-toggle;
+}
+
+.children {
+  @include tree-indent-guide('.row, .groupHeader');
+}
+
+.row {
+  @include tree-row;
+
+  // Rows render as <button> or <div>; cover the button resets either way.
+  width: 100%;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  color: var(--color-text);
+  box-sizing: border-box;
+
+  &:focus-visible {
+    outline: none;
+    background: var(--color-hover);
+    box-shadow: inset 3px 0 0 var(--color-primary);
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+}
+
+// The row whose surface is open in the active pane. The two-class selector
+// outranks `.rowSelected` below so a row that is both selected and active
+// keeps the active styling.
+.rowActive,
+.rowActive.rowSelected {
+  @include tree-row-active;
+}
+
+// Multi-select highlight — quieter left stripe + tint, matching the
+// workspace tree's `rowSelected` via the shared mixin.
+.rowSelected {
+  @include tree-row-selected;
+}
+
+.rowDimmed {
+  opacity: 0.55;
+}
+
+// Per-row tinting: a consumer className on the row sets the custom
+// properties and the slots read them, so consumer tints stay out of the kit.
+//
+//   .rowCategory { --tree-icon-color: var(--color-warning); }
+.icon {
+  @include tree-icon;
+
+  color: var(--tree-icon-color, var(--color-primary));
+}
+
+// Keeps its full width while it fits (a `.description` beside it only gets
+// the leftover space), then shrinks and ellipsizes before the row's trailing
+// chrome, so a long label never pushes badges or controls past the row.
+.label {
+  @include tree-label;
+
+  flex: 0 1 auto;
+  min-width: 0;
+  color: var(--tree-label-color, var(--color-text));
+}
+
+// Inline muted caption after the label — single-line, ellipsized, so the
+// row keeps the tree's one-line rhythm (full text lives on the tooltip).
+.description {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+// Free-form middle slot for rows whose content isn't label+description
+// (agent identity blocks, feed post bodies). Fills and truncates.
+.content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+// Pulse applied for 1.6s when a row is revealed from the sidebar search.
+@keyframes sidebar-tree-reveal-pulse {
+  0% {
+    background: var(
+      --color-primary-bg-hover,
+      color-mix(in srgb, var(--color-primary) 28%, transparent)
+    );
+    box-shadow: inset 2px 0 0 0 var(--color-on-primary, var(--color-primary));
+  }
+  60% {
+    background: var(--color-primary-bg, color-mix(in srgb, var(--color-primary) 12%, transparent));
+    box-shadow: inset 2px 0 0 0 var(--color-on-primary, var(--color-primary));
+  }
+  100% {
+    background: transparent;
+    box-shadow: inset 2px 0 0 0 transparent;
+  }
+}
+
+.rowReveal {
+  animation: sidebar-tree-reveal-pulse 1.6s ease-out;
+}

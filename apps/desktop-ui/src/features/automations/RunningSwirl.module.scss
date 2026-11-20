@@ -1,0 +1,38 @@
+@use '../../styles/abstracts' as *;
+
+// Same motion as the workspace tree's `.runSwirl` (WorkspaceTree.module.scss).
+.spinBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spin svg {
+  display: block;
+  animation: automation-swirl-spin 2.4s linear infinite;
+}
+
+@keyframes automation-swirl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  color: var(--color-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin svg {
+    animation: none;
+  }
+}

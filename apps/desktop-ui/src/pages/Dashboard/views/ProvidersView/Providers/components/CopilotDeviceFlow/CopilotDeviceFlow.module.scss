@@ -1,0 +1,71 @@
+@use '../../../../../../../styles/abstracts' as *;
+@use '../../../../../styles/dashboard' as dash;
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-disabled);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.status {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.error {
+  font-size: var(--text-xs);
+  color: var(--prov-danger);
+}
+
+.success {
+  font-size: var(--text-xs);
+  color: var(--prov-sage);
+}
+
+// The device-code card — a proper warm card that frames the code prominently.
+.codeBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--color-field);
+  border: 1px solid var(--color-border);
+  border-radius: var(--prov-radius-card);
+}
+
+.codeLabel {
+  @include dash.theme-uppercase-label;
+}
+
+// Intentionally large — a device code the user reads and types at GitHub.
+.userCode {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 3px;
+  color: var(--color-text);
+}
+
+.link {
+  font-size: var(--text-xs);
+  color: var(--prov-accent);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}

@@ -1,0 +1,99 @@
+// The date view's additions in the date + repeat popover: the Repeat row,
+// This one (Done · Skip) and the "Move to …?" prompt, under the days and
+// times of the date picker's card. Tokens only.
+
+.extras {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+// This one: Done · Skip
+
+.thisOne {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px 6px var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-hover);
+}
+
+.thisOneText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.caps {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.thisOneWhen {
+  overflow: hidden;
+  font-weight: var(--font-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overdue {
+  color: var(--color-error);
+}
+
+// Move to …?
+
+.move {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+}
+
+.moveText {
+  margin: 0;
+}
+
+.moveActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+// Words
+
+.muted {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--text-xs);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  color: var(--color-text-muted);
+
+  p {
+    margin: 0;
+  }
+}

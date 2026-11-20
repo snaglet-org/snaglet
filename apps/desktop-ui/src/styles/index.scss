@@ -1,0 +1,154 @@
+// Shared theme tokens and baseline styles load once from @snaglet/ui in main.tsx.
+
+// SCSS abstracts (compile-time helpers)
+@use './abstracts/index' as *;
+
+// Global (non-module) classes shared app-wide; `_node-chips` owns the
+// `.md-chip` node-reference pills.
+@use './globals/node-chips';
+
+html,
+body {
+  height: 100%;
+}
+
+html {
+  font-family: var(--font-body);
+  color: var(--color-text);
+}
+
+body {
+  position: relative;
+  font-family: var(--font-body);
+  letter-spacing: var(--letter-spacing-tight, -0.005em);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+// Drop cursor for TipTap editors (ChipEditableInput): the plugin renders a
+// div with this class. `!important` overrides the inline `background-color`
+// the plugin sets when given a color, so the theme's brand token wins.
+.snaglet-dropcursor {
+  background: var(--color-primary) !important;
+  border-radius: 0;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+// External-chip drop indicator (ChipNode plugin): a zero-width widget <span>
+// at the insertion point while a chip is dragged in from outside the editor
+// (e.g. the WorkspaceTree). prosemirror-dropcursor ignores external drags, so
+// this draws its own caret, which renders the same in WKWebView (Tauri).
+.snaglet-chip-drop-indicator {
+  display: inline-block;
+  width: 0;
+  height: 1em;
+  position: relative;
+  vertical-align: text-bottom;
+  pointer-events: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    border-radius: 0;
+    background: var(--color-primary);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 35%, transparent);
+  }
+}
+
+// Use the global sans family across app chrome and headings.
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  letter-spacing: var(--letter-spacing-display, -0.01em);
+}
+
+// Paper texture: a fixed full-app overlay of turbulence noise (black at ~6%
+// alpha, scaled by --paper-grain-opacity, which also turns it off). SVG
+// filters in data-URI backgrounds are safe in WebKit (Tauri).
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: var(--paper-grain-opacity, 0.5);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.14' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0'/></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>");
+  background-size: 320px 320px;
+}
+
+// Candy scrollbars on every scroll container.
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+// Fluid scrolling for in-app anchor jumps and reveals.
+@media (prefers-reduced-motion: no-preference) {
+  html,
+  * {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html,
+  * {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: var(--radius-pill);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+// Brand-tinted text selection — tinted paper behind ink text.
+::selection {
+  background: var(--color-selection);
+  color: var(--color-on-selected);
+}
+
+// Sticker focus ring for keyboard navigation.
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+// Grabbing cursor everywhere during a workspace-tree node drag. TreeRow sets
+// `data-dragging` on <body> from dragstart to dragend so per-element cursors
+// don't show through while a node is in flight.
+body[data-dragging],
+body[data-dragging] * {
+  cursor: grabbing !important;
+}

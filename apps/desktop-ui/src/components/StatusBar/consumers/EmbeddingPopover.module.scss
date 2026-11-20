@@ -1,0 +1,29 @@
+@use '../../../styles/abstracts' as *;
+.surface {
+  min-width: 240px;
+  padding: space(2);
+}
+.heading {
+  font-weight: 600;
+  margin-bottom: space(1);
+}
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: space(1) 0;
+  color: var(--color-text-muted);
+}
+.row strong {
+  color: var(--color-text);
+  @include layout-truncate;
+}
+.error {
+  color: var(--color-warning);
+}
+.empty {
+  padding: space(2);
+  color: var(--color-text-muted);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

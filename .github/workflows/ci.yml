@@ -1,0 +1,214 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source:
+    name: Source and package contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Cache managed PostgreSQL runtime
+        uses: actions/cache@v4
+        with:
+          path: ~/.snaglet/cache/postgres-runtime
+          key: snaglet-pg-runtime-v2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/db/runtime/postgres/version.ts', 'packages/db/runtime/postgres/binaries.ts') }}
+      - name: Build checksum-pinned PostgreSQL runtime
+        run: pnpm pg:runtime:build --strict
+      - name: Format
+        run: pnpm format:check
+      - name: Accepted ESLint and Knip baseline
+        run: pnpm lint:baseline
+      - name: Realtime import boundaries
+        run: pnpm lint:realtime
+      - name: Documentation gate
+        run: pnpm lint:docs
+      - name: Typecheck
+        run: pnpm typecheck:all
+      - name: Compiled package consumption
+        run: pnpm test:package-exports
+      - name: Tool registry audit (strict)
+        run: pnpm test:tool-registry
+      - name: Server and shared unit tests
+        run: pnpm test:unit --runInBand
+        timeout-minutes: 15
+      - name: Managed PostgreSQL integration tests
+        run: pnpm test:integration
+        timeout-minutes: 15
+      - name: Desktop UI tests
+        run: pnpm test:desktop-ui
+      - name: Build profile, desktop bundle, and co-located Jest test guards
+        run: pnpm test:build-profiles
+
+  browser-preview:
+    name: Browser preview artifact
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Cache managed PostgreSQL runtime
+        uses: actions/cache@v4
+        with:
+          path: ~/.snaglet/cache/postgres-runtime
+          key: snaglet-pg-runtime-v2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/db/runtime/postgres/version.ts', 'packages/db/runtime/postgres/binaries.ts') }}
+      - name: Build checksum-pinned PostgreSQL runtime
+        run: pnpm pg:runtime:build --strict
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Build browser preview from clean output
+        run: pnpm clean && pnpm build:browser-preview
+      - name: Verify browser preview
+        run: pnpm verify:artifacts --profile browser-preview
+      - name: Upload browser manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-preview-diagnostics
+          path: |
+            dist/browser-preview/manifest.json
+            dist/browser-preview/browser-preview.png
+          if-no-files-found: warn
+
+  desktop-preview:
+    name: Desktop preview artifact (macOS arm64)
+    # macOS and Windows runners are billed at a multiple on private repositories.
+    if: ${{ !github.event.repository.private }}
+    runs-on: macos-14
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Require the supported desktop architecture
+        run: test "$(uname -m)" = arm64
+      - name: Cache managed PostgreSQL runtime
+        uses: actions/cache@v4
+        with:
+          path: ~/.snaglet/cache/postgres-runtime
+          key: snaglet-pg-runtime-v2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/db/runtime/postgres/version.ts', 'packages/db/runtime/postgres/binaries.ts') }}
+      - name: Build checksum-pinned PostgreSQL runtime
+        run: pnpm pg:runtime:build --strict
+      - name: Verify managed PostgreSQL runtime and fresh bootstrap
+        run: |
+          pnpm pg:runtime:verify
+          pnpm --filter @snaglet/db exec tsx scripts/verify-fresh-bootstrap.ts
+      - run: pnpm exec playwright install chromium
+      - name: Build web and server input
+        run: |
+          pnpm build:web
+          pnpm build:server
+      - name: Build packaged desktop preview
+        run: pnpm build:desktop-preview
+      - name: Verify packaged desktop preview
+        run: pnpm verify:artifacts --profile desktop-preview
+      - name: Upload desktop diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-preview-diagnostics-macos-arm64
+          path: |
+            dist/desktop-preview/artifacts/artifact-manifest.json
+            dist/desktop-preview/staging-manifest.json
+            dist/desktop-preview/desktop-preview.png
+          if-no-files-found: warn
+
+  windows-desktop:
+    name: Windows x64 desktop and runtime
+    if: ${{ !github.event.repository.private }}
+    runs-on: windows-2022
+    timeout-minutes: 90
+    steps:
+      - name: Keep the Snaglet home and PostgreSQL runtime in the runner's temp folder
+        run: |
+          "SNAGLET_HOME=$env:RUNNER_TEMP/snaglet-windows-ci" >> $env:GITHUB_ENV
+          "SNAGLET_PG_RUNTIME_DIR=$env:RUNNER_TEMP/snaglet-windows-pg-runtime" >> $env:GITHUB_ENV
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build and typecheck packages
+        run: |
+          pnpm build
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm typecheck:all
+      - name: Build checksum-pinned PostgreSQL and pgvector
+        run: pnpm pg:runtime:build --strict
+      - name: Native runtime and recovery
+        run: |
+          pnpm pg:runtime:verify
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm pg:backup:verify-recovery
+      - name: Build desktop candidate
+        run: pnpm build:desktop-preview
+      - name: Source and build contracts
+        run: |
+          pnpm test:unit --runInBand --coverage=false
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm test:build-profiles
+      - name: Database integration tests
+        run: pnpm test:integration --runInBand
+      - name: Desktop UI tests
+        run: pnpm test:desktop-ui
+      - name: Real native embedding inference
+        run: |
+          pnpm embedder:fetch --strict
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm --filter @snaglet/server embedder:verify
+      - name: Packaged Windows lifecycle and persistence
+        run: pnpm verify:artifacts --profile desktop-preview
+      - name: Retain Windows candidate and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64-candidate-and-diagnostics
+          path: |
+            dist/desktop-preview/artifacts/*-setup.exe
+            dist/desktop-preview/artifacts/artifact-manifest.json
+            dist/desktop-preview/artifacts/SHA256SUMS
+            dist/desktop-preview/staging-manifest.json
+            dist/desktop-preview/desktop-windows.png
+            dist/desktop-preview/windows-acceptance.json
+          if-no-files-found: warn
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan the history for secrets
+        run: >
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.18.4
+          detect --source /repo --no-banner --redact

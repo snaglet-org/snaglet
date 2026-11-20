@@ -1,0 +1,1 @@
+export { AutomationPane } from './AutomationPane';

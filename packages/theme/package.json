@@ -1,0 +1,44 @@
+{
+  "name": "@snaglet/theme",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Snaglet's color theme as data: the default palette, its token keys, and ready-made CSS and SCSS.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./theme.css": "./theme.css",
+    "./tokens.scss": {
+      "sass": "./tokens.scss",
+      "default": "./tokens.scss"
+    },
+    "./defaultTheme.json": "./defaultTheme.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "defaultTheme.json",
+    "theme.css",
+    "tokens.scss",
+    "README.md"
+  ],
+  "sideEffects": [
+    "*.css",
+    "*.scss"
+  ],
+  "scripts": {
+    "generate": "tsx scripts/generate.ts",
+    "check": "tsx scripts/generate.ts --check",
+    "typecheck": "tsc --noEmit && tsx scripts/generate.ts --check"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^5.4.5"
+  }
+}

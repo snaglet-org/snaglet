@@ -1,0 +1,12 @@
+import { type FC } from 'react';
+
+/**
+ * Paperclip glyph for attach affordances (composer attach button, the
+ * command palette's file rows). Monochrome `currentColor` icon (Bootstrap
+ * Icons `paperclip`) replacing the 📎 emoji.
+ */
+export const PaperclipIcon: FC = () => (
+  <svg viewBox="0 0 16 16" width={14} height={14} fill="currentColor" aria-hidden focusable="false">
+    <path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0z" />
+  </svg>
+);

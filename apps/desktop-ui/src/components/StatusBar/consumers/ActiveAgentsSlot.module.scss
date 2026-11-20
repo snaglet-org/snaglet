@@ -1,0 +1,20 @@
+@use '../../../styles/abstracts' as *;
+
+// Leading glyph for the active-agents chip: a small square that reads
+// "agent" next to the connection dot without competing with it. Dimmed in
+// the idle (0) state; filled with the primary tone while agents work.
+.glyph {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
+  border: 1px solid currentColor;
+  opacity: 0.55;
+}
+
+.glyphActive {
+  background: currentColor;
+  border-color: transparent;
+  opacity: 1;
+}

@@ -1,0 +1,1 @@
+export { MoveConfirmationBanner } from './MoveConfirmationBanner';

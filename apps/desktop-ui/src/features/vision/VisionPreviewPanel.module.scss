@@ -1,0 +1,205 @@
+@use '../../styles/abstracts' as *;
+
+.panel {
+  margin: 0 8px 6px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 38px;
+  padding: 5px 7px 5px 10px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.identity,
+.actions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.identity {
+  gap: 7px;
+}
+
+.actions {
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
+.liveDot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--color-success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 18%, transparent);
+}
+
+.title {
+  @include layout-truncate;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+
+.status {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+}
+
+.grid {
+  display: grid;
+  gap: 1px;
+  padding: 1px;
+  background: var(--color-border-subtle);
+
+  &[data-layout='both'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.tile {
+  min-width: 0;
+  margin: 0;
+  background: var(--color-background);
+
+  figcaption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 24px;
+    padding: 3px 7px;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-3xs);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+}
+
+.stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 92px;
+  max-height: 220px;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at center,
+      color-mix(in srgb, var(--color-primary) 8%, transparent),
+      transparent 58%
+    ),
+    #0c0d0f;
+
+  video {
+    display: block;
+    width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+  }
+}
+
+.waiting {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+.aperture {
+  width: 26px;
+  height: 26px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.corner {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border-color: color-mix(in srgb, var(--color-primary) 75%, white 8%);
+  pointer-events: none;
+}
+
+.topLeft {
+  top: 7px;
+  left: 7px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+
+.topRight {
+  top: 7px;
+  right: 7px;
+  border-top: 1px solid;
+  border-right: 1px solid;
+}
+
+.bottomLeft {
+  bottom: 7px;
+  left: 7px;
+  border-bottom: 1px solid;
+  border-left: 1px solid;
+}
+
+.bottomRight {
+  right: 7px;
+  bottom: 7px;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+}
+
+.captureFlash {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, white 72%, var(--color-primary));
+  opacity: 0;
+  pointer-events: none;
+  animation: capture-flash 420ms ease-out;
+}
+
+@keyframes capture-flash {
+  0% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .captureFlash {
+    animation-duration: 1ms;
+  }
+}
+
+@container chat-shell (max-width: 520px) {
+  .grid[data-layout='both'] {
+    grid-template-columns: 1fr;
+  }
+
+  .status {
+    display: none;
+  }
+}

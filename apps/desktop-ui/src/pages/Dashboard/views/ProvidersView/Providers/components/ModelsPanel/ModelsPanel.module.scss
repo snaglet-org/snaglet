@@ -1,0 +1,266 @@
+@use '../../../../../../../styles/abstracts/layout' as layout;
+@use '../../../../../styles/dashboard' as dash;
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: 500px;
+  min-height: 0;
+}
+
+.controls {
+  flex-shrink: 0;
+}
+
+.addForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: flex-end;
+
+  > label {
+    flex: 1 1 180px;
+    min-width: 0;
+  }
+}
+
+// First-class "Add custom model" form
+
+.customSection {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.customToggle {
+  @include layout.button-reset;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  align-self: flex-start;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--prov-accent);
+  }
+}
+
+.customToggleIcon {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--prov-accent);
+}
+
+.customCard {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-field);
+  border: 1px solid var(--color-border);
+  border-radius: var(--prov-radius-card);
+}
+
+.customHelp {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+
+  strong {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+}
+
+.sectionLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-disabled);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.fieldRow {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+
+  > * {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+}
+
+.error {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--prov-danger);
+}
+
+.fieldLabel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+// Scrollable area
+
+.scrollArea {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.emptyState {
+  font-size: var(--text-sm);
+  color: var(--color-text-disabled);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-field);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--prov-radius-card);
+  text-align: center;
+}
+
+// Grid layout
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-2);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: var(--prov-radius-card);
+  transition: border-color 0.12s;
+
+  &:hover {
+    border-color: var(--color-border-strong);
+  }
+
+  // berry ring on models an agent is actively using (action/active role).
+  &[data-used] {
+    border-color: color-mix(in srgb, var(--prov-accent) 34%, var(--color-border));
+  }
+}
+
+@keyframes model-card-focus {
+  0%,
+  35% {
+    border-color: var(--prov-accent);
+    box-shadow: inset 3px 0 0 var(--prov-accent);
+    background: color-mix(in srgb, var(--prov-accent) 8%, var(--color-foreground));
+  }
+
+  100% {
+    border-color: var(--color-border);
+    box-shadow: inset 3px 0 0 transparent;
+    background: var(--color-foreground);
+  }
+}
+
+.cardFocused {
+  animation: model-card-focus 1.8s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cardFocused {
+    animation: none;
+    border-color: var(--prov-accent);
+    box-shadow: inset 3px 0 0 var(--prov-accent);
+  }
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.cardName {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.3;
+  min-width: 0;
+}
+
+.cardActionBtn,
+.removeBtn {
+  opacity: 0;
+  transition: opacity 0.1s;
+
+  .card:hover & {
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    opacity: 1;
+  }
+}
+
+.editModelForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-1);
+}
+
+.cardModelId {
+  @include dash.theme-mono-meta;
+  @include layout.truncate;
+}
+
+.cardDesc {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: 2px;
+}
+
+// Calm gold plain-language reason for plan-blocked models. The card itself
+// stays full opacity — the model is still pinnable.
+.reasonStrip {
+  margin: var(--space-1) 0 0;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--prov-gold) 82%, var(--color-text));
+  background: var(--prov-gold-bg);
+  border: 1px solid var(--prov-gold-border);
+  border-radius: var(--prov-radius-tag);
+}

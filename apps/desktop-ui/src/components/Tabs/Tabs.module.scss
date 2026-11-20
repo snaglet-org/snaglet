@@ -1,0 +1,290 @@
+@use '../../styles/abstracts' as *;
+
+// Tabs — keyboard-navigable tablist (role="tablist")
+//
+// Two variants share the underlying tab geometry but differ in
+// how the active state paints:
+//   underline — primary-colored bottom border (horizontal) or
+//               primary left-rail (vertical) on the active tab.
+//   rail     — vertical icon column with a filled active state
+//              + left-edge accent bar (ActivityBar pattern).
+//
+// Replaces ~6 per-feature tab/nav implementations across the
+// Dashboard with one canonical primitive.
+
+.tablist {
+  display: flex;
+  flex-shrink: 0;
+}
+
+// Orientation
+
+// A horizontal strip that doesn't fit scrolls sideways with no scrollbar
+// (Tabs.tsx keeps the active and focused tab in view and lets a vertical
+// wheel scroll it). An end with more tabs past it shows a chevron button
+// (`.scrollButton`) over a clear band, then fades in: `--tabs-edge` is that
+// band plus the fade, EDGE_FADE in Tabs.tsx.
+// It is the tabs' offset parent, so those offsets are in its own pixels.
+.orientationHorizontal {
+  --tabs-button: 20px;
+  --tabs-fade: 24px;
+  --tabs-edge: calc(var(--tabs-button) + var(--tabs-fade));
+  position: relative;
+  flex-direction: row;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  @include layout-scrollbar-hidden;
+
+  &[data-overflow-start] {
+    $start: linear-gradient(
+      to right,
+      transparent var(--tabs-button),
+      currentcolor var(--tabs-edge)
+    );
+    -webkit-mask-image: $start;
+    mask-image: $start;
+  }
+
+  &[data-overflow-end] {
+    $end: linear-gradient(to left, transparent var(--tabs-button), currentcolor var(--tabs-edge));
+    -webkit-mask-image: $end;
+    mask-image: $end;
+  }
+
+  &[data-overflow-start][data-overflow-end] {
+    $both: linear-gradient(
+      to right,
+      transparent var(--tabs-button),
+      currentcolor var(--tabs-edge),
+      currentcolor calc(100% - var(--tabs-edge)),
+      transparent calc(100% - var(--tabs-button))
+    );
+    -webkit-mask-image: $both;
+    mask-image: $both;
+  }
+}
+
+// The frame around a horizontal strip: it carries the scroll buttons, which
+// sit over the strip's faded ends. The strip fills it.
+.frame {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  min-width: 0;
+
+  > .tablist {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+// "More tabs this way": a chevron at an end with tabs scrolled past it. It
+// sits over the strip's clear band (the mask hides the tabs there), so it
+// needs no backdrop of its own on any surface.
+.scrollButton {
+  position: absolute;
+  top: 0;
+  bottom: 1px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+
+  svg {
+    display: block;
+    width: 12px;
+    height: 12px;
+  }
+
+  &:hover {
+    color: var(--color-text);
+    background: var(--color-hover);
+  }
+}
+
+.scrollStart {
+  left: 0;
+}
+
+.scrollEnd {
+  right: 0;
+}
+
+.orientationVertical {
+  flex-direction: column;
+  gap: 4px;
+}
+
+// Sizes
+// Sizes apply to the underline-style tab itself; rail tabs use the
+// consumer-supplied dimensions (typically icon-sized).
+
+.sizeSm .tab {
+  padding: 6px 10px;
+  font-size: var(--text-2xs);
+}
+
+.sizeMd .tab {
+  padding: 8px 12px;
+  font-size: 11px;
+}
+
+// Tab base
+// Mono-uppercase HUD voice matches the rest of the Dashboard chrome.
+// Active state is painted via the variant rules below, not here.
+
+.tab {
+  appearance: none;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  @include theme-mono-label(wide);
+  font-weight: 700;
+  color: var(--detail-2);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: none;
+    color: var(--color-text);
+    box-shadow: inset 0 0 0 1px var(--color-primary);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+}
+
+// Variant: underline
+// Horizontal: 2px primary underline that covers the strip's line.
+// Vertical: 2px primary left-rail on the active tab.
+
+.variantUnderline {
+  .tab {
+    border-bottom: 2px solid transparent;
+  }
+}
+
+// The strip's 1px line is an inset shadow, drawn inside the strip under the
+// tabs, so the active 2px underline covers it and the scrolling strip never
+// clips the underline (a border plus a -1px tab margin would be clipped).
+.orientationHorizontal.variantUnderline {
+  box-shadow: inset 0 -1px 0 var(--color-border);
+}
+
+.orientationVertical.variantUnderline {
+  .tab {
+    justify-content: flex-start;
+    text-align: left;
+    border-bottom: none;
+    border-left: 2px solid transparent;
+    padding-left: 14px;
+  }
+}
+
+.variantUnderline .tabActive {
+  color: var(--color-text);
+  border-bottom-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-selected) 44%, transparent);
+
+  &:hover {
+    color: var(--color-text);
+  }
+}
+
+.orientationVertical.variantUnderline .tabActive {
+  border-bottom-color: transparent;
+  border-left-color: var(--color-primary);
+  background: var(--color-selected);
+  @include theme-on-selected;
+}
+
+// Variant: rail
+// Vertical icon column. Active tab fills with panel + primary glyph
+// and shows a 2px left-edge accent.
+
+.variantRail {
+  align-items: center;
+  padding: 4px 0;
+  gap: 4px;
+}
+
+.variantRail .tab {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  font-weight: normal;
+  color: var(--detail-2);
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+    color: var(--color-text);
+    transform: translateY(-1px);
+  }
+
+  @include focus-ring;
+}
+
+.variantRail .tabActive {
+  background: var(--color-selected);
+  @include theme-on-selected;
+  border-color: var(--color-primary-border);
+  transform: translateX(1px);
+  box-shadow:
+    2px 2px 0 color-mix(in srgb, var(--color-primary) 18%, transparent),
+    var(--shadow-xs);
+
+  // Left accent — VS Code style.
+  &::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: -3px;
+    width: 3px;
+    background: var(--color-primary);
+    border-radius: var(--radius-pill);
+  }
+
+  // Outranks `.variantRail .tab:hover:not(:disabled)`, so a hovered active
+  // tab keeps its Selected fill under its on-Selected glyph.
+  &:hover:not(:disabled) {
+    background: var(--color-selected);
+    transform: translate(1px, -1px);
+  }
+}

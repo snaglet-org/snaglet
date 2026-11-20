@@ -1,0 +1,383 @@
+@use '../../../../styles/abstracts' as *;
+
+// Dashboard pane — token-driven, light + dark aware.
+// Uses the same surface/border/brand tokens as Chat page panels.
+
+.pane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-background);
+  container: pane-shell / inline-size;
+
+  // Inactive panes: dramatic 3D raised-button effect.
+  // Strong outset shadow + subtle top highlight = floating above the surface.
+  // Uses theme-aware shadow tokens (--shadow-ink adapts to app theme, not OS).
+  outline: 1px solid var(--color-border);
+  outline-offset: -1px;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-surface-raised) 85%, transparent),
+    0 2px 4px rgb(var(--shadow-color) / 0.08),
+    0 4px 8px rgb(var(--shadow-color) / 0.06),
+    0 8px 16px rgb(var(--shadow-color) / 0.04);
+  transition:
+    outline-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+
+  // Active/focused pane: pressed-in button effect.
+  // Strong inset shadow makes it feel deeply recessed compared to the
+  // dramatic raised inactive panes. Accent outline reinforces focus state.
+  // Uses theme-independent rgba shadows (Snaglet has one light theme; no dark variant).
+  &.paneActive {
+    outline-color: var(--color-primary-border);
+    box-shadow:
+      inset 0 0 0 1px var(--color-primary-border),
+      inset 0 3px 6px rgb(var(--shadow-color) / 0.12),
+      inset 0 1px 3px rgb(var(--shadow-color) / 0.08);
+
+    // Top-edge accent bar on the toolbar — the at-a-glance "this pane has
+    // focus" signal. Inset box-shadow (not a border) so switching active
+    // panes never shifts layout.
+    .chrome {
+      --pane-chrome-surface: color-mix(in srgb, var(--color-chrome) 74%, var(--color-selected));
+      box-shadow: inset 0 2px 0 0 var(--color-primary);
+    }
+
+    // Container category colors for active pane chrome
+    &[data-container-category='project'] .chrome {
+      box-shadow: inset 0 2px 0 0 var(--color-container-project);
+    }
+  }
+}
+
+// Split screen: the active pane gets a thick border in the theme's Border
+// color on all four sides, so clicking into another pane visibly moves focus.
+// Drawn by an overlay pseudo-element (not a real border) so switching panes
+// never shifts layout; it sits above pane content but under the drop-zone
+// overlay (z-index 50). A lone pane has nothing to contrast with, so it
+// keeps the quieter single-pane treatment.
+:global([data-pane-split='true']) .pane.paneActive::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 3px solid var(--color-border-strong);
+  pointer-events: none;
+  z-index: 40;
+}
+
+// The history keys (⌘[, ⌘], ⌘Y) act on the focused split only, so its
+// back / forward / history cluster takes the accent edge; the other panes'
+// clusters stay neutral.
+:global([data-pane-split='true']) .pane.paneActive [data-pane-history-nav] {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary-border);
+}
+
+// The single unified topbar has three structural zones:
+// fixed history chrome | scrollable contextual rail | fixed actions.
+// Only the center can overflow. The edge zones paint their own opaque
+// surface and sit above the rail, so controls remain visible and clickable.
+.chrome {
+  --pane-chrome-surface: var(--color-chrome);
+
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  align-items: center;
+  min-width: 0;
+  min-height: var(--density-chrome-height);
+  box-sizing: border-box;
+  background: var(--pane-chrome-surface);
+  color: var(--color-on-chrome);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  overflow: hidden;
+
+  // Draw keyboard focus rings inward so center controls remain fully visible
+  // when browser focus scrolling brings them into the rail viewport.
+  :focus-visible {
+    outline-offset: -2px;
+  }
+}
+
+.leftZone,
+.rightZone {
+  position: relative;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  min-width: max-content;
+  align-self: stretch;
+  background: var(--pane-chrome-surface);
+}
+
+.leftZone {
+  padding: 3px 0 3px 6px;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 100%;
+    width: 12px;
+    pointer-events: none;
+    background: linear-gradient(to right, var(--pane-chrome-surface), transparent);
+  }
+}
+
+.rightZone {
+  gap: 6px;
+  padding: 3px 6px 3px 0;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 100%;
+    bottom: 0;
+    width: 12px;
+    pointer-events: none;
+    background: linear-gradient(to left, var(--pane-chrome-surface), transparent);
+  }
+}
+
+.centerRail {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  align-self: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: auto;
+  @include layout-scrollbar-thin($axis: x, $size: 4px);
+}
+
+.centerContent {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 3px 12px;
+
+  // Give each chrome control its own stacking/positioning context so their
+  // dropdowns (history nav, breadcrumb path) anchor and layer correctly.
+  // Controls keep their full size; only the breadcrumb gives way.
+  > * {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    min-width: max-content;
+  }
+
+  // The breadcrumb takes the room the controls leave and shrinks first in a
+  // narrow pane: its path collapses to an ellipsis, then the title ellipsizes
+  // (PathHeader), so the view's controls (md / txt, Export) stay in the pane.
+  // Only a pane too narrow even for that scrolls the rail sideways.
+  > .crumbs {
+    display: flex;
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+}
+
+.crumbsEmpty {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-on-chrome-muted);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+// Per-surface action slots. Contextual controls stay in the scroll rail;
+// explicitly fixed controls (ContainerView's view toggle) join the right edge.
+.centerActions,
+.rightActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.centerActions {
+  margin-left: auto;
+}
+
+.openSidebarBtn {
+  flex: none;
+}
+
+// Per-kind icon tints carried through PathHeader's `iconClassName` slot
+// so the same node reads the same color in the sidebar, the body, and
+// the chrome. The container tint is overridden by the category-specific
+// colors when the pane carries a `data-container-category` attribute.
+.crumbIconContainer {
+  color: var(--color-container-default);
+}
+.crumbIconDoc {
+  color: var(--color-node-doc);
+}
+// A project file keeps the sky blue it always had; the Doc color is for docs.
+.crumbIconFile {
+  color: var(--color-node-file);
+}
+.crumbIconThread {
+  color: var(--color-node-thread);
+}
+.crumbIconImage {
+  color: var(--color-node-image);
+}
+.crumbIconProject {
+  color: var(--color-node-project);
+}
+
+// Container category breadcrumb icon colors
+.pane[data-container-category='project'] .crumbIconContainer {
+  color: var(--color-container-project);
+}
+// New-tab / close are neutral outset controls, matching the physical
+// leaf/history family rather than borderless ghost actions.
+.chromeIconBtn {
+  --button-bevel-edge: var(--color-border-strong);
+
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--color-text-muted);
+  background: var(--color-surface-raised);
+  border-color: var(--color-border);
+  border-radius: 0;
+  box-shadow: 1px 1px 0 color-mix(in srgb, var(--button-bevel-edge) 28%, transparent);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+    border-color: var(--color-primary-border);
+    color: var(--color-primary);
+  }
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  // Every pane body is a named CSS container so views restyle by their
+  // own width, not the viewport's. In a split-pane layout a narrow pane
+  // on a wide window must get the narrow treatment. Convention:
+  //   @container pane (inline-size < 480px) { ... }
+  // Prefer this over @media for anything rendered inside a pane.
+  container: pane / inline-size;
+
+  > * {
+    height: 100%;
+    // Fluid pane zoom: the view root, not `.body`, whose
+    // measured inline-size must stay unzoomed or it would feed back into
+    // itself — renders at `1 − strength·(1 − width / --pane-zoom-full)`,
+    // floored at `--pane-zoom-min`, so every px inside (text, padding, controls)
+    // shrinks with the pane. `100cqi` is the pane's own width, so the
+    // engine recomputes on every divider drag with no JS. Engines that
+    // can't divide lengths inside calc() drop this declaration; there
+    // useFluidZoom (PaneChrome.tsx) writes `--pane-zoom` inline instead.
+    // `zoom` (unlike `transform: scale`) reflows, so `height: 100%` still
+    // fills the pane with no bottom gap. Constants: styles/_tokens.scss.
+    zoom: var(
+      --pane-zoom,
+      clamp(
+        var(--pane-zoom-min),
+        calc(1 - var(--pane-zoom-strength) * (1 - 100cqi / var(--pane-zoom-full))),
+        1
+      )
+    );
+  }
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.zone {
+  position: absolute;
+  background: var(--color-primary-bg);
+  border: 2px dashed var(--color-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-brand-glow);
+  transition:
+    inset 80ms ease,
+    background 80ms ease;
+}
+
+.zone-center {
+  inset: 4px;
+}
+.zone-top {
+  top: 0;
+  bottom: 50%;
+  left: 0;
+  right: 0;
+}
+.zone-bottom {
+  top: 50%;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+.zone-left {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 50%;
+}
+.zone-right {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  right: 0;
+}
+
+@container pane-shell (inline-size < 420px) {
+  .centerContent {
+    gap: 3px;
+    padding-inline: 8px;
+  }
+
+  .leftZone {
+    padding-left: 4px;
+  }
+
+  .rightZone {
+    gap: 3px;
+    padding-right: 4px;
+  }
+
+  .centerActions,
+  .rightActions {
+    gap: 2px;
+  }
+
+  .chromeIconBtn {
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    min-height: 22px;
+  }
+}

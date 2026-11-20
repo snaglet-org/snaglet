@@ -1,0 +1,253 @@
+@use 'theme' as *;
+
+// Controls — shared low-level primitives for interactive controls.
+//
+// Used by Button, Switch, TextInput, Textarea (and any new
+// control primitive). Keep this small; only add a mixin here when
+// the same pattern shows up in 2+ control modules.
+
+// focus-ring — the standard keyboard-focus outline for buttons and
+// custom controls (Button, Switch). Suppresses the native outline
+// and paints a box-shadow ring via the theme-supplied token.
+@mixin focus-ring {
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+// button-outset / button-inset — a restrained desktop-control bevel.
+// The face keeps Snaglet's palette while the light top/left and shaded
+// bottom/right edges make clickable controls feel physical.
+@mixin button-outset {
+  box-shadow:
+    inset 1px 1px 0 color-mix(in srgb, var(--raised) 88%, var(--color-hover)),
+    inset -1px -1px 0
+      color-mix(in srgb, var(--button-bevel-edge, var(--color-border-strong)) 72%, transparent),
+    1px 1px 0
+      color-mix(in srgb, var(--button-bevel-edge, var(--color-border-strong)) 38%, transparent);
+}
+
+@mixin button-inset {
+  box-shadow:
+    inset 1px 1px 1px
+      color-mix(in srgb, var(--button-bevel-edge, var(--color-border-strong)) 74%, transparent),
+    inset -1px -1px 0 color-mix(in srgb, var(--raised) 72%, transparent);
+}
+
+// field-focus-reset — for the native <input>/<textarea>/<select>
+// element inside a bordered field wrapper. The wrapper paints the
+// focus state via :focus-within, so the element itself only needs
+// to suppress the global outline and any container ring.
+//
+// The selector repeats the element's own class (`&#{&}`) to out-rank
+// container rules like `.panel :focus-visible { outline: … }` in Popover
+// and FieldEditorPopover, or `.surface :focus-visible { box-shadow: … }` in
+// the calendar popovers. Without it those tie on specificity, load later,
+// and paint a square ring over the field's rounded focus glow.
+@mixin field-focus-reset {
+  &#{&}:focus,
+  &#{&}:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+}
+
+// field-shell — shared recessed-field geometry and interaction states.
+// Wrapper controls (TextInput, Textarea, DateInput) use :focus-within and a
+// `.disabled` class; native controls (Select) use their own pseudo-classes.
+// Parameters preserve the small intentional differences between those
+// surfaces without duplicating the border, transition, hover, and focus rules.
+// Dropdown fields pass `$radius: var(--radius-dropdown)` (square).
+@mixin field-shell(
+  $interaction: wrapper,
+  $background-property: background,
+  $base-shadow: null,
+  $hover-border-color: var(--color-primary-border),
+  $hover-background: null,
+  $focus-shadow: (
+    0 0 0 1px var(--color-primary),
+    0 0 11px color-mix(in srgb, var(--color-primary) 28%, transparent),
+  ),
+  $transition-background: false,
+  $radius: var(--radius-field)
+) {
+  #{$background-property}: var(--color-field);
+  border: 1px solid var(--color-border);
+  border-radius: $radius;
+
+  @if $base-shadow != null {
+    box-shadow: $base-shadow;
+  }
+
+  @if $transition-background {
+    transition:
+      border-color var(--transition-fast),
+      background-color var(--transition-fast),
+      box-shadow var(--transition-fast);
+  } @else {
+    transition:
+      border-color var(--transition-fast),
+      box-shadow var(--transition-fast);
+  }
+
+  @if $interaction == wrapper {
+    &:hover:not(.disabled) {
+      border-color: $hover-border-color;
+    }
+
+    &:focus-within:not(.disabled) {
+      border-color: var(--color-primary);
+      box-shadow: $focus-shadow;
+    }
+  } @else if $interaction == native {
+    &:hover:not(:disabled) {
+      @if $hover-background != null {
+        #{$background-property}: $hover-background;
+      }
+      border-color: $hover-border-color;
+    }
+
+    // Doubled class out-ranks container `:focus-visible` outline rules
+    // (see field-focus-reset) so the field keeps its rounded focus glow.
+    &#{&}:focus-visible,
+    &#{&}:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: $focus-shadow;
+    }
+  } @else {
+    @error 'Unknown field-shell interaction: #{$interaction}';
+  }
+}
+
+// doc-header-pill — the compact pill shared by the doc header controls
+// (DetailRouter `.docHeaderControl`) and the md/txt toggle (MarkdownTextToggle
+// `[data-chrome='pill']`), which DocView shows together, so they read as one
+// family. Callers add their own extras (text-transform, focus ring, cursor).
+@mixin doc-header-pill {
+  box-sizing: border-box;
+  height: 22px;
+  min-height: 22px;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 68%, transparent);
+  border-radius: var(--radius-button);
+  background: color-mix(in srgb, var(--color-field) 58%, transparent);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1;
+  box-shadow: none;
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+    border-color: var(--color-primary-border);
+    color: var(--color-text);
+    box-shadow: none;
+  }
+
+  // Active side selected → the whole control lights with the selected surface.
+  &[aria-pressed='true']:not(:disabled) {
+    background: var(--color-selected);
+    border-color: var(--color-primary-border);
+    @include theme-on-selected;
+  }
+
+  &:active:not(:disabled) {
+    background: var(--color-selected);
+    @include theme-on-selected;
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+// Interactive control mixins.
+// These use theme-* helpers — callers get both via the
+// abstracts barrel (@use '../styles/abstracts' as ab).
+
+// Focus ring
+@mixin theme-focus-ring {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+// Button
+@mixin theme-button {
+  --button-bevel-edge: var(--color-border-strong);
+
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  padding: 6px 14px;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: var(--letter-spacing-snug);
+  cursor: pointer;
+  transition:
+    background 80ms ease,
+    transform 80ms ease,
+    box-shadow 80ms ease;
+  @include button-outset;
+
+  &:hover {
+    background: var(--color-hover);
+    border-color: var(--color-primary-border);
+    @include button-outset;
+  }
+  &:active {
+    transform: translate(1px, 1px);
+    @include button-inset;
+  }
+}
+@mixin theme-button-primary {
+  @include theme-button;
+  --button-bevel-edge: var(--color-primary-dark);
+
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-color: var(--color-primary-dark);
+  &:hover {
+    background: var(--color-primary-dark);
+    @include button-outset;
+  }
+}
+
+// Input field
+@mixin theme-input {
+  background: var(--color-field);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
+  padding: 6px 10px;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  &::placeholder {
+    color: var(--color-text-subtle);
+  }
+  &:focus {
+    @include theme-focus-ring;
+    border-color: var(--color-primary);
+    outline-offset: 0;
+  }
+}
+
+// Tag / chip
+@mixin theme-chip {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-primary-muted);
+  color: var(--color-primary-dark);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--chip-radius);
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: var(--letter-spacing-normal);
+}

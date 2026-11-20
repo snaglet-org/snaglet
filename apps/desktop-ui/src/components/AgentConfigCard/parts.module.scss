@@ -1,0 +1,106 @@
+@use '../../styles/abstracts/layout' as layout;
+
+/* Shared Library component kit styles */
+
+/* ConfigField — labeled field wrapper */
+.configField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.configFieldLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* InheritancePill */
+.inheritancePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 0;
+  letter-spacing: var(--letter-spacing-snug);
+}
+
+.inheritancePillInherited {
+  background: color-mix(in srgb, var(--color-info) 12%, transparent);
+  color: var(--color-primary);
+}
+
+.inheritancePillOverridden {
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+  color: var(--color-warning);
+}
+
+/* BudgetControl — single column (one numeric field + the full-width duration
+   control). Conversation-wide caps live in the Routing pane, not here. */
+.budgetGridSingle {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px 14px;
+  align-items: start;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+// Duration control spans full width — it has variable height depending on
+// whether the "Limited" input row is visible, so it must not share a row
+// with the fixed-height numeric fields.
+.budgetDurationSpan {
+  grid-column: 1 / -1;
+}
+
+.durationControl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.durationInputRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-left: 24px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+// Width hook for the numeric "value" half of the run-time input row.
+.durationValueInput {
+  width: 80px;
+  min-width: 0;
+  flex: 0 1 80px;
+  box-sizing: border-box;
+}
+
+// Select gets its full chrome from the controls library.
+.durationUnitSelect {
+  flex: 1 1 80px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@keyframes agentTabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

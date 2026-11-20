@@ -1,0 +1,20 @@
+// The repeating cell's text: its next occurrence, e.g. "Sun Nov 1".
+.text {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.overdueText::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-warning);
+}

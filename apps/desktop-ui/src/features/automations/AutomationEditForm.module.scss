@@ -1,0 +1,79 @@
+@use '../../styles/abstracts' as *;
+
+.form {
+  display: contents;
+}
+
+.title {
+  flex: 1 1 auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.timing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.at {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.count {
+  width: calc(var(--space-12) * 2);
+}
+
+.rule {
+  color: var(--color-text);
+  font-size: var(--text-sm);
+}
+
+.hint {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--text-sm);
+}
+
+// In the Automations pane: the same fields, no modal chrome.
+.inlineForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 560px;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}

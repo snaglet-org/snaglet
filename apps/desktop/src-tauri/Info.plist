@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS usage descriptions merged into the generated Info.plist by the Tauri v2
+  bundler (any Info.plist in src-tauri/ is merged — see the Tauri "macOS
+  Application Bundle > Native configuration" docs). Required so the packaged app
+  may prompt for and use the microphone in voice mode and the camera in vision
+  mode (WKWebView refuses getUserMedia without these strings). Browser-tab dev testing
+  at localhost:3001 uses the browser's own permission prompt and needs nothing
+  here.
+-->
+<plist version="1.0">
+<dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Snaglet uses your microphone for voice mode — speaking with your agents.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Snaglet uses your camera only when you enable camera access in a chat; an agent then takes one frame per turn on request.</string>
+</dict>
+</plist>

@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "paths": {
+      "@snaglet/ui": ["./packages/ui/src/index.ts"],
+      "@snaglet/ui/sidebar-tree": ["./packages/ui/src/components/SidebarTree/index.ts"],
+      "@snaglet/ui/leaf-toggle": ["./packages/ui/src/components/LeafToggle/index.ts"],
+      "@snaglet/shared": ["./packages/shared/index.ts"],
+      "@snaglet/shared/*": ["./packages/shared/*"],
+      "@snaglet/db": ["./packages/db/index.ts"],
+      "@snaglet/db/*": ["./packages/db/*"],
+      "@snaglet/sdk": ["./packages/snaglet-sdk/index.ts"],
+      "@server/*": ["./apps/server/src/*"],
+      "@desktop/*": ["./apps/desktop-ui/src/*"]
+    }
+  }
+}

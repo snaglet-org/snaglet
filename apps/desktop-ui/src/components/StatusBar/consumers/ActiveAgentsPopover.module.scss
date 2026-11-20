@@ -1,0 +1,76 @@
+@use '../../../styles/abstracts' as *;
+
+// Popover body for the active-agents indicator. Lives inside the status
+// bar's shared .popover shell (border, shadow, background come from there);
+// this file only shapes the list itself.
+
+.empty {
+  padding: space(1) space(2);
+  color: var(--color-text-muted);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 220px;
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.item {
+  display: block;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: space(2);
+  width: 100%;
+  padding: space(1) space(2);
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.rowClickable {
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+}
+
+.rowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.name {
+  color: var(--color-text);
+  @include layout-truncate;
+}
+
+.where {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs, 11px);
+  @include layout-truncate;
+}
+
+.elapsed {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs, 11px);
+  font-variant-numeric: tabular-nums;
+}

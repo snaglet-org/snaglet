@@ -1,0 +1,49 @@
+// Add-agent picker. Inherits Modal's default chrome (overlay, panel)
+// and stays in the chat's retro vocabulary — sharp corners, mono type,
+// brand-color confirm.
+
+.title {
+  flex: 1 1 auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+
+.status {
+  padding: 8px 4px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+// Form field — a labeled dropdown. The label sits above the select in
+// a stacked layout that scales well for adding more fields later (role,
+// model override, etc.).
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fieldLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+// The agent picker uses the canonical <Select> and its themed caret; no
+// local override.
+
+.error {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-error, var(--color-error));
+  color: var(--color-error, var(--color-error));
+  font-size: 12px;
+  background: var(--color-hover);
+}

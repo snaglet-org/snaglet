@@ -1,0 +1,225 @@
+@use '../../../../styles/abstracts' as *;
+
+// The calendar's row popover: the row window's properties, compact.
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.titleButton {
+  @include layout-button-reset;
+  width: 100%;
+  margin: -2px -4px;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: text;
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+  }
+}
+
+.inlineEditor {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+
+  > :first-child {
+    min-height: 28px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-background);
+  }
+}
+
+.properties {
+  display: grid;
+  grid-template-columns: minmax(80px, 36%) minmax(0, 1fr);
+  margin: 0;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.property {
+  display: contents;
+}
+
+.propertyName,
+.propertyValue {
+  margin: 0;
+  padding: 3px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent);
+}
+
+.propertyName {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding-top: 6px;
+  padding-right: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+.propertyIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-top: 1px;
+
+  svg {
+    width: 11px;
+    height: 11px;
+  }
+}
+
+.propertyValue {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--text-sm);
+
+  :global(.md-chip) {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+}
+
+.valueButton {
+  @include layout-button-reset;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 24px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  color: var(--color-text);
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: text;
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+  }
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.readOnly {
+  color: var(--color-text-muted);
+}
+
+.empty {
+  color: var(--color-text-subtle);
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 2px 0;
+
+  > :first-child {
+    min-height: 28px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-background);
+  }
+}
+
+.editorActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.fieldError {
+  margin: 2px 0 0;
+  color: var(--color-danger);
+  font-size: var(--text-xs);
+}
+
+// Three zones (header, properties, actions) split by hairlines, with the
+// calendar · table · field line as a quiet footer.
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.section {
+  padding-top: var(--space-2);
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
+}
+
+.stateChip {
+  flex: none;
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+  line-height: 16px;
+
+  &[data-state='done'] {
+    color: var(--color-text);
+    background: color-mix(in srgb, var(--cal-accent, var(--color-primary)) 22%, transparent);
+  }
+}
+
+.whenLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  min-width: 0;
+}
+
+.repeatText {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.moreLink,
+.notifyToggle {
+  @include layout-button-reset;
+  padding: var(--space-1) 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text);
+  }
+}
+
+.where {
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

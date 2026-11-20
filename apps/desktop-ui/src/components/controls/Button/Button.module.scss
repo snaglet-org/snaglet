@@ -1,0 +1,269 @@
+@use '../../../styles/abstracts/breakpoints';
+@use '../../../styles/abstracts/controls' as controls;
+@use '../../../styles/abstracts' as *;
+
+// Button — compact corners and a light outset bevel. Variants: neutral,
+// primary (filled), danger (error colors on hover), ghost and link. Ghost
+// and link stay flat so low-priority actions do not compete.
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-snug);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  text-decoration: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast),
+    filter var(--transition-fast);
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  @include controls.focus-ring;
+}
+
+// Sizes
+// Dense enough to match Dashboard rows, toolbars, and pane chrome.
+
+// xs — 16px inline icon chrome on cards, list rows, and pane headers
+// (card actions, collapse chevrons).
+.sizeXs {
+  min-height: 16px;
+  padding: 0 6px;
+  font-size: 9.5px;
+}
+
+.sizeSm {
+  min-height: 22px;
+  padding: 2px 8px;
+  font-size: 10.5px;
+}
+
+.sizeMd {
+  min-height: 28px;
+  padding: 4px 12px;
+  font-size: 11.5px;
+}
+
+.sizeLg {
+  min-height: 34px;
+  padding: 6px 16px;
+  font-size: 13px;
+}
+
+// Variants
+
+// Neutral — the default. Panel-toned surface, foreground text.
+// Subtle hover that just shifts the fill; no border flash.
+.variantNeutral {
+  --button-bevel-edge: var(--color-border-strong);
+
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  @include controls.button-outset;
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+    border-color: var(--color-primary-border);
+    @include controls.button-outset;
+  }
+
+  &:active:not(:disabled) {
+    background: var(--color-selected);
+    @include theme-on-selected;
+    transform: translate(1px, 1px);
+    @include controls.button-inset;
+  }
+
+  // Toggle-button pressed state. Use aria-pressed on the Button to
+  // get this treatment (e.g. <Button aria-pressed={open}>) instead of
+  // re-implementing an "active" class in consumer stylesheets.
+  &[aria-pressed='true']:not(:disabled) {
+    background: var(--color-selected);
+    @include theme-on-selected;
+    @include controls.button-inset;
+  }
+}
+
+// Primary — filled with the accent. Mono uppercase + tracked spacing
+// gives it the loud "terminal CTA" voice for things like New Task,
+// Save, Connect.
+.variantPrimary {
+  --button-bevel-edge: var(--color-primary-dark);
+
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+  @include controls.button-outset;
+  @include theme-mono-label(wide);
+  font-weight: 700;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.05);
+    @include controls.button-outset;
+  }
+
+  &:active:not(:disabled) {
+    filter: brightness(0.94);
+    transform: translate(1px, 1px);
+    @include controls.button-inset;
+  }
+}
+
+// Danger — quiet until hover. Border + text flip to the error
+// palette, matching the dash.button-danger mixin.
+.variantDanger {
+  --button-bevel-edge: var(--color-border-strong);
+
+  background: var(--color-surface-raised);
+  color: var(--color-text-muted);
+  @include controls.button-outset;
+
+  &:hover:not(:disabled) {
+    --button-bevel-edge: var(--color-error);
+
+    background: transparent;
+    border-color: var(--color-error);
+    color: var(--color-error);
+    @include controls.button-outset;
+  }
+
+  &:active:not(:disabled) {
+    --button-bevel-edge: var(--color-error);
+
+    background: var(--color-error-bg);
+    transform: translate(1px, 1px);
+    @include controls.button-inset;
+  }
+}
+
+// Ghost — borderless and transparent until hover. For low-priority
+// toolbar actions where chrome would compete with content.
+.variantGhost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-text-muted);
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+    border-color: var(--color-border);
+    color: var(--color-text);
+  }
+
+  &:active:not(:disabled) {
+    background: var(--color-selected);
+    @include theme-on-selected;
+    transform: scale(0.97);
+  }
+
+  // Toggle-button pressed state, as on the neutral variant: a ghost
+  // toggle (find-bar case toggle, a chosen relation target) must read
+  // as chosen even at rest, not only on hover.
+  &[aria-pressed='true']:not(:disabled) {
+    background: var(--color-selected);
+    border-color: var(--color-border);
+    @include theme-on-selected;
+  }
+}
+
+// Link — inline text-button that looks like a hyperlink. No border, no
+// fill, just primary-colored text that underlines on hover. Used for
+// "reply" / "configure embeddings" / "[+] expand" sort of inline
+// actions, so consumer modules don't reinvent borderless mini-buttons.
+.variantLink {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-primary);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+
+  &:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+
+  &:active:not(:disabled) {
+    background: transparent;
+    transform: scale(0.97);
+  }
+}
+
+// Modifiers
+
+.fullWidth {
+  width: 100%;
+}
+
+// Square icon-only button. Width matches the size's min-height so it's
+// a perfect square; padding drops to 0 so the glyph sits dead-center.
+// Pair with leftIcon (or put the glyph in children) and pass aria-label.
+.iconOnly {
+  padding: 0;
+
+  &.sizeXs {
+    width: 16px;
+    min-width: 16px;
+  }
+  &.sizeSm {
+    width: 22px;
+    min-width: 22px;
+  }
+  &.sizeMd {
+    width: 28px;
+    min-width: 28px;
+  }
+  &.sizeLg {
+    width: 34px;
+    min-width: 34px;
+  }
+}
+
+.loading {
+  pointer-events: none;
+}
+
+.spinner {
+  width: 12px;
+  height: 12px;
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leftIcon,
+.rightIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}

@@ -1,0 +1,216 @@
+@use '../../../../styles/abstracts' as *;
+
+// Automations pane — same header / section grammar as the MCP connection
+// panes: identity first, hairline seam, labeled sections below.
+
+.shell {
+  container: automation-pane / inline-size;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-sans));
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.subtitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  color: var(--color-error);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 24px 32px;
+
+  @include layout-scrollbar-thin($size: 8px, $inset: true);
+}
+
+.loading {
+  margin: 0;
+  padding: 20px 24px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+.notice {
+  margin: 0;
+  padding: 8px 12px;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  box-shadow: inset 3px 0 0 var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+}
+
+.section {
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+  background: color-mix(in srgb, var(--color-foreground) 42%, transparent);
+}
+
+.sectionHeading {
+  margin: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.prompt {
+  margin: 0;
+  padding: 12px;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: minmax(110px, max-content) minmax(0, 1fr);
+  gap: 8px 16px;
+  margin: 0;
+  padding: 12px;
+  font-size: var(--text-sm);
+
+  dt {
+    color: var(--color-text-muted);
+  }
+
+  dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.nextRun {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+}
+
+// Fixed-width digits, so the ticking seconds don't shift the line.
+.countdown {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.calendar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.result[data-status='failed'] {
+  color: var(--color-error);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+@container automation-pane (inline-size < 560px) {
+  .header,
+  .body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .headerRow {
+    flex-direction: column;
+  }
+
+  .actions {
+    justify-content: flex-start;
+  }
+}
+
+@container automation-pane (inline-size < 380px) {
+  .detailGrid {
+    grid-template-columns: 1fr;
+    gap: 3px;
+
+    dd + dt {
+      margin-top: 8px;
+    }
+  }
+}

@@ -1,0 +1,361 @@
+@use '../../../../styles/abstracts' as *;
+
+// GetStartedView — the first-run pane, in the open style of Home and the
+// other settings views: no boxed panels, small mono uppercase labels, square
+// corners, hairlines between steps, tokens only so any theme paints it.
+
+.shell {
+  height: 100%;
+  overflow: auto;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+
+  @include layout-scrollbar-thin($size: 8px, $inset: true, $hover: true);
+}
+
+.page {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 28px 24px 32px;
+
+  @container pane (inline-size < 560px) {
+    padding: 16px 14px 24px;
+  }
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eyebrow,
+.label {
+  @include theme-mono-label(wide);
+  margin: 0;
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text);
+}
+
+.lead,
+.muted {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.link {
+  @include layout-button-reset;
+
+  padding: 0;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: var(--font-medium);
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-error);
+}
+
+// Steps
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+.stepHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.stepNumber {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-primary);
+}
+
+.stepTitle {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--font-bold);
+  color: var(--color-text);
+}
+
+.stepState {
+  @include theme-mono-label;
+
+  margin-left: auto;
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+
+  &[data-state='done'] {
+    color: var(--color-success);
+  }
+}
+
+// Connected credentials
+
+.connected,
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.connectedList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.connectedRow {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: var(--text-sm);
+}
+
+.connectedName {
+  font-weight: var(--font-medium);
+}
+
+.connectedLabel {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.connectedStatus {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+
+  &[data-status='ok'] {
+    color: var(--color-success);
+  }
+
+  &[data-status='fail'] {
+    color: var(--color-error);
+  }
+}
+
+.connectedReason {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  overflow-wrap: anywhere;
+}
+
+// Provider cards
+
+.cards {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.card {
+  @include layout-button-reset;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 56px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-background);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-border);
+    background: var(--color-hover);
+  }
+
+  &[data-active] {
+    border-color: var(--color-primary);
+    background: var(--color-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+}
+
+.cardTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.cardBlurb {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.note {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+// The chosen provider's own connect panel
+
+.connect {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.help {
+  margin: 0;
+  padding-left: 10px;
+  border-left: 2px solid var(--color-primary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+// The Providers view fills its pane; here it takes its own height, up to a
+// cap past which it scrolls inside the frame.
+.embed {
+  max-height: 460px;
+  overflow: auto;
+  border: 1px solid var(--color-border-subtle);
+}
+
+// The model step: each starter agent's model, a one-click offer, the picker
+
+.agentList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.agentRow {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: var(--text-sm);
+}
+
+.agentName {
+  font-weight: var(--font-medium);
+}
+
+.agentModel {
+  overflow: hidden;
+  color: var(--color-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &[data-state='none'] {
+    color: var(--color-text-muted);
+  }
+
+  &[data-state='unavailable'] {
+    color: var(--color-warning);
+  }
+}
+
+.offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding-left: 10px;
+  border-left: 2px solid var(--color-primary);
+}
+
+.offerText {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skip {
+  @include layout-button-reset;
+
+  align-self: flex-start;
+  padding: 0;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}

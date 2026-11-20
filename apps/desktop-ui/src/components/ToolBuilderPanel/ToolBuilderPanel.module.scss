@@ -1,0 +1,205 @@
+@use '../../styles/abstracts' as *;
+
+// ToolBuilderPanel — create/edit form for a workspace-sourced custom tool.
+// Follows the ServerEditor / NewAgentModal field grammar (label + control
+// stacked). Pane-hosted — `.pane`/`.paneHeader`/
+// `.paneBody`/`.paneFooter` mirror ToolView's own `.root` sizing convention
+// (height: 100%, internal scroll, `--density-pane-pad-*`) so the two halves
+// of a tool's pane (this + ToolView) feel like one surface, not a bespoke
+// modal transplanted in place.
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+}
+
+.paneHeader {
+  flex-shrink: 0;
+  padding: var(--density-pane-pad-y) var(--density-pane-pad-x) 12px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.paneBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px var(--density-pane-pad-x);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.paneFooter {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px var(--density-pane-pad-x);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.loading {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.tabs {
+  margin-bottom: 2px;
+}
+
+.tabDirtyDot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  vertical-align: middle;
+}
+
+.codeSection {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  min-width: 0;
+}
+
+.codeSectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.codeDirtyLabel {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.codeLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 320px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-sunken);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+// Cheap client-side "no default export" hint (see handlerEditorSupport.ts) —
+// warning-toned but non-blocking, same well vocabulary as .fieldHint below.
+.codeExportHint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-warning);
+  line-height: 1.4;
+}
+
+// Retry affordance under the tool.ts load-failure console — hugs the left
+// edge instead of stretching to the section's full width.
+.codeRetryBtn {
+  align-self: flex-start;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--color-text-disabled);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.fieldHint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.fieldErrorText {
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  line-height: 1.4;
+}
+
+// Build/install failures can carry a full esbuild log — cap the height and
+// let it scroll rather than growing the modal unbounded (matches ToolView's
+// `.outputError` output-console typography: monospace, wrapped, scrollable).
+.formError {
+  margin: 0;
+  padding: 8px 10px;
+  max-height: 160px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+// Read-only fallback for a parametersSchema the row editor can't represent
+// (see ToolBuilderPanel's `unrepresentableSchema`) — a recessed well, same
+// vocabulary as the build-error console above.
+.schemaPreview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.schemaPreviewJson {
+  margin: 0;
+  padding: 8px 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

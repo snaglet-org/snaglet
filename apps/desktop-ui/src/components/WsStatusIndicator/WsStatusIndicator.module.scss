@@ -1,0 +1,65 @@
+@use '../../styles/abstracts' as *;
+
+// Fixed bottom-right connection status badge.
+// Only rendered when the WS connection is NOT open — invisible during normal use.
+
+.badge {
+  position: fixed;
+  bottom: space(3);
+  right: space(3);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: space(1);
+  padding: space(1) space(2);
+  border-radius: var(--radius-md, 6px);
+  border: 1px solid;
+  font-size: var(--font-size-xs, 11px);
+  font-family: var(--font-mono, monospace);
+  pointer-events: none;
+  user-select: none;
+
+  &.warning {
+    background: var(--color-warning-bg);
+    border-color: var(--color-warning-border);
+    color: var(--color-warning);
+  }
+
+  &.error {
+    background: var(--color-error-bg);
+    border-color: var(--color-error-border);
+    color: var(--color-error);
+  }
+}
+
+// Pulsing dot
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse 1.5s ease-in-out infinite;
+
+  .warning & {
+    background: var(--color-warning);
+  }
+
+  .error & {
+    background: var(--color-error);
+    animation: none; // static dot for hard error, not reconnecting
+  }
+}
+
+.label {
+  white-space: nowrap;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}

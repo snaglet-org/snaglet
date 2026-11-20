@@ -1,0 +1,34 @@
+# Gitleaks reads this file from the repository root. It keeps the default
+# rules and allowlists known false positives of the generic-api-key rule.
+# Each allowlist needs both the file path and the exact value shape, so a real
+# key added to one of these files is still reported.
+title = "Snaglet gitleaks config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "generic-api-key"
+
+  [[rules.allowlists]]
+  description = "SHA-256 checksums of the voice model tokens files"
+  condition = "AND"
+  paths = ['''(?:^|/)apps/server/src/services/voice/voiceModelManifest\.ts$''']
+  regexTarget = "line"
+  regexes = [
+    '''^\s*(?:const SHARED_TOKENS_SHA = '[0-9a-f]{64}';|tokensSha: '[0-9a-f]{64}',)\s*$''',
+  ]
+
+  [[rules.allowlists]]
+  description = "Placeholder credentials in tests"
+  condition = "AND"
+  paths = [
+    '''(?:^|/)tests/build/ensure-dev-env\.test\.ts$''',
+    '''(?:^|/)tests/unit/apps/server/config/logger\.test\.ts$''',
+    '''(?:^|/)tests/unit/apps/server/services/McpService/(?:installOnceProcess|mcpInstaller)\.test\.ts$''',
+  ]
+  regexes = [
+    '''^0123456789abcdef$''',
+    '''^s3cr3t-Abc_123\.def$''',
+    '''^test-secret-placeholder-[0-9a-f]{4}$''',
+  ]

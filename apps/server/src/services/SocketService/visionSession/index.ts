@@ -1,0 +1,1 @@
+export { registerVisionHandlers } from './handlers';

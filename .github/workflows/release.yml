@@ -1,0 +1,90 @@
+name: Production candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish after every production gate passes
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: production-release
+  cancel-in-progress: false
+
+jobs:
+  verify-source:
+    name: Frozen source verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint:baseline
+      - run: pnpm lint:realtime
+      - run: pnpm lint:docs
+      - run: pnpm typecheck:all
+      - run: pnpm test:package-exports
+      - run: pnpm test --runInBand --forceExit
+        timeout-minutes: 15
+      - run: pnpm test:desktop-ui
+
+  production-candidate:
+    name: Production candidate (macOS arm64)
+    needs: verify-source
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install chromium
+      - run: pnpm build:server
+      - name: Build production candidate
+        run: pnpm build:desktop
+      - name: Verify production candidate
+        run: pnpm verify:artifacts --profile desktop-production
+      - name: Upload candidate manifests and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-production-candidate-macos-arm64
+          path: |
+            dist/desktop-production/artifacts/artifact-manifest.json
+            dist/desktop-production/artifacts/SHA256SUMS
+            dist/desktop-production/artifacts/provenance.json
+            dist/desktop-production/staging-manifest.json
+            dist/desktop-production/desktop-production.png
+          if-no-files-found: warn
+
+  publish:
+    name: Publish signed and notarized release
+    needs: production-candidate
+    if: ${{ inputs.publish }}
+    runs-on: macos-14
+    environment: production
+    steps:
+      - name: Block until credentialed signing workflow exists
+        run: |
+          echo "CI publication is intentionally blocked."
+          echo "Signed releases are shipped from a maintainer machine with a Developer ID certificate:"
+          echo "  pnpm build:desktop && pnpm verify:artifacts --profile desktop-production"
+          echo "  node scripts/release/sign-and-notarize.mjs --notary-profile snaglet-notary"
+          echo "  node scripts/ship-desktop.mjs --version vX.Y.Z"
+          echo "See docs/release-process.md (Signing and Distribution). Wiring signing into CI"
+          echo "requires the certificate and notary credentials as environment secrets first."
+          exit 1

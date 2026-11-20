@@ -1,0 +1,240 @@
+// Layout, positioning and display helper mixins
+// (used as `@include layout-flex-center;`).
+
+// Flexbox
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+@mixin flex-no-shrink {
+  flex-shrink: 0;
+}
+
+// Fill / sizing
+
+@mixin fill($width: 100%, $height: 100%) {
+  width: $width;
+  height: $height;
+}
+
+@mixin fill-screen {
+  @include fill(100vw, 100vh);
+}
+
+@mixin fill-absolute {
+  @include scale-position(absolute, 100%, 100%, 0, 0, 0, 0);
+}
+
+@mixin fill-fixed {
+  @include scale-position(fixed, 100%, 100%, 0, 0, 0, 0);
+}
+
+// Positioning
+
+@mixin scale-position(
+  $type,
+  $width: null,
+  $height: null,
+  $top: 0,
+  $left: 0,
+  $right: 0,
+  $bottom: 0
+) {
+  position: $type;
+  @if $width != null {
+    width: $width;
+  }
+  @if $height != null {
+    height: $height;
+  }
+  top: $top;
+  left: $left;
+  right: $right;
+  bottom: $bottom;
+}
+
+@mixin scale-position-absolute(
+  $width: null,
+  $height: null,
+  $top: 0,
+  $left: 0,
+  $right: 0,
+  $bottom: 0
+) {
+  @include scale-position(absolute, $width, $height, $top, $left, $right, $bottom);
+}
+
+@mixin scale-position-fixed($width: null, $height: null, $top: 0, $left: 0, $right: 0, $bottom: 0) {
+  @include scale-position(fixed, $width, $height, $top, $left, $right, $bottom);
+}
+
+// Sizing
+
+@mixin scale($width: auto, $height: auto, $objectFit: contain) {
+  width: $width;
+  height: $height;
+  object-fit: $objectFit;
+}
+
+@mixin scale-to-screen($width: 100vw, $height: 100vh) {
+  @include scale($width, $height, contain);
+}
+
+// Overflow
+
+@mixin overflow-hidden {
+  overflow: hidden;
+}
+@mixin overflow-auto {
+  overflow: auto;
+}
+@mixin overflow-scroll {
+  overflow: scroll;
+}
+@mixin overflow-visible {
+  overflow: visible;
+}
+
+// Scrollbar
+
+// The app's thin scrollbar: a translucent thumb on a transparent track,
+// colored by the --scrollbar-* tokens. $axis is y | x | both; $inset floats
+// the thumb inside a 2px transparent gutter; $hover brightens it on hover.
+// $native: false emits only the ::-webkit-* rules, because setting
+// scrollbar-width/-color makes Chromium ignore ::-webkit-* entirely.
+@mixin scrollbar-thin(
+  $axis: y,
+  $size: var(--scrollbar-size),
+  $radius: 0,
+  $inset: false,
+  $hover: false,
+  $native: true
+) {
+  @if $native {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+
+  &::-webkit-scrollbar {
+    @if $axis == x {
+      height: $size;
+    } @else if $axis == both {
+      width: $size;
+      height: $size;
+    } @else {
+      width: $size;
+    }
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: $radius;
+    @if $inset {
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+  }
+  @if $hover {
+    &::-webkit-scrollbar-thumb:hover {
+      background: var(--scrollbar-thumb-hover);
+      @if $inset {
+        background-clip: padding-box;
+      }
+    }
+  }
+}
+
+@mixin scrollbar-thin-horizontal {
+  @include scrollbar-thin($axis: x);
+}
+
+// Scroll without a visible bar — for rails and strips that scroll by
+// drag/wheel and would be crowded by chrome.
+@mixin scrollbar-hidden {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// Scroll edge fade — the hint that a sideways scroller holds more than it
+// shows: an edge with content scrolled past it fades out. The ends come from
+// `useScrollEdges` (hooks/useScrollEdges.ts), which sets data-overflow-start
+// and data-overflow-end on the scroller. The tab strip (Tabs) fades the same
+// way. `currentcolor` is just an opaque mask color.
+@mixin scroll-edge-fade($fade: 24px) {
+  &[data-overflow-start] {
+    -webkit-mask-image: linear-gradient(to right, transparent, currentcolor $fade);
+    mask-image: linear-gradient(to right, transparent, currentcolor $fade);
+  }
+
+  &[data-overflow-end] {
+    -webkit-mask-image: linear-gradient(to left, transparent, currentcolor $fade);
+    mask-image: linear-gradient(to left, transparent, currentcolor $fade);
+  }
+
+  &[data-overflow-start][data-overflow-end] {
+    $both: linear-gradient(
+      to right,
+      transparent,
+      currentcolor $fade,
+      currentcolor calc(100% - #{$fade}),
+      transparent
+    );
+    -webkit-mask-image: $both;
+    mask-image: $both;
+  }
+}
+
+// Border radius helpers
+
+@mixin rounded-top($radius) {
+  border-top-left-radius: $radius;
+  border-top-right-radius: $radius;
+}
+
+@mixin rounded-bottom($radius) {
+  border-bottom-left-radius: $radius;
+  border-bottom-right-radius: $radius;
+}
+
+// Text
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Interactive
+
+@mixin button-reset {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+}
+
+@mixin fixed-flex-center {
+  @include fill-fixed;
+  @include flex-center;
+}

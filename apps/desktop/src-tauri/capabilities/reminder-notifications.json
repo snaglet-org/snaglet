@@ -1,0 +1,9 @@
+{
+  "identifier": "reminder-notifications",
+  "description": "The packaged UI is served by the sidecar on a loopback origin, which Tauri treats as remote and grants no permissions by default. This lets that page (and only it, in the main window) listen for the shell's reminder-notification-clicked event.",
+  "windows": ["main"],
+  "remote": {
+    "urls": ["http://127.0.0.1:*"]
+  },
+  "permissions": ["core:event:allow-listen", "core:event:allow-unlisten"]
+}

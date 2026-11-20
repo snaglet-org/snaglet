@@ -1,0 +1,194 @@
+// The agent page's Memories tab: a quiet list of rows, each a key, the
+// memory's text (clamped) and where and when it was recorded. Tokens only.
+.root {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+
+// The memories' own scroll box: bordered, it holds the rows (and Load more)
+// and scrolls on its own while the page around it stays still.
+.box {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+}
+
+.count {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.hint {
+  margin: 0;
+  padding: 8px 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.error {
+  padding: 8px 10px;
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: var(--text-sm);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// One memory: the row button, with its delete control floating at the top
+// right as a sibling (a button inside a button is invalid).
+.item {
+  position: relative;
+}
+
+.actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+
+  // Hidden until the row is hovered or anything in it has focus, but still
+  // in the tab order; asking "Delete?" keeps it up.
+  .item:hover &,
+  .item:focus-within &,
+  &[data-confirming='true'] {
+    opacity: 1;
+  }
+
+  // Touch has no hover: always show it.
+  @media (hover: none) {
+    opacity: 1;
+  }
+}
+
+.confirm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-foreground);
+}
+
+.confirmText {
+  color: var(--color-text);
+  font-size: var(--text-xs);
+}
+
+.row {
+  appearance: none;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 36px 10px 12px; // room at the right for the delete control
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-foreground);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+// Long keys break after their dots (<wbr>), at hyphens, and inside any
+// segment too long for the line, so they never run past the row.
+.key {
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-primary);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.content {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+}
+
+.meta {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.thread {
+  color: var(--color-text);
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+  padding-top: 10px;
+}
+
+.previewTitle {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.previewContent {
+  margin: 0;
+  max-height: 50vh;
+  overflow: auto;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.previewMeta {
+  margin-top: 12px;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}

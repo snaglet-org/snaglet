@@ -1,0 +1,114 @@
+// AgentModelEditor — provider/model/credential selector
+// Flat layout: no wrapper card. Inputs sit directly on the surface.
+@use '../../styles/abstracts' as *;
+
+.modelEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+// Header row: the section label on the left, an optional slot (e.g. the
+// thread default/override pill) pinned to the right. Matches the shared
+// <Section> head grammar (space-between, mono-label) so the editor's
+// "Model" header lines up with the Budget / Tool access sections around it.
+.modelEditorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.modelEditorHeaderLabel {
+  @include theme-mono-label;
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.modelEditorGrid {
+  display: grid;
+  // Collapse provider/model from two columns to one as the field row
+  // narrows — the track count follows available width, so the selects
+  // never crush below a legible minimum (no fixed breakpoint needed).
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 7px;
+}
+
+.modelEditorField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.modelEditorLabel {
+  @include theme-mono-label;
+  color: var(--color-text-muted);
+}
+
+.modelEditorActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.saveBtn {
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wider);
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: 0;
+  cursor: pointer;
+  transition: filter 120ms ease;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.resetBtn {
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wider);
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    border-color 120ms ease;
+
+  &:hover:not(:disabled) {
+    color: var(--color-text);
+    border-color: var(--color-border);
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.modelEditorStatus {
+  @include theme-mono-label;
+  color: var(--color-success);
+}
+
+.modelEditorError {
+  @include theme-mono-label;
+  color: var(--color-error);
+}

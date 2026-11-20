@@ -1,0 +1,181 @@
+@use '../../styles/abstracts' as *;
+
+// Dashboard shell — token-driven so light + dark modes track the same
+// vocabulary as the Chat page (--color-bg-*, --color-primary*,
+// --color-border*, etc.). No raw hex / rgba on layout surfaces.
+
+.shell {
+  // `inset: 0` alone sizes the shell to the window at any UI zoom (CSS `zoom`
+  // on the root, see zoomWindow). No `vw` / `vh` here or in the tracks below:
+  // engines disagree on whether the root zoom scales them.
+  position: fixed;
+  inset: 0;
+  display: grid;
+  // Sidebar width is driven by --db-sidebar-w (set inline on the shell
+  // by useSidebarWidth). Fallback to 320px when the variable is absent
+  // (e.g. tests, SSR snapshots). --db-activitybar-w is the icon strip's
+  // width — ActivityBar.module.scss consumes it too, so the collapsed
+  // column and the strip can never drift apart. The `46%` cap is of the
+  // shell, which is the window.
+  --db-activitybar-w: 44px;
+  grid-template-columns: min(var(--db-sidebar-w, 320px), 46%) minmax(0, 1fr);
+  // Row 1 holds the sidebar + main pane area; row 2 is the full-width status
+  // bar (auto height) anchored below every pane. `minmax(0, 1fr)` lets row 1
+  // shrink so panes scroll internally instead of pushing the bar off-screen.
+  grid-template-rows: minmax(0, 1fr) auto;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-disabled);
+  overflow: hidden;
+
+  // Collapsed: the view panel goes away but the activity strip stays.
+  &.shellSidebarHidden {
+    grid-template-columns: var(--db-activitybar-w) 1fr;
+  }
+
+  // While dragging the resizer, suppress hover/transition jitter
+  // on the sidebar and lock the cursor across the whole shell.
+  &.shellResizing {
+    cursor: col-resize;
+    user-select: none;
+  }
+}
+
+// "Loud chrome action" affordance on top of <Button variant="ghost" size="md" iconOnly>:
+// absolutely positions the leaf-toggle button at the top-left corner of the shell, paints
+// the panel-tinted resting surface, and fills with primary + lifts on hover.
+// Same loud-hover family as PaneChrome.chromeIconBtn and the sidebar header
+// .addBtn trio — emerging "loud icon chrome" pattern.
+.sidebarToggle {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 200;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  background: var(--color-foreground);
+  border-color: var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow var(--transition-fast),
+    color var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    background: var(--color-primary);
+    border-color: var(--color-primary-border);
+    color: var(--color-on-primary);
+    transform: translateY(-1px) scale(1.04);
+    box-shadow: var(--shadow-brand-glow);
+  }
+}
+
+// Leaf icon inside the sidebar toggle button.
+// Open  → tip points left  (sidebar open, "close" affordance, rotate -90°)
+// Closed → tip points right (sidebar closed, "open" affordance, rotate 90°)
+.sidebarToggleLeaf {
+  display: block;
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &[data-open='true'] {
+    transform: rotate(-90deg);
+  }
+
+  &[data-open='false'] {
+    transform: rotate(90deg);
+  }
+}
+
+// Rail column — vertical stack that owns the left rail geometry (width +
+// divider). Holds the ActivityBar tabs.
+.railColumn {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  width: var(--db-activitybar-w, 44px);
+  border-right: 1px solid var(--color-border);
+  background: var(--color-activity-bar);
+  // The ActivityBar fills the rail column; the column owns the width
+  // and divider, so the bar drops its own.
+  :global(.activitybar-root),
+  > :first-child {
+    width: 100%;
+    border-right: none;
+  }
+}
+
+.sidebar {
+  // Two-column layout (VS-Code style): activity bar on the left,
+  // view panel filling the rest. The activity bar owns its own
+  // background; the view panel uses the surface color.
+  display: flex;
+  flex-direction: row;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  background: var(--color-sidebar);
+  border-right: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.viewPanel {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.viewBottomBar {
+  // Compact bar at the bottom of the view panel — hosts the archive
+  // drop-zone. Flush against the panel edges so the drop target lines
+  // up with the view's content area; the drop-zone's own border-top
+  // provides the visual divider against the view body.
+  flex: 0 0 auto;
+}
+
+.main {
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  background: var(--color-background);
+}
+
+// Sidebar resizer — a thin vertical handle on the sidebar's right
+// edge. Hit area is wider (6px) than the visible line (1px) so the
+// drag target is comfortable without taking layout space.
+.sidebarResizer {
+  position: absolute;
+  top: 0;
+  right: -3px; // center the 6px hit area on the sidebar/main boundary
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 50;
+  background: transparent;
+  transition: background var(--transition-fast);
+
+  &:hover,
+  &.sidebarResizerActive {
+    background: var(--color-primary);
+    opacity: 0.6;
+  }
+}
+
+@media (max-width: 640px) {
+  .shell {
+    --db-activitybar-w: 40px;
+  }
+
+  .sidebarToggle {
+    top: 6px;
+    left: 5px;
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+  }
+}

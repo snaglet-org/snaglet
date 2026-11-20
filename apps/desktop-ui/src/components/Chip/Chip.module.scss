@@ -1,0 +1,169 @@
+@use '../../styles/abstracts' as *;
+
+// Chip — small mono pill for tags, filters, counts, and toggles.
+// Variants: solid (filled), outline (transparent), dashed (dashed border,
+// italic). Tones set --chip-fg / --chip-bg / --chip-border, so variants and
+// tones compose without a class per combination.
+
+.chip {
+  // Shared pill skeleton (inline-flex, border-radius, mono, nowrap) from
+  // abstracts/_chips.scss — the same source the global `.md-chip` pulls
+  // from. Chip-specific bits stay below.
+  @include chip-base;
+  @include theme-mono-label;
+  gap: 4px;
+  line-height: 1;
+  flex-shrink: 0;
+  // Default tone (overridden by .toneX classes).
+  --chip-fg: var(--color-text-muted);
+  --chip-bg: var(--color-hover);
+  --chip-border: var(--color-border);
+}
+
+// Sizes
+
+.sizeXs {
+  font-size: var(--text-3xs);
+  padding: 1px 5px;
+  min-height: 14px;
+}
+
+.sizeSm {
+  font-size: 11px;
+  padding: 2px 7px;
+  min-height: 18px;
+}
+
+// Tones
+// Each tone sets the three custom properties; variants consume them.
+
+.toneNeutral {
+  --chip-fg: var(--color-text);
+  --chip-bg: var(--color-foreground);
+  --chip-border: var(--color-border);
+}
+
+.toneMuted {
+  --chip-fg: var(--color-text-muted);
+  --chip-bg: var(--color-hover);
+  --chip-border: var(--color-border);
+}
+
+// Accent tones route through the shared tint formula (chip-tone-vars),
+// so the bg/border tint amounts track the `--chip-*-tint` tokens.
+.tonePrimary {
+  @include chip-tone-vars(var(--color-primary));
+}
+
+.toneSuccess {
+  @include chip-tone-vars(var(--color-success));
+}
+
+.toneWarning {
+  @include chip-tone-vars(var(--color-warning));
+}
+
+.toneError {
+  @include chip-tone-vars(var(--color-error));
+}
+
+.toneInfo {
+  @include chip-tone-vars(var(--color-info));
+}
+
+// Variants
+
+.variantSolid {
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  color: var(--chip-fg);
+}
+
+.variantOutline {
+  background: transparent;
+  border: 1px solid var(--chip-border);
+  color: var(--chip-fg);
+}
+
+.variantDashed {
+  background: transparent;
+  border: 1px dashed var(--chip-border);
+  color: var(--chip-fg);
+  font-style: italic;
+}
+
+// Interactive (renders as <button>)
+
+.interactive {
+  cursor: pointer;
+  appearance: none;
+  font-family: inherit;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    opacity var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--chip-fg) 18%, transparent);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--chip-fg);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+}
+
+// Pressed (toggle-on) state: stronger fill and a line-through, read as
+// "filter applied, these results are excluded".
+.interactive[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--chip-fg) 22%, transparent);
+  border-color: var(--chip-fg);
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+// Slots
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.9em;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.label {
+  line-height: 1;
+}
+
+.remove {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 1.2em;
+  line-height: 1;
+  padding: 0 1px;
+  cursor: pointer;
+  opacity: 0.6;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity var(--transition-fast);
+
+  &:hover {
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--chip-fg);
+    opacity: 1;
+  }
+}

@@ -1,0 +1,32 @@
+@use '../../../styles/abstracts' as *;
+
+// ActivityBar — thin vertical column of view-switcher icon buttons.
+// Sits flush against the left edge of the dashboard sidebar; switches
+// the view panel between Library / Agents (and future views).
+
+// Container chrome only — the tab geometry + active-state accent ship
+// from <Tabs variant="rail" orientation="vertical">. The 48px top
+// reserves space for the absolutely-positioned sidebar-toggle hamburger
+// that lives at the viewport top-left edge.
+.root {
+  flex: 0 0 auto;
+  // Width is owned by the dashboard shell (--db-activitybar-w) so the
+  // collapsed shell column and this strip stay in lockstep.
+  width: var(--db-activitybar-w, 44px);
+  padding: 48px 0 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--color-activity-bar);
+  border-right: 1px solid var(--color-border);
+
+  @include layout-scrollbar-hidden;
+
+  // One size for every rail glyph. The shared icons ship at mixed intrinsic
+  // sizes (14 / 20 / 28px) because they're reused elsewhere; CSS beats the
+  // SVG width/height attributes, so the rail normalizes them here.
+  svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+}

@@ -1,0 +1,30 @@
+// The link address form inside the editor popover card.
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 16px 12px;
+  background: var(--color-foreground);
+}
+
+.input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  padding: 6px 8px;
+  background: var(--color-background);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -1px;
+  }
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 11px;
+}

@@ -1,0 +1,53 @@
+// Tokens only — no raw color literals, so this inherits every theme.
+
+// Shared by both placements: just the reveal. Chrome is placement-specific
+// below, because an inline surface must look like the panel it sits in while a
+// floating one must read as a card above it.
+.surface {
+  box-sizing: border-box;
+  animation: reveal var(--transition-fast, 120ms) ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+// Floating: lifted out of flow and positioned against its trigger. Owns the
+// full card chrome so callers only position it.
+.floating {
+  position: fixed;
+  z-index: 2000;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-foreground);
+  color: var(--color-text);
+  box-shadow: var(--shadow-md);
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+// Inline: stays in document flow directly beneath its trigger. This is the
+// ProjectView "container settings" case — it should still dismiss like an
+// overlay, but it must not float, because it pushes the panel open. Layout
+// only; the caller's className supplies border and background so the surface
+// matches its surroundings rather than looking like a dropped-in card.
+.inline {
+  position: relative;
+  width: 100%;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

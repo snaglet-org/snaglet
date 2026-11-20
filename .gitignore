@@ -1,0 +1,79 @@
+# Dependencies (no trailing slash, so a symlinked node_modules is ignored too)
+node_modules
+# This repo uses pnpm; an npm lockfile is always a mistake
+package-lock.json
+
+# Build output
+dist
+*.tsbuildinfo
+*.tgz
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/
+apps/desktop/src-tauri/resources/
+apps/desktop/src-tauri/binaries/
+apps/server/native/*/bin/
+apps/server/src/services/ToolService/generated/
+# Sources here are TypeScript, so any .js or .d.ts is a stray build artifact
+packages/shared/**/*.js
+apps/desktop-ui/src/**/*.js
+apps/desktop-ui/src/**/*.d.ts
+!apps/desktop-ui/src/vite-env.d.ts
+apps/desktop-ui/vite.config.js
+apps/desktop-ui/vite.config.d.ts
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Caches
+.cache
+.vite
+.eslintcache
+__pycache__/
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+!.env.local.example
+*.pem
+*.key
+*.p12
+*.p8
+
+# Local databases and runtime data
+.snaglet/
+*.db
+*.pid
+snaglet.config.json
+tmp
+# A literal "~" folder created by a home path that was never expanded
+~
+
+# Logs and crash reports
+logs
+*.log
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Test and coverage output
+coverage
+*.lcov
+test-results/
+playwright-report/
+blob-report/
+tests/e2e/__screenshots__/*
+!tests/e2e/__screenshots__/.gitkeep
+
+# Editor and OS files
+.DS_Store
+.vscode/settings.json
+.vscode/mcp.json
+.idea/
+
+# Local tool state and AI-assistant files
+.claude
+.codex
+/.cursor
+.playwright-mcp/
+CLAUDE.md
+/AGENTS.md
+/GEMINI.md
+worktrees/

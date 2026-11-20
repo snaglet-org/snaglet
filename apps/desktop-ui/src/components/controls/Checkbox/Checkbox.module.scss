@@ -1,0 +1,132 @@
+// Checkbox — wraps a native <input type="checkbox"> for form and
+// screen-reader semantics, painted as an outline box with no fill. When
+// checked, the outline tints to primary and a check glyph animates in.
+
+.wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--color-text);
+  user-select: none;
+
+  &:hover:not(.disabled) .box {
+    border-color: var(--color-primary-border);
+  }
+}
+
+.disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+// Sizes
+
+.sizeSm .box {
+  width: 12px;
+  height: 12px;
+}
+
+.sizeMd .box {
+  width: 14px;
+  height: 14px;
+}
+
+// Hidden native input
+// Visually hidden but still focusable and submitted with forms. The
+// visible box is painted by .box below.
+
+.input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+  appearance: none;
+}
+
+// Visible box
+
+.box {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  // No fill when unchecked — a bare outline box that borrows the
+  // surface behind it, so it stays subtle on any panel in light or dark.
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  // Tints the check / indeterminate glyph (both use currentColor).
+  color: var(--color-primary);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  // Checked / indeterminate keeps the outline and just tints the border
+  // to primary, letting the check glyph carry the "on" state. A whisper
+  // of primary wash gives affordance without a harsh block of color.
+  .input:checked + &,
+  .input:indeterminate + & {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  }
+
+  // Focus halo on the visible box, driven by the hidden input's focus state.
+  .input:focus-visible + & {
+    box-shadow: 0 0 0 2px var(--color-focus-ring);
+    border-color: var(--color-primary);
+  }
+}
+
+// Glyphs
+// Both glyphs are mounted only when active (React), so a mount-time
+// animation gives the micro-transition on check without needing an
+// exit animation — the box's border/background transition covers the
+// "off" direction.
+
+.glyphCheck {
+  width: 100%;
+  height: 100%;
+  animation: checkboxGlyphIn var(--transition-fast) ease-out;
+}
+
+.glyphIndeterminate {
+  display: block;
+  width: 60%;
+  height: 2px;
+  background: currentColor;
+  animation: checkboxGlyphIn var(--transition-fast) ease-out;
+}
+
+@keyframes checkboxGlyphIn {
+  from {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glyphCheck,
+  .glyphIndeterminate {
+    animation: none;
+  }
+}
+
+// Inline label
+
+.label {
+  line-height: 1.2;
+}

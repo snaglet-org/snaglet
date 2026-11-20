@@ -1,0 +1,160 @@
+@use '../../../../styles/abstracts' as *;
+
+.panel {
+  min-width: 0;
+  background: var(--color-foreground);
+}
+.heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.body {
+  padding: 10px 12px;
+}
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 12px;
+  border-top: 1px solid var(--color-border);
+}
+.saveStatus {
+  min-height: 1em;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+
+  > label,
+  > .label {
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--color-text-muted);
+  }
+}
+
+.chipInput {
+  @include field-shell($interaction: native);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 30px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 5px 8px;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  &[contenteditable='false'] {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+// About one and a half lines; the box grows as the text does.
+.descriptionInput {
+  min-height: 38px;
+}
+
+.panel .chipInput,
+.panel .dateInput,
+.panel .typeSelect {
+  border-color: transparent;
+  border-bottom-color: var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+
+  &:hover:not(:disabled),
+  &:focus,
+  &:focus-visible {
+    border-color: transparent;
+    border-bottom-color: var(--color-primary);
+    background: transparent;
+    outline: none;
+    box-shadow: none;
+  }
+}
+
+.panel .dateInput:focus-within {
+  border-color: transparent;
+  border-bottom-color: var(--color-primary);
+  box-shadow: none;
+}
+
+// Every dropdown in the panel is the same underlined, square field as the
+// text inputs: their 30px height, 8px text inset and type size.
+.panel .typeSelect {
+  height: 30px;
+  padding-left: 8px;
+  font-size: var(--text-sm);
+}
+.note {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+.error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-error);
+}
+
+.groupLabel {
+  margin-top: 4px;
+  font-family: var(--font-sans);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  color: var(--color-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+// A relation's "Allow multiple …" pill under its targets.
+.optionRow {
+  margin-top: 4px;
+}
+
+.targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.dismissNotice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dismissActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}

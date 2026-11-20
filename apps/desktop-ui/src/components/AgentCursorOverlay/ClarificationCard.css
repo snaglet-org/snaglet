@@ -1,0 +1,123 @@
+/* The only interactive element of the in-app cursor overlay: the rest of the
+   overlay stays click-through. Colors come from the workspace theme tokens. */
+.snaglet-agent-ask {
+  position: absolute;
+  pointer-events: auto;
+  box-sizing: border-box;
+  width: 300px;
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 12px;
+  line-height: 1.35;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--text) 25%, transparent);
+  outline: none;
+}
+.snaglet-agent-ask--inline {
+  position: static;
+  max-height: min(60vh, 420px);
+}
+.snaglet-agent-ask:focus-visible {
+  border-color: var(--text);
+}
+.snaglet-agent-ask__head {
+  margin-bottom: 4px;
+}
+.snaglet-agent-ask__muted,
+.snaglet-agent-ask__head span,
+.snaglet-agent-ask__preamble {
+  color: var(--text-muted);
+}
+.snaglet-agent-ask__preamble {
+  margin: 0 0 4px;
+}
+.snaglet-agent-ask__prompt {
+  margin: 0 0 6px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.snaglet-agent-ask__options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.snaglet-agent-ask__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.snaglet-agent-ask__option {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1 1 auto;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.snaglet-agent-ask__row:has(.snaglet-agent-ask__input) .snaglet-agent-ask__option {
+  flex: 0 0 auto;
+}
+.snaglet-agent-ask__option.is-focus {
+  border-color: var(--border);
+  background: var(--selected);
+  color: var(--on-selected);
+}
+.snaglet-agent-ask__mark {
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  border: 1px solid var(--text-muted);
+  border-radius: 50%;
+}
+.snaglet-agent-ask__option.is-on .snaglet-agent-ask__mark {
+  background: var(--text);
+  border-color: var(--text);
+}
+.snaglet-agent-ask__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--text);
+  font: inherit;
+}
+.snaglet-agent-ask__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 11px;
+}
+.snaglet-agent-ask__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.snaglet-agent-ask__actions button {
+  padding: 2px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.snaglet-agent-ask__actions button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

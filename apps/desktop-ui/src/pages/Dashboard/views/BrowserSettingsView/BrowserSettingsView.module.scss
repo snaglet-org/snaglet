@@ -1,0 +1,143 @@
+@use '../../../../styles/abstracts' as *;
+@use '../../styles/dashboard' as dash;
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  overflow: hidden;
+}
+
+.body {
+  flex: 1;
+  overflow: auto;
+  padding: 28px 32px 40px;
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-sizing: border-box;
+}
+
+.header {
+  @include dash.theme-card;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.glyph {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-bg);
+  border: 1px solid var(--color-primary-border);
+  color: var(--color-primary-on-selected);
+  font-size: var(--text-xl);
+  flex-shrink: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.errorBanner {
+  @include dash.theme-error-banner;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--color-hover);
+  border: 1px solid var(--color-border);
+}
+
+.rowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rowTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  padding: 1px 6px;
+  font-size: 10px;
+  text-transform: uppercase;
+  background: var(--color-primary-bg);
+  border: 1px solid var(--color-primary-border);
+  color: var(--color-primary-on-selected);
+}
+
+.meta {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-warning);
+}
+
+.rowActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.newRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}

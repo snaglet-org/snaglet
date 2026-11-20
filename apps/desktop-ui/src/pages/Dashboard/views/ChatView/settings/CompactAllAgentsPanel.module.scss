@@ -1,0 +1,105 @@
+@use '../../../../../styles/abstracts' as *;
+
+// CompactAllAgentsPanel — "Compress all" affordance for the thread Context
+// tab. Composes the shared Section (label + content) + Stack/Cluster layout
+// primitives; this module only carries the leftover leaf styling. Colors come
+// only from palette-derived --color-* tokens (no raw literals) per the
+// theme-tokens convention.
+
+// Sits at the foot of the Context pane; a hairline top-seam separates it from
+// the editor above (same "separation without boxes" idiom as the AgentView
+// rail). Section supplies the label + inner vertical rhythm.
+.panel {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.description {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.summary {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono, monospace);
+}
+
+.summaryHasFailures {
+  color: var(--color-error, var(--color-error));
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.progressItem {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+.agentName {
+  color: var(--color-text);
+  font-weight: 500;
+  min-width: 0;
+  @include layout-truncate;
+  flex: 0 1 auto;
+  max-width: 55%;
+}
+
+.status {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.statusRunning {
+  color: var(--color-primary, var(--color-primary));
+}
+
+.statusDone {
+  color: var(--color-success, var(--color-success));
+}
+
+.statusError {
+  color: var(--color-error, var(--color-error));
+}
+
+.errorText {
+  color: var(--color-error, var(--color-error));
+  font-size: var(--text-xs);
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.hint {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.loadError {
+  font-size: var(--text-sm);
+  color: var(--color-error, var(--color-error));
+}
+
+.confirmMessage {
+  font-size: var(--text-base);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}

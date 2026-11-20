@@ -1,0 +1,12 @@
+{
+  "productName": "Snaglet",
+  "identifier": "com.snaglet.app",
+  "build": {
+    "beforeBuildCommand": "",
+    "frontendDist": "resources/server/static/web"
+  },
+  "bundle": {
+    "active": true,
+    "createUpdaterArtifacts": false
+  }
+}

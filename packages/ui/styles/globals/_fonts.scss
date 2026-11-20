@@ -1,0 +1,28 @@
+// IBM Plex Sans and IBM Plex Mono (latin subset), served at /fonts by the host
+// app from apps/desktop-ui/public/fonts, with the SIL Open Font License in
+// OFL.txt there. No font loads from the network.
+@use 'sass:list';
+
+$faces: (
+  'IBM Plex Sans': (
+    'ibm-plex-sans',
+    (400, 500, 600, 700),
+  ),
+  'IBM Plex Mono': (
+    'ibm-plex-mono',
+    (400, 500, 600, 700),
+  ),
+);
+
+@each $family, $face in $faces {
+  $file: list.nth($face, 1);
+  @each $weight in list.nth($face, 2) {
+    @font-face {
+      font-family: $family;
+      font-style: normal;
+      font-weight: $weight;
+      font-display: swap;
+      src: url('/fonts/#{$file}-latin-#{$weight}-normal.woff2') format('woff2');
+    }
+  }
+}

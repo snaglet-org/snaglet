@@ -1,0 +1,129 @@
+// Composer — the chat's layout around the shared ComposerShell bubble:
+// outer column, secondary (voice/vision) rail, attachment thumbnails, and
+// chat-only tweaks to the editor (short-pane caps, voice revising cue).
+
+@use '../../../../../styles/abstracts' as *;
+
+.composerShell {
+  display: flex;
+  flex-direction: column;
+  margin: 8px 12px 12px;
+  gap: 6px;
+  flex-shrink: 1;
+  min-height: 0;
+}
+
+// Short-pane caps for the dashboard's split-screen layouts: the editor
+// still grows with its content, just to a lower ceiling when the pane is
+// short. Two breakpoints: 500px (medium split, ~3 lines) and 320px (deeply
+// nested split, ~2 lines). `.bubble .input` outranks the shell's own cap.
+@container chat-shell (height < 500px) {
+  .bubble .input {
+    max-height: 78px;
+  }
+}
+
+@container chat-shell (height < 320px) {
+  .bubble .input {
+    max-height: 48px;
+  }
+}
+
+// The secondary rail sits outside the bordered composer bubble on purpose:
+// mode/capability controls stay available without competing with the primary
+// Upload/Stop/Send row. It wraps instead of scrolling so Vision's upward menu
+// is never clipped by an overflow container.
+.secondaryRail {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.voiceControlsSlot,
+.voiceModeControlsSlot {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.voiceModeControlsSlot {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+// Voice "revising" cue
+// Apple's STT re-decodes the utterance so far and can revise earlier words.
+// When the voice hook flags a revision, the bubble gets `data-voice-revising`
+// and the in-flight text slowly pulses toward muted: a subtle "refining" cue.
+.bubble[data-voice-revising='true'] .input {
+  animation: voiceRevisePulse 1.15s ease-in-out infinite;
+}
+
+@keyframes voiceRevisePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+// Respect reduced-motion: hold a gentle static dim instead of pulsing.
+@media (prefers-reduced-motion: reduce) {
+  .bubble[data-voice-revising='true'] .input {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+// Attachment thumbnails in the shell's strip. No curved borders; matches
+// the rest of the dashboard's sharp-edged retro theme.
+.attachment {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.attachmentImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.attachmentPlaceholder {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+// Dark-overlay × on top of attached image. Positioning + image-overlay tint
+// are container-specific; box + canonical ghost interactions come from Button.
+.attachmentRemove {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: var(--color-on-primary);
+  background: color-mix(in srgb, var(--disabled) 65%, transparent);
+  border-color: transparent;
+  font-size: var(--text-md);
+  line-height: 14px;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--disabled) 85%, transparent);
+    color: var(--color-on-primary);
+    border-color: transparent;
+  }
+}

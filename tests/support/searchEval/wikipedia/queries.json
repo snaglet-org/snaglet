@@ -1,0 +1,817 @@
+{
+  "schemaVersion": 1,
+  "queries": [
+    {
+      "id": "wikipedia-01",
+      "intent": "document concept",
+      "category": "exact/title",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Arch bridge",
+        "mode": "keyword"
+      },
+      "expected": ["arch-bridge"],
+      "evidence": [
+        {
+          "docKey": "arch-bridge",
+          "text": "An arch bridge is a bridge with abutments at each end shaped as a curved arch",
+          "startOffset": 0,
+          "endOffset": 77
+        }
+      ],
+      "rationale": "Exact article title identifies this document; parenthetical Mercury titles retain disambiguation."
+    },
+    {
+      "id": "wikipedia-02",
+      "intent": "document concept",
+      "category": "exact/title",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Engineering",
+        "mode": "keyword"
+      },
+      "expected": ["engineering"],
+      "evidence": [
+        {
+          "docKey": "engineering",
+          "text": "Engineering is the practice of systematically applying natural science and mathematics to design and improve systems, devices, or processes that solve problems under constraints",
+          "startOffset": 0,
+          "endOffset": 177
+        }
+      ],
+      "rationale": "Exact article title identifies this document; parenthetical Mercury titles retain disambiguation."
+    },
+    {
+      "id": "wikipedia-03",
+      "intent": "document concept",
+      "category": "exact/title",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Fermentation",
+        "mode": "keyword"
+      },
+      "expected": ["fermentation"],
+      "evidence": [
+        {
+          "docKey": "fermentation",
+          "text": "Fermentation is a type of anaerobic metabolism that harnesses the redox potential of the reactants to make adenosine triphosphate (ATP) and organic end products",
+          "startOffset": 0,
+          "endOffset": 160
+        }
+      ],
+      "rationale": "Exact article title identifies this document; parenthetical Mercury titles retain disambiguation."
+    },
+    {
+      "id": "wikipedia-04",
+      "intent": "document concept",
+      "category": "exact/title",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Mercury (element)",
+        "mode": "keyword"
+      },
+      "expected": ["mercury-element"],
+      "evidence": [
+        {
+          "docKey": "mercury-element",
+          "text": "Mercury is a chemical element; it has symbol Hg (from Latin hydrargyrum) and atomic number 80",
+          "startOffset": 0,
+          "endOffset": 93
+        }
+      ],
+      "rationale": "Exact article title identifies this document; parenthetical Mercury titles retain disambiguation."
+    },
+    {
+      "id": "wikipedia-05",
+      "intent": "document concept",
+      "category": "exact/title",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Mercury (planet)",
+        "mode": "keyword"
+      },
+      "expected": ["mercury-planet"],
+      "evidence": [
+        {
+          "docKey": "mercury-planet",
+          "text": "Mercury is the first planet from the Sun and the smallest in the Solar System",
+          "startOffset": 0,
+          "endOffset": 77
+        }
+      ],
+      "rationale": "Exact article title identifies this document; parenthetical Mercury titles retain disambiguation."
+    },
+    {
+      "id": "wikipedia-06",
+      "intent": "document concept",
+      "category": "exact/title",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Pollination",
+        "mode": "keyword"
+      },
+      "expected": ["pollination"],
+      "evidence": [
+        {
+          "docKey": "pollination",
+          "text": "Pollination is the transfer of pollen from an anther of a plant to the stigma of a plant, later enabling fertilisation and the production of seeds",
+          "startOffset": 0,
+          "endOffset": 146
+        }
+      ],
+      "rationale": "Exact article title identifies this document; parenthetical Mercury titles retain disambiguation."
+    },
+    {
+      "id": "wikipedia-07",
+      "intent": "document concept",
+      "category": "exact/title",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Printing press",
+        "mode": "keyword"
+      },
+      "expected": ["printing-press"],
+      "evidence": [
+        {
+          "docKey": "printing-press",
+          "text": "A printing press is a machine that applies pressure to transfer ink onto a surface made of paper, cloth, or a similar material",
+          "startOffset": 0,
+          "endOffset": 126
+        }
+      ],
+      "rationale": "Exact article title identifies this document; parenthetical Mercury titles retain disambiguation."
+    },
+    {
+      "id": "wikipedia-08",
+      "intent": "document concept",
+      "category": "exact/title",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Sonata",
+        "mode": "keyword"
+      },
+      "expected": ["sonata"],
+      "evidence": [
+        {
+          "docKey": "sonata",
+          "text": "In music, a sonata (; pl",
+          "startOffset": 0,
+          "endOffset": 24
+        }
+      ],
+      "rationale": "Exact article title identifies this document; parenthetical Mercury titles retain disambiguation."
+    },
+    {
+      "id": "wikipedia-09",
+      "intent": "document concept",
+      "category": "keyword",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Caloris Planitia",
+        "mode": "keyword"
+      },
+      "expected": ["mercury-planet"],
+      "evidence": [
+        {
+          "docKey": "mercury-planet",
+          "text": "Caloris Planitia",
+          "startOffset": 370,
+          "endOffset": 386
+        }
+      ],
+      "rationale": "Named crater uniquely identifies the planetary article."
+    },
+    {
+      "id": "wikipedia-10",
+      "intent": "document concept",
+      "category": "keyword",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Hg atomic number 80",
+        "mode": "keyword"
+      },
+      "expected": ["mercury-element"],
+      "evidence": [
+        {
+          "docKey": "mercury-element",
+          "text": "symbol Hg (from Latin hydrargyrum) and atomic number 80",
+          "startOffset": 38,
+          "endOffset": 93
+        }
+      ],
+      "rationale": "Chemical symbol and atomic number distinguish the element."
+    },
+    {
+      "id": "wikipedia-11",
+      "intent": "document concept",
+      "category": "keyword",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "anther stigma pollen",
+        "mode": "keyword"
+      },
+      "expected": ["pollination"],
+      "evidence": [
+        {
+          "docKey": "pollination",
+          "text": "transfer of pollen from an anther of a plant to the stigma of a plant",
+          "startOffset": 19,
+          "endOffset": 88
+        }
+      ],
+      "rationale": "Botanical transfer vocabulary identifies pollination."
+    },
+    {
+      "id": "wikipedia-12",
+      "intent": "document concept",
+      "category": "keyword",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "ethanol lactate",
+        "mode": "keyword"
+      },
+      "expected": ["fermentation"],
+      "evidence": [
+        {
+          "docKey": "fermentation",
+          "text": "produce commodity chemicals, such as ethanol and lactate",
+          "startOffset": 1102,
+          "endOffset": 1158
+        }
+      ],
+      "rationale": "Both products are explicitly described in the fermentation introduction."
+    },
+    {
+      "id": "wikipedia-13",
+      "intent": "document concept",
+      "category": "keyword",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "sonatina sonatine",
+        "mode": "keyword"
+      },
+      "expected": ["sonata"],
+      "evidence": [
+        {
+          "docKey": "sonata",
+          "text": "The term sonatina, pl. sonatine",
+          "startOffset": 760,
+          "endOffset": 791
+        }
+      ],
+      "rationale": "The diminutive music term appears in the sonata extract."
+    },
+    {
+      "id": "wikipedia-14",
+      "intent": "document concept",
+      "category": "keyword",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Gutenberg 1440",
+        "mode": "keyword"
+      },
+      "expected": ["printing-press"],
+      "evidence": [
+        {
+          "docKey": "printing-press",
+          "text": "Johannes Gutenberg around 1440",
+          "startOffset": 380,
+          "endOffset": 410
+        }
+      ],
+      "rationale": "Named inventor and approximate date identify printing."
+    },
+    {
+      "id": "wikipedia-15",
+      "intent": "document concept",
+      "category": "keyword",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "forensic engineering",
+        "mode": "keyword"
+      },
+      "expected": ["engineering"],
+      "evidence": [
+        {
+          "docKey": "engineering",
+          "text": "forensic engineering is used to determine what went wrong",
+          "startOffset": 1401,
+          "endOffset": 1458
+        }
+      ],
+      "rationale": "Failure investigation is explicitly discussed here."
+    },
+    {
+      "id": "wikipedia-16",
+      "intent": "document concept",
+      "category": "keyword",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "abutments horizontal thrust",
+        "mode": "keyword"
+      },
+      "expected": ["arch-bridge"],
+      "evidence": [
+        {
+          "docKey": "arch-bridge",
+          "text": "horizontal thrust restrained by the abutments",
+          "startOffset": 166,
+          "endOffset": 211
+        }
+      ],
+      "rationale": "Specific load path identifies arch bridges."
+    },
+    {
+      "id": "wikipedia-17",
+      "intent": "document concept",
+      "category": "paraphrase",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "which small rocky world is nearest our star",
+        "mode": "hybrid"
+      },
+      "expected": ["mercury-planet"],
+      "evidence": [
+        {
+          "docKey": "mercury-planet",
+          "text": "first planet from the Sun and the smallest in the Solar System",
+          "startOffset": 15,
+          "endOffset": 77
+        }
+      ],
+      "rationale": "Paraphrases orbital position and size without using Mercury."
+    },
+    {
+      "id": "wikipedia-18",
+      "intent": "document concept",
+      "category": "paraphrase",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "metal that stays fluid under ordinary temperature and pressure",
+        "mode": "hybrid"
+      },
+      "expected": ["mercury-element"],
+      "evidence": [
+        {
+          "docKey": "mercury-element",
+          "text": "liquid at standard temperature and pressure",
+          "startOffset": 223,
+          "endOffset": 266
+        }
+      ],
+      "rationale": "Paraphrases the distinctive physical state of the element."
+    },
+    {
+      "id": "wikipedia-19",
+      "intent": "document concept",
+      "category": "paraphrase",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "how animals carry reproductive material between flowers",
+        "mode": "hybrid"
+      },
+      "expected": ["pollination"],
+      "evidence": [
+        {
+          "docKey": "pollination",
+          "text": "Pollinating animals travel from plant to plant carrying pollen on their bodies",
+          "startOffset": 299,
+          "endOffset": 377
+        }
+      ],
+      "rationale": "Animal-mediated transfer is directly described."
+    },
+    {
+      "id": "wikipedia-20",
+      "intent": "document concept",
+      "category": "paraphrase",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "making cellular energy when oxygen is insufficient",
+        "mode": "hybrid"
+      },
+      "expected": ["fermentation"],
+      "evidence": [
+        {
+          "docKey": "fermentation",
+          "text": "due to insufficient oxygen supply or anaerobic conditions",
+          "startOffset": 534,
+          "endOffset": 591
+        }
+      ],
+      "rationale": "The extract connects anaerobic metabolism and ATP production to oxygen shortage."
+    },
+    {
+      "id": "wikipedia-21",
+      "intent": "document concept",
+      "category": "paraphrase",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "a short easier version of a multi movement instrumental composition",
+        "mode": "hybrid"
+      },
+      "expected": ["sonata"],
+      "evidence": [
+        {
+          "docKey": "sonata",
+          "text": "often used for a short or technically easy sonata",
+          "startOffset": 827,
+          "endOffset": 876
+        }
+      ],
+      "rationale": "The sonatina definition answers the request."
+    },
+    {
+      "id": "wikipedia-22",
+      "intent": "document concept",
+      "category": "paraphrase",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "machine that put ink on sheets and made books cheaper",
+        "mode": "hybrid"
+      },
+      "expected": ["printing-press"],
+      "evidence": [
+        {
+          "docKey": "printing-press",
+          "text": "The cost of printed texts declined and their availability increased",
+          "startOffset": 737,
+          "endOffset": 804
+        }
+      ],
+      "rationale": "The extract links an ink-transfer machine to lower text costs."
+    },
+    {
+      "id": "wikipedia-23",
+      "intent": "document concept",
+      "category": "paraphrase",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "designing useful systems while balancing safety cost and physical limits",
+        "mode": "hybrid"
+      },
+      "expected": ["engineering"],
+      "evidence": [
+        {
+          "docKey": "engineering",
+          "text": "balancing competing demands such as safety, performance, aesthetics, cost",
+          "startOffset": 375,
+          "endOffset": 448
+        }
+      ],
+      "rationale": "The general design discipline, not one specific bridge or printing machine."
+    },
+    {
+      "id": "wikipedia-24",
+      "intent": "document concept",
+      "category": "paraphrase",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "curved crossing that pushes sideways into its end supports",
+        "mode": "hybrid"
+      },
+      "expected": ["arch-bridge"],
+      "evidence": [
+        {
+          "docKey": "arch-bridge",
+          "text": "horizontal thrust restrained by the abutments at either end",
+          "startOffset": 166,
+          "endOffset": 225
+        }
+      ],
+      "rationale": "Paraphrases the structural load-transfer mechanism."
+    },
+    {
+      "id": "wikipedia-25",
+      "intent": "document concept",
+      "category": "ambiguous/disambiguated",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Mercury",
+        "mode": "hybrid"
+      },
+      "expected": ["mercury-planet", "mercury-element"],
+      "evidence": [
+        {
+          "docKey": "mercury-planet",
+          "text": "Mercury is the first planet",
+          "startOffset": 0,
+          "endOffset": 27
+        },
+        {
+          "docKey": "mercury-element",
+          "text": "Mercury is a chemical element",
+          "startOffset": 0,
+          "endOffset": 29
+        }
+      ],
+      "rationale": "Unqualified shared name: both senses are relevant; either can be first. No preferred ordering."
+    },
+    {
+      "id": "wikipedia-26",
+      "intent": "document concept",
+      "category": "ambiguous/disambiguated",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Mercury orbit sunrise",
+        "mode": "hybrid"
+      },
+      "expected": ["mercury-planet"],
+      "evidence": [
+        {
+          "docKey": "mercury-planet",
+          "text": "one solar day (sunrise to sunrise) on Mercury",
+          "startOffset": 918,
+          "endOffset": 963
+        }
+      ],
+      "rationale": "Orbit and sunrise select the planet, not the liquid metal.",
+      "distractorKeys": ["mercury-element"]
+    },
+    {
+      "id": "wikipedia-27",
+      "intent": "document concept",
+      "category": "ambiguous/disambiguated",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Mercury toxic thermometers",
+        "mode": "hybrid"
+      },
+      "expected": ["mercury-element"],
+      "evidence": [
+        {
+          "docKey": "mercury-element",
+          "text": "Mercury is used in thermometers",
+          "startOffset": 953,
+          "endOffset": 984
+        }
+      ],
+      "rationale": "Toxicity and instruments select the chemical element.",
+      "distractorKeys": ["mercury-planet"]
+    },
+    {
+      "id": "wikipedia-28",
+      "intent": "document concept",
+      "category": "ambiguous/disambiguated",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "bridges",
+        "mode": "hybrid"
+      },
+      "expected": ["arch-bridge", "engineering"],
+      "evidence": [
+        {
+          "docKey": "arch-bridge",
+          "text": "An arch bridge is a bridge",
+          "startOffset": 0,
+          "endOffset": 26
+        },
+        {
+          "docKey": "engineering",
+          "text": "resulting in creations such as bridges",
+          "startOffset": 232,
+          "endOffset": 270
+        }
+      ],
+      "rationale": "Broad bridge query supports both the specific structure and the general discipline; either order is acceptable."
+    },
+    {
+      "id": "wikipedia-29",
+      "intent": "document concept",
+      "category": "cross-topic distractor",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "industrial production of ethanol rather than printed books",
+        "mode": "hybrid"
+      },
+      "expected": ["fermentation"],
+      "evidence": [
+        {
+          "docKey": "fermentation",
+          "text": "produce commodity chemicals, such as ethanol",
+          "startOffset": 1102,
+          "endOffset": 1146
+        }
+      ],
+      "rationale": "Production vocabulary also appears in printing; ethanol disambiguates.",
+      "distractorKeys": ["printing-press", "engineering"]
+    },
+    {
+      "id": "wikipedia-30",
+      "intent": "document concept",
+      "category": "cross-topic distractor",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "plant reproduction by pollen rather than preserving food",
+        "mode": "hybrid"
+      },
+      "expected": ["pollination"],
+      "evidence": [
+        {
+          "docKey": "pollination",
+          "text": "later enabling fertilisation and the production of seeds",
+          "startOffset": 90,
+          "endOffset": 146
+        }
+      ],
+      "rationale": "Two biological processes share production vocabulary; pollen selects pollination.",
+      "distractorKeys": ["fermentation"]
+    },
+    {
+      "id": "wikipedia-31",
+      "intent": "document concept",
+      "category": "cross-topic distractor",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "steam powered presses for mass communication",
+        "mode": "hybrid"
+      },
+      "expected": ["printing-press"],
+      "evidence": [
+        {
+          "docKey": "printing-press",
+          "text": "incorporated steam power and rotary motion",
+          "startOffset": 1252,
+          "endOffset": 1294
+        }
+      ],
+      "rationale": "Engineering also mentions steam power, but presses and mass communication select printing.",
+      "distractorKeys": ["engineering"]
+    },
+    {
+      "id": "wikipedia-32",
+      "intent": "document concept",
+      "category": "cross-topic distractor",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "horizontal load transfer in curved bridges rather than general design ethics",
+        "mode": "hybrid"
+      },
+      "expected": ["arch-bridge"],
+      "evidence": [
+        {
+          "docKey": "arch-bridge",
+          "text": "horizontal thrust restrained by the abutments",
+          "startOffset": 166,
+          "endOffset": 211
+        }
+      ],
+      "rationale": "Specific structural behavior is absent from the general engineering extract.",
+      "distractorKeys": ["engineering"]
+    },
+    {
+      "id": "wikipedia-33",
+      "intent": "document concept",
+      "category": "scope filter",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "Mercury",
+        "mode": "hybrid"
+      },
+      "expected": ["mercury-planet", "mercury-element"],
+      "evidence": [
+        {
+          "docKey": "mercury-planet",
+          "text": "Mercury is the first planet",
+          "startOffset": 0,
+          "endOffset": 27
+        },
+        {
+          "docKey": "mercury-element",
+          "text": "Mercury is a chemical element",
+          "startOffset": 0,
+          "endOffset": 29
+        }
+      ],
+      "rationale": "Physical-sciences scope retains both Mercury senses; neither is a false positive.",
+      "scope": {
+        "projectKey": "physical-sciences"
+      }
+    },
+    {
+      "id": "wikipedia-34",
+      "intent": "document concept",
+      "category": "scope filter",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "production",
+        "mode": "hybrid"
+      },
+      "expected": ["pollination", "fermentation"],
+      "evidence": [
+        {
+          "docKey": "pollination",
+          "text": "production of seeds",
+          "startOffset": 127,
+          "endOffset": 146
+        },
+        {
+          "docKey": "fermentation",
+          "text": "production and preservation of food",
+          "startOffset": 692,
+          "endOffset": 727
+        }
+      ],
+      "rationale": "Both biological production senses are relevant inside living-systems; printing and engineering must be excluded by scope.",
+      "scope": {
+        "projectKey": "living-systems"
+      },
+      "distractorKeys": ["printing-press", "engineering"]
+    },
+    {
+      "id": "wikipedia-35",
+      "intent": "document concept",
+      "category": "scope filter",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "production",
+        "mode": "hybrid"
+      },
+      "expected": ["printing-press", "engineering"],
+      "evidence": [
+        {
+          "docKey": "printing-press",
+          "text": "literary production",
+          "startOffset": 460,
+          "endOffset": 479
+        },
+        {
+          "docKey": "engineering",
+          "text": "testing and simulations being used prior to production",
+          "startOffset": 1314,
+          "endOffset": 1368
+        }
+      ],
+      "rationale": "Both manufacture/design and literary production are relevant inside arts-and-technology; biological senses are excluded.",
+      "scope": {
+        "projectKey": "arts-and-technology"
+      },
+      "distractorKeys": ["pollination", "fermentation"]
+    },
+    {
+      "id": "wikipedia-36",
+      "intent": "document concept",
+      "category": "scope filter",
+      "input": {
+        "kind": "workspace",
+        "kinds": ["doc"],
+        "query": "engineering bridges",
+        "mode": "hybrid"
+      },
+      "expected": ["engineering", "arch-bridge"],
+      "evidence": [
+        {
+          "docKey": "engineering",
+          "text": "resulting in creations such as bridges",
+          "startOffset": 232,
+          "endOffset": 270
+        },
+        {
+          "docKey": "arch-bridge",
+          "text": "An arch bridge is a bridge",
+          "startOffset": 0,
+          "endOffset": 26
+        }
+      ],
+      "rationale": "Broad structural engineering request admits both the discipline and bridge example within the selected project.",
+      "scope": {
+        "projectKey": "arts-and-technology"
+      }
+    }
+  ]
+}

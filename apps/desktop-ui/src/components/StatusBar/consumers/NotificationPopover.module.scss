@@ -1,0 +1,168 @@
+@use '../../../styles/abstracts' as *;
+
+// Popover body for the notification center. Lives inside the status
+// bar's shared .popover shell.
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: space(1) space(2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.headerTitle {
+  font-weight: 600;
+  font-size: var(--font-size-sm, 13px);
+  color: var(--color-text);
+}
+
+.headerActions {
+  display: flex;
+  gap: space(1);
+}
+
+.headerBtn {
+  cursor: pointer;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: var(--font-size-xs, 11px);
+  color: var(--color-text-muted);
+  padding: 2px space(1);
+  border-radius: var(--radius-sm, 4px);
+
+  &:hover {
+    color: var(--color-text);
+    background: var(--color-hover);
+  }
+}
+
+.empty {
+  padding: space(3) space(2);
+  color: var(--color-text-muted);
+  text-align: center;
+  font-size: var(--font-size-sm, 13px);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 280px;
+  max-width: 360px;
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  display: block;
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+// A row holds two sibling buttons: open (dot, text, time) and dismiss. The
+// open button carries the row's padding so the whole row still opens it.
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: space(1);
+  width: 100%;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+}
+
+.open {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-start;
+  gap: space(1);
+  min-width: 0;
+  padding: space(1) 0 space(1) space(2);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rowUnread {
+  background: var(--color-background-secondary, rgb(var(--shadow-color) / 0.03));
+}
+
+.unreadDot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  margin-top: 6px;
+}
+
+.unreadDotPlaceholder {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  margin-top: 6px;
+}
+
+.rowContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.title {
+  color: var(--color-text);
+  font-size: var(--font-size-sm, 13px);
+  @include layout-truncate;
+}
+
+.body {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs, 11px);
+  @include layout-truncate;
+}
+
+.time {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs, 11px);
+  margin-top: 2px;
+}
+
+.dismissBtn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs, 11px);
+  padding: 2px;
+  // The row's top and right padding, which the open button carries.
+  margin: calc(#{space(1)} + 1px) space(2) 0 0;
+  border-radius: var(--radius-sm, 4px);
+  opacity: 0;
+
+  // Shown on hover, and to keyboard users while either button has focus.
+  .row:hover &,
+  .row:focus-within & {
+    opacity: 1;
+  }
+
+  &:hover {
+    color: var(--color-text);
+    background: var(--color-hover);
+  }
+}

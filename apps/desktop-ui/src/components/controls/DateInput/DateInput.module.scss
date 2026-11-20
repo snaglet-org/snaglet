@@ -1,0 +1,196 @@
+// DateInput — Snaglet's rounded date / time field
+//
+// A text field that shows the value in the viewer's locale, with an ×
+// to clear an optional value and a calendar (or clock) glyph that opens
+// the picker card (DatePicker.module.scss). Matches the Input / Select /
+// Textarea chrome (rounded --radius-field, primary focus halo). Month and
+// week keep the native control (`.native`), its indicator hidden under
+// the same glyph.
+
+@use '../../../styles/abstracts/controls' as controls;
+
+.wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  max-width: 100%;
+  @include controls.field-shell($focus-shadow: 0 0 0 1px var(--color-primary));
+}
+
+.fullWidth {
+  width: 100%;
+
+  .input {
+    flex: 1;
+  }
+}
+
+// Sizes
+
+.sizeSm {
+  min-height: 22px;
+  padding: 0 6px 0 8px;
+
+  .input {
+    font-size: 11px;
+  }
+}
+
+.sizeMd {
+  min-height: 28px;
+  padding: 0 7px 0 10px;
+
+  .input {
+    font-size: 12px;
+  }
+}
+
+.sizeLg {
+  min-height: 34px;
+  padding: 0 9px 0 12px;
+
+  .input {
+    font-size: 13px;
+  }
+}
+
+// The text
+
+.input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  padding: 0;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  outline: none;
+  @include controls.field-focus-reset;
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+// Clear and glyph
+
+.clear {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  appearance: none;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity var(--transition-fast),
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+}
+
+.wrapper:hover .clear,
+.wrapper:focus-within .clear,
+.open .clear {
+  opacity: 1;
+}
+
+.glyph {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+}
+
+.wrapper:focus-within:not(.disabled) .glyph,
+.open .glyph {
+  color: var(--color-primary);
+}
+
+// States
+
+.open:not(.disabled) {
+  border-color: var(--color-primary);
+}
+
+.invalid.invalid,
+.invalid.invalid:hover:not(.disabled),
+.invalid.invalid:focus-within:not(.disabled) {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-error) 55%, transparent);
+}
+
+.invalid .glyph {
+  color: var(--color-error);
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+
+  .glyph {
+    cursor: not-allowed;
+  }
+}
+
+// Native month / week
+
+.native {
+  .input {
+    // Leave room for our glyph on the right.
+    padding-right: 20px;
+
+    // Hide the browser's default calendar indicator — we render our own.
+    &::-webkit-calendar-picker-indicator {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+  }
+
+  .glyph {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+}

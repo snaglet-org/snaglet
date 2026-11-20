@@ -1,0 +1,92 @@
+name: Bug report
+description: Report a reproducible bug or regression
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. The more detail you include, the faster we can help.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear and concise description of the bug.
+      placeholder: Describe what you observed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to reliably trigger the issue.
+      placeholder: |
+        1. Go to …
+        2. Click on …
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: run-mode
+    attributes:
+      label: How do you run Snaglet?
+      options:
+        - Downloaded app
+        - Source checkout in the browser (pnpm dev)
+        - Source checkout in the desktop window (pnpm dev:desktop)
+        - Desktop app I built (pnpm build:desktop)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Snaglet version or commit
+      description: The commit you run (`git rev-parse --short HEAD`) or the app's version.
+      placeholder: 1a2b3c4
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node version, browser (if applicable).
+      placeholder: |
+        - OS: macOS 14.x
+        - Node: 22.x
+        - Browser: Chrome 125
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: >-
+        Relevant lines from `logs/server.log` in your Snaglet home (`~/.snaglet-dev` for a source
+        checkout, `~/.snaglet` for the app). A source checkout logs only errors until you set
+        `LOG_LEVEL=info` in `.env.local`. Remove anything private first, and never paste API
+        keys or the contents of `.env`.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Screenshots, or anything else that might help.
+    validations:
+      required: false

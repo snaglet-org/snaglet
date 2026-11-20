@@ -1,0 +1,21 @@
+{
+  "references": [
+    {
+      "path": "./packages/shared"
+    },
+    {
+      "path": "./packages/db"
+    },
+    {
+      "path": "./apps/server"
+    },
+    {
+      "path": "./apps/desktop-ui"
+    },
+    {
+      "path": "./packages/snaglet-sdk"
+    }
+  ],
+  "files": [],
+  "extends": "./tsconfig.base.json"
+}

@@ -1,0 +1,339 @@
+// The Repeat view (the approved date + repeat popover): a header with Back,
+// six choices as radio rows, Custom's one form in a sunken box, Ends on one
+// line, and the sentence over Done at the foot. Tokens only, so every theme
+// re-skins it; it sits in the date picker's card or a RepeatSurface.
+
+@mixin button-reset {
+  appearance: none;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+}
+
+// Header
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 36px;
+  padding: var(--space-1) var(--space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.back {
+  @include button-reset;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-left: calc(-1 * var(--space-1));
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+  &:focus-visible {
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.starts {
+  flex: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+// The six choices
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-1) var(--space-2);
+}
+
+.choice {
+  @include button-reset;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-md);
+  text-align: left;
+  transition: background-color var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+  }
+  &:focus-visible {
+    box-shadow: var(--shadow-focus-ring);
+  }
+  &[aria-checked='true'] {
+    background: var(--color-hover);
+    font-weight: 600;
+  }
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.ring {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+
+  [aria-checked='true'] > & {
+    border-color: var(--color-primary);
+  }
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+
+  [aria-checked='true'] > .ring > & {
+    background: var(--color-primary);
+  }
+}
+
+.choiceText {
+  flex: 1;
+  min-width: 0;
+}
+
+// Custom
+
+.custom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0 var(--space-3) var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-hover);
+}
+
+.endsChoice {
+  display: flex;
+  min-width: 0;
+}
+
+.mode {
+  flex: 1;
+  justify-content: center;
+}
+
+// "Repeat every [2] [weeks] on", "Repeat every [Interval]".
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.count {
+  flex: none;
+  width: 56px;
+}
+
+.unit {
+  flex: none;
+  min-width: 92px;
+}
+
+.unitWide {
+  flex: none;
+  min-width: 124px;
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.dayChip {
+  @include button-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-foreground);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+
+  &:hover {
+    background: var(--color-hover);
+  }
+  &:focus-visible {
+    box-shadow: var(--shadow-focus-ring);
+  }
+  &[aria-pressed='true'] {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+// Interval: "[0] days [1] hour" over "[30] minutes [0] seconds".
+.every {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.everyPart {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+// Monthly: "on day [9]" or "on the [2nd] [Friday]", one per row.
+.monthOn {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.monthRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.monthOption {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-width: 64px;
+  cursor: pointer;
+
+  input {
+    margin: 0;
+    accent-color: var(--color-primary);
+  }
+}
+
+// Ends
+
+.ends {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-2);
+}
+
+.endsLabel {
+  font-weight: var(--font-medium);
+}
+
+.endsValue {
+  display: flex;
+  grid-column: 2;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+// Words
+
+.muted {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--text-xs);
+}
+
+.padded {
+  padding: 0 var(--space-3) var(--space-2);
+}
+
+// Foot: the sentence, the next one, Done
+
+.foot {
+  // Stays in view when a short pane makes the card scroll.
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-foreground);
+}
+
+.footText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.summary {
+  margin: 0;
+  font-weight: var(--font-medium);
+  overflow-wrap: anywhere;
+}
+
+.next {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,154 @@
+@use '../../../../styles/abstracts' as *;
+
+.editor {
+  min-width: 0;
+}
+.label {
+  font: 500 var(--text-xs) var(--font-sans);
+  color: var(--color-text-muted);
+}
+.list {
+  list-style: none;
+  margin: 6px 0;
+  padding: 0;
+}
+.row {
+  min-width: 0;
+}
+.option {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  gap: 5px;
+}
+.control,
+.name,
+.action {
+  @include layout-button-reset;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+.control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+.control:hover:not(:disabled),
+.action:hover:not(:disabled) {
+  background: var(--color-hover);
+}
+.name {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+.drag {
+  width: 17px;
+  cursor: grab;
+  font-size: 14px;
+  letter-spacing: -3px;
+}
+.drag:active {
+  cursor: grabbing;
+}
+.input {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 5px 4px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  outline: none;
+}
+.input:focus {
+  border-bottom-color: var(--color-primary);
+}
+.color {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+.palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0 8px 22px;
+}
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+}
+.swatch[aria-pressed='true'] {
+  outline: 1px solid currentColor;
+  outline-offset: 1px;
+}
+.add {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.add .input {
+  font-size: var(--text-sm);
+}
+.confirmation {
+  margin: 6px 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+.confirmation p {
+  margin: 0 0 5px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.actions {
+  display: flex;
+  gap: 10px;
+}
+.action {
+  padding: 3px 0;
+  color: var(--color-text);
+}
+.error {
+  margin: 4px 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-error);
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (hover: hover) {
+  .option .drag,
+  .option .remove {
+    opacity: 0;
+  }
+  .option:hover .drag,
+  .option:hover .remove,
+  .option:focus-within .drag,
+  .option:focus-within .remove {
+    opacity: 1;
+  }
+}

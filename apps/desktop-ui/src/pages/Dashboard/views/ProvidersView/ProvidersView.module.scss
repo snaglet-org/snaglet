@@ -1,0 +1,81 @@
+@use '../../../../styles/abstracts' as *;
+@use '../../styles/dashboard' as dash;
+
+// Providers page — Warm Desktop treatment.
+//
+// The page's roundness and status-role colors are scoped to it through
+// custom properties declared on `.shell`. Custom properties inherit through
+// the DOM, so every descendant module (sidebar, detail, models, auth forms,
+// credential rows, chips) reads them without any global change:
+//   • Global _tokens.scss keeps `--radius-* : 0` app-wide.
+//   • Global `--color-warning` stays berry app-wide; it is re-pointed to gold
+//     only inside this subtree (a scoped override that never reaches :root),
+//     which also recolors the shared `<Chip tone="warning">` inside Providers.
+
+.shell {
+  // Scoped roundness (frame / card / row / tag)
+  --prov-radius-frame: 0px;
+  --prov-radius-card: 0px;
+  --prov-radius-row: 0px;
+  --prov-radius-tag: 0px;
+
+  // Scoped status roles
+  // berry stays reserved for action / active only.
+  --prov-accent: var(--color-primary); // berry
+  --prov-sage: var(--color-success); // sage — success / connected
+  --prov-danger: var(--color-error); // error
+
+  // gold — warning / caution. No gold role exists in the palette and the
+  // global warning token is berry, so this single sanctioned literal is the
+  // gold source; everything else derives from it.
+  --prov-gold: #b0842c;
+  --prov-gold-bg: color-mix(in srgb, var(--prov-gold) 14%, var(--color-field));
+  --prov-gold-border: color-mix(in srgb, var(--prov-gold) 52%, var(--color-border));
+  // Scoped override — re-point the warning role to gold inside Providers only
+  // so shared warning chips (preview / endpoint / stale) read gold, not berry.
+  --color-warning: var(--prov-gold);
+  --color-warning-bg: var(--prov-gold-bg);
+  --color-warning-border: var(--prov-gold-border);
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--space-3);
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  overflow: hidden;
+}
+
+// Detail wrapper (fills the remaining space)
+.detailWrapper {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+// Empty state (no provider selected)
+.emptyState {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: var(--color-subtle);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+// Pane-responsive layout (shrinks with the pane, not the viewport): the frame
+// padding narrows as the pane does.
+@container pane (inline-size < 560px) {
+  .shell {
+    padding: var(--space-2);
+  }
+}
+
+@container pane (inline-size < 420px) {
+  .shell {
+    padding: 0;
+  }
+}

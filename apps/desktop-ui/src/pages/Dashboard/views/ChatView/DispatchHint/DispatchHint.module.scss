@@ -1,0 +1,33 @@
+// Hint bar shown when a group-thread message was sent without an @mention
+.hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  margin: 0 8px 5px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+
+  span {
+    flex: 1;
+  }
+}
+
+.dismiss {
+  flex-shrink: 0;
+  padding: 0 2px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  line-height: 1;
+
+  &:hover {
+    color: var(--color-text);
+  }
+}

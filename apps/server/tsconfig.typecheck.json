@@ -1,0 +1,25 @@
+{
+  // Typecheck-only config (`pnpm typecheck`). Identical to tsconfig.json except
+  // `googleapis` resolves to a types-only slice of the six APIs Snaglet uses, which
+  // keeps ~917 files (~30%) of googleapis out of the program. tsx/esbuild/tsc
+  // build keep reading tsconfig.json, so runtime resolution is unchanged.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "incremental": true,
+    "tsBuildInfoFile": "../../node_modules/.cache/tsc/server.typecheck.tsbuildinfo",
+    "paths": {
+      "@snaglet/shared": ["../../packages/shared/index.ts"],
+      "@snaglet/shared/*": ["../../packages/shared/*"],
+      "@snaglet/db": ["../../packages/db/index.ts"],
+      "@snaglet/db/*": ["../../packages/db/*"],
+      "@snaglet/sdk": ["../../packages/snaglet-sdk/index.ts"],
+      "@server/*": ["./src/*"],
+      "@desktop/*": ["../desktop-ui/src/*"],
+      "googleapis": ["./src/shims/googleapis-slim.types.d.ts"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "../../dist", "src/shims/googleapis-slim.ts"]
+}

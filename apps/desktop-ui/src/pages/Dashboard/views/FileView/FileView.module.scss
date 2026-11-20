@@ -1,0 +1,48 @@
+@use '../../../../styles/abstracts' as *;
+
+.fileView {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  flex: 0 0 auto;
+}
+
+.title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-mono, monospace);
+  color: var(--color-text);
+  @include layout-truncate;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.badge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  color: var(--color-text-muted);
+}
+
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+}
+
+.notice {
+  padding: 16px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}

@@ -1,0 +1,28 @@
+// UI zoom compensation
+// The desktop shell zooms with CSS `zoom` on the root (zoomWindow.ts). Every
+// engine zooms px lengths, so `unzoomed()` divides by the level, published as
+// `--snaglet-zoom`. Engines disagree on `vw` / `vh`: standardized zoom scales them
+// by the level, older WebKit (Safari 17) does not, so zoomWindow measures the
+// factor and publishes it as `--snaglet-viewport-zoom` for the window-* helpers.
+// Current WebKit still leaves `vw` unzoomed in grid track sizes, so size grid
+// tracks with `%` of a full-window container instead of these helpers.
+
+// A fraction of the real window: `window-vh(88)` is 88% of the window height
+// at any zoom. Use for overlay frames and viewport caps.
+@function window-vw($percent) {
+  @return calc(#{$percent}vw / var(--snaglet-viewport-zoom, 1));
+}
+
+@function window-vh($percent) {
+  @return calc(#{$percent}vh / var(--snaglet-viewport-zoom, 1));
+}
+
+@function window-dvh($percent) {
+  @return calc(#{$percent}dvh / var(--snaglet-viewport-zoom, 1));
+}
+
+// A length the zoom leaves alone on screen, e.g. a preview frame's max-width:
+// the frame keeps its size while the text and controls inside it scale.
+@function unzoomed($length) {
+  @return calc(#{$length} / var(--snaglet-zoom, 1));
+}

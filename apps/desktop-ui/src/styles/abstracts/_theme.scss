@@ -1,0 +1,277 @@
+// Theme mixins (all prefixed `theme-`): surfaces, typography patterns,
+// decorative treatments and UI scaffolding. Controls live in _controls.scss.
+
+// Sticker shadow
+
+@mixin theme-sticker-shadow($offset: 2px, $color: var(--text)) {
+  box-shadow: #{$offset} #{$offset} 0 0 #{$color};
+}
+@mixin theme-sticker-shadow-sm {
+  @include theme-sticker-shadow(2px);
+}
+@mixin theme-sticker-shadow-md {
+  @include theme-sticker-shadow(3px);
+}
+
+// Ink border
+
+@mixin theme-ink-border($color: var(--color-border)) {
+  border: 1px solid #{$color};
+}
+@mixin theme-ink-border-strong($color: var(--color-border-strong)) {
+  border: 2px solid #{$color};
+}
+
+// Surfaces
+
+@mixin theme-surface {
+  background: var(--color-background);
+  @include theme-ink-border;
+  border-radius: var(--radius-card);
+}
+
+@mixin theme-surface-raised {
+  background: var(--color-surface-raised);
+  @include theme-ink-border(var(--color-border-strong));
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-overlay);
+}
+
+// theme-card — every "panel" surface (ProjectView sections, kanban
+// columns, archive rows, etc.). Shadows are reserved for things that
+// are actual overlays (menus, tooltips, modals).
+@mixin theme-card {
+  background: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+@mixin theme-card-bold {
+  background: var(--color-foreground);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+}
+
+// theme-well — inset recessed container.
+@mixin theme-well {
+  background: var(--color-field);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
+}
+
+// theme-pane-body — default work surface for split panes and detail views.
+@mixin theme-pane-body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+// theme-pane-section — compact content block inside a pane.
+@mixin theme-pane-section {
+  @include theme-card;
+  padding: var(--density-card-pad);
+}
+
+// theme-on-selected — what sits on a solid Selected surface. Re-scopes the
+// text roles so labels, secondary text and icons inside read on Selected
+// whatever the palette: the default theme's peach takes dark text, a light
+// theme's pale Selected keeps its own text color (--on-selected is derived).
+@mixin theme-on-selected {
+  --color-text: var(--color-on-selected);
+  --color-text-muted: var(--color-on-selected-muted);
+  --color-text-subtle: var(--color-on-selected-muted);
+  --color-on-chrome: var(--color-on-selected);
+  --color-on-chrome-muted: var(--color-on-selected-muted);
+  color: var(--color-on-selected);
+}
+
+// theme-on-selected-accents — for a Selected surface whose children paint
+// accent ink or outlines of their own (a checkbox, a badge, a help glyph):
+// re-scopes the accent and line roles on its children to the on-Selected
+// inks, since the plain accent reads at about 1.3:1 on Selected and the pale
+// line color hardly at all. On the children, so the surface keeps its own
+// accent edge. Mirrors the tree rows' `-on-selected` in @snaglet/ui. Not for
+// a surface holding accent-filled controls: their on-accent text would land
+// on an on-Selected fill.
+@mixin theme-on-selected-accents {
+  > * {
+    --color-primary: var(--color-primary-on-selected);
+    --color-primary-border: var(--color-primary-on-selected);
+    --color-border: var(--color-on-selected-muted);
+  }
+}
+
+// theme-selected-surface — active row / selected tab distribution.
+@mixin theme-selected-surface {
+  background: var(--color-selected);
+  border-color: var(--color-primary-border);
+  @include theme-on-selected;
+}
+
+// theme-lift — hover elevation treatment.
+@mixin theme-lift {
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: var(--shadow-sm);
+  }
+  &:active {
+    transform: translate(0, 0);
+    box-shadow: none;
+  }
+}
+
+// Dot grid
+
+@mixin theme-dot-grid {
+  background-image: radial-gradient(circle, var(--color-border-subtle) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+// Typography patterns
+
+@mixin theme-mono-heading {
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+@mixin theme-body-text {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--font-normal);
+  line-height: var(--leading-relaxed);
+}
+
+@mixin theme-label-text {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  letter-spacing: var(--letter-spacing-snug);
+}
+
+// theme-uppercase-label — all-caps label treatment.
+@mixin theme-uppercase-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  letter-spacing: var(--letter-spacing-widest);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+// theme-mono-meta — small muted monospace metadata.
+@mixin theme-mono-meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+// theme-mono-label — the app's dominant label idiom: mono font,
+// uppercase, tight tracking. Two variants:
+//   @include theme-mono-label        → 11px / 0.04em tracking (default)
+//   @include theme-mono-label(wide)  → 11px / 0.08em tracking
+//
+// Color is intentionally not included; callers set their own.
+@mixin theme-mono-label($variant: default) {
+  font-family: var(--font-mono);
+  // Uses the metadata/label token; the pane's fluid zoom scales it.
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+
+  @if $variant == wide {
+    letter-spacing: var(--letter-spacing-widest);
+  } @else {
+    letter-spacing: var(--letter-spacing-wide);
+  }
+}
+
+// Disclosure
+
+// theme-disclosure-leaf — the shared disclosure-glyph treatment.
+// The LeafToggle artwork is vertical, so this rotates it: collapsed → tip
+// points right (90deg), expanded → tip points down (180deg).
+@mixin theme-disclosure-leaf($size: 13px) {
+  display: block;
+  flex-shrink: 0;
+  width: $size;
+  height: $size;
+  color: var(--color-text-muted);
+  transform: rotate(90deg);
+  transform-origin: 50% 50%;
+  transition:
+    transform var(--transition-fast),
+    color var(--transition-fast);
+
+  &[data-open='true'] {
+    transform: rotate(180deg);
+  }
+}
+
+// Badges & status indicators
+
+// theme-badge — inline mono badge/pill — the tiny lowercase chip that
+// tags a row (project / orphan / task status).
+// One shared base; callers override color/border-color per state:
+//
+//   .statusPill { @include theme-badge; }
+//   .statusPillActive { color: var(--color-primary); border-color: var(--color-primary); }
+@mixin theme-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: var(--letter-spacing-snug);
+  color: var(--color-text-muted);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--chip-radius);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+// Feedback banners
+
+// theme-error-banner — flat error banner, sharp corners, error tokens.
+// Used by ChatSettings.error, ProjectView.createFormError.
+@mixin theme-error-banner {
+  padding: 8px 12px;
+  background: var(--color-error-bg, var(--color-hover));
+  border: 1px solid var(--color-error-border, var(--color-error, var(--color-border)));
+  color: var(--color-error, var(--color-text));
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  border-radius: var(--radius-md);
+}
+
+// Jump feedback
+
+// theme-line-flash — a brief highlight that fades out where a jump in a doc
+// landed (the outline, in the rendered editor and the markdown view). The
+// duration matches LINE_FLASH_MS in lineHighlightPlugin.ts.
+@mixin theme-line-flash {
+  animation: line-flash 1.4s ease-out both;
+
+  @keyframes line-flash {
+    from {
+      background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+    }
+
+    to {
+      background: transparent;
+    }
+  }
+}
+
+// Single-line truncation and scrollbars live in abstracts/layout —
+// `layout-truncate`, `layout-scrollbar-thin`, `layout-scrollbar-hidden`.

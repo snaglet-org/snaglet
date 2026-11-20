@@ -1,0 +1,89 @@
+@use '../../../../../styles/abstracts' as *;
+
+// A subagent's result row: the same centered, muted register as the other
+// thread_event meta lines (MessageRow .meta), opening into the report.
+
+.root {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.line {
+  appearance: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  max-width: 100%;
+  padding: 1px 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  text-align: center;
+  cursor: pointer;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    color: var(--color-text);
+    border-color: var(--color-border-subtle);
+    background: var(--color-hover);
+  }
+
+  @include focus-ring;
+}
+
+.root[data-outcome='failed'] .line {
+  color: var(--color-error);
+}
+
+.caret {
+  flex: 0 0 auto;
+  font-size: 0.85em;
+}
+
+.details {
+  width: min(640px, 94%);
+  margin-top: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.error {
+  margin-bottom: 6px;
+  color: var(--color-error);
+  font-size: var(--text-sm);
+}
+
+// Doubled for the same reason as MessageRow .markdownBody: beat the shared
+// MarkdownRenderer's long-form spacing regardless of bundle order.
+.markdown.markdown {
+  max-width: 100%;
+  min-width: 0;
+  font-size: var(--text-sm);
+  line-height: 1.25;
+  overflow-x: auto;
+}
+
+.raw {
+  font-size: var(--text-sm);
+  line-height: 1.22;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.empty {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}

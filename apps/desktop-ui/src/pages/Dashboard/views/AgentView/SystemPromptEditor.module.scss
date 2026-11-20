@@ -1,0 +1,102 @@
+@use '../../../../styles/abstracts' as *;
+
+.outer {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-width: 0;
+  gap: 4px;
+}
+
+// Title row — the section label plus its quiet inline autosave hint on one
+// baseline. The hint is muted and de-emphasized so the eye stays on the label.
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+}
+
+// Border is on .editor which maps to WorkspaceEditor's root .wrap div.
+// No wrapper between the border and the contenteditable — zero dead zone.
+.editor {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: color-mix(in srgb, var(--color-selected) 26%, var(--color-field));
+  border: 1px solid color-mix(in srgb, var(--color-border) 76%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 8%, transparent);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  // `.editor` lands on WorkspaceEditor's root `.wrap`, which ships
+  // `flex: 1 1 auto` so it can fill a full-height host. Here we want the
+  // opposite: the editor hugs its body (200–460px) and the section flows
+  // to that height. Re-stating the hug at higher specificity
+  // (`.outer > .editor`) neutralizes the grow regardless of stylesheet order.
+  .outer > & {
+    flex: 0 0 auto;
+    height: auto;
+    min-height: 0;
+  }
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--text) 8%, transparent),
+      0 0 0 1px var(--color-primary);
+  }
+
+  // Strip nested editor borders. WorkspaceEditor owns chrome visibility via
+  // `hideChrome`; avoid reaching into hashed internal toolbar class names.
+  :global {
+    // The body is the scroll region: it grows with content from a usable
+    // minimum up to a cap, then scrolls internally. This is what keeps each
+    // editor "big enough to see and scroll within" with a max height.
+    [class*='body'] {
+      display: flex;
+      flex-direction: column;
+      flex: 0 0 auto;
+      min-height: 150px;
+      max-height: 260px;
+      overflow-y: auto;
+      padding: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      border-radius: 0;
+    }
+
+    .ProseMirror {
+      flex: 1 0 auto;
+      min-height: 0;
+      padding: 7px 9px;
+      outline: none;
+      font-family: var(--font-sans);
+      // Fixed reading size: --sysprompt-text-base (15px), the doc body's size.
+      font-size: var(--sysprompt-text-base, var(--text-sm));
+      line-height: 1.5;
+      color: var(--color-text);
+      cursor: text;
+    }
+
+    // An embedded design-doc section (the seeded agents' Identity and System
+    // prompt) reads as the field's content, not as an editing widget: no
+    // raw heading slug (`§ identity`), and Show as link / copy / remove stay
+    // out of sight until the embed's header is hovered or holds focus, so
+    // they are still one hover away but never a stray click.
+    [data-transclusion-part='anchor'] {
+      display: none;
+    }
+
+    [data-transclusion-part='actions'] {
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+
+    [data-transclusion-part='header']:hover [data-transclusion-part='actions'],
+    [data-transclusion-part='actions']:focus-within {
+      opacity: 1;
+    }
+  }
+}

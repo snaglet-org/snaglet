@@ -1,0 +1,57 @@
+@use '../../../../styles/abstracts' as *;
+
+.palette {
+  --select-option-accent: var(--color-select-gray);
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--select-option-accent) 18%, var(--color-background));
+}
+
+.blue {
+  --select-option-accent: var(--color-select-blue);
+}
+.green {
+  --select-option-accent: var(--color-node-task);
+}
+.yellow {
+  --select-option-accent: var(--color-select-yellow);
+}
+.orange {
+  --select-option-accent: var(--color-select-orange);
+}
+.red {
+  --select-option-accent: var(--color-node-tool);
+}
+.purple {
+  --select-option-accent: var(--color-select-purple);
+}
+.pink {
+  --select-option-accent: var(--color-select-pink);
+}
+.brown {
+  --select-option-accent: color-mix(in srgb, var(--color-select-orange) 40%, var(--color-text));
+}
+.gray {
+  --select-option-accent: var(--color-select-gray);
+}
+
+.tag {
+  @include chip-base;
+  min-width: 0;
+  max-width: 100%;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: inherit;
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: normal;
+  text-transform: none;
+  vertical-align: middle;
+}
+
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,33 @@
+{
+  "name": "@snaglet/shared",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "main": "../../dist/shared/index.js",
+  "types": "../../dist/shared/index.d.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types/index.ts",
+    "./types/*": "./types/*.ts",
+    "./utils": "./utils/index.ts",
+    "./utils/*": "./utils/*.ts",
+    "./constants/*": "./constants/*.ts",
+    "./constants": "./constants/index.ts",
+    "./cursor": "./cursor/index.ts",
+    "./cursor/*": "./cursor/*.ts"
+  },
+  "scripts": {
+    "build": "tsc && tsc-alias -p tsconfig.json --resolve-full-paths --resolve-full-extension .js",
+    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=1024 tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "tsc-alias": "^1.8.16",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@snaglet/theme": "workspace:*",
+    "rrule": "2.8.1"
+  }
+}

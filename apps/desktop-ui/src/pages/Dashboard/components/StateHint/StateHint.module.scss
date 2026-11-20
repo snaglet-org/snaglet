@@ -1,0 +1,21 @@
+@use '../../../../styles/abstracts' as *;
+/**
+ * `.hint` — centered, muted, monospaced placeholder used as a whole-view
+ * stand-in for loading / empty / error states. Replaces ~5 near-identical
+ * `.loading` / `.placeholder` / `.empty` blocks scattered across Dashboard
+ * view SCSS modules.
+ */
+.hint {
+  padding: var(--space-6, 32px) var(--space-4, 16px);
+  text-align: center;
+  color: var(--color-text-muted);
+  @include theme-mono-label;
+}
+
+/**
+ * `.error` — same shape, but uses the error token. Keeps the view from
+ * needing a second local class just to recolor the same block.
+ */
+.error {
+  color: var(--color-error, var(--color-text-muted));
+}

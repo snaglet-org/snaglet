@@ -1,0 +1,98 @@
+// Select — a native <select> (platform option list, keyboard and
+// accessibility) in the same flat field chrome as TextInput, with square
+// corners (--radius-dropdown). The dropdown indicator is the leaf glyph as a
+// masked overlay, so its color follows the theme.
+//
+// Uses only WKWebView-safe features: mask-image, CSS vars, color-mix
+// (Safari 16.2+).
+
+@use '../../../styles/abstracts/controls' as controls;
+
+// Leaf glyph (kawaii leaf used throughout the app) as a mask. The
+// element it masks is painted with background-color, so the leaf's
+// color is theme-driven and state-reactive.
+$leaf-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M376.749,131.123L275.385,232.487v48.558l118.263-118.263C388.472,152.017,382.777,141.428,376.749,131.123z'/%3E%3Cpath d='M409.547,201.712L275.385,335.873v90.992c81.752-9.524,145.386-78.494,145.386-161.903C420.771,244.24,416.558,222.896,409.547,201.712z'/%3E%3Cpath d='M99.744,210.429c-5.364,18.306-8.515,36.65-8.515,54.532c0,83.409,63.634,152.38,145.386,161.903V336.35L99.744,210.429z'/%3E%3Cpath d='M275.385,0v177.659l80.07-80.07C323.481,50.833,289.007,13.96,275.385,0z'/%3E%3Cpath d='M135.251,131.123c-7.6,12.994-14.678,26.437-20.843,40.116l122.207,112.429v-51.181L135.251,131.123z'/%3E%3Cpath d='M156.545,97.59l80.07,80.07V0C222.992,13.96,188.519,50.833,156.545,97.59z'/%3E%3Cpath d='M256,427.999c-6.559,0-13.025-0.393-19.385-1.133v7.595V512h38.77v-77.539v-7.595C269.025,427.606,262.559,427.999,256,427.999z'/%3E%3C/svg%3E");
+
+// Shell
+// A positioning context so the leaf caret can be overlaid on the
+// right edge. No visual chrome of its own — the border and
+// background live on the native <select> (so the field-shell style
+// contract stays on the element the tests assert against).
+.shell {
+  position: relative;
+  display: inline-flex;
+  width: 100%;
+}
+
+// Leaf caret
+// Masked overlay, pointer-events off so clicks fall through to the
+// native <select> and open the option list. Rotated 180° so the
+// leaf tip points down (▾), matching a dropdown affordance.
+.caret {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 11px;
+  height: 11px;
+  transform: translateY(-50%) rotate(180deg);
+  background-color: var(--color-text-muted);
+  mask-image: $leaf-mask;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: $leaf-mask;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  pointer-events: none;
+  transition: background-color var(--transition-fast);
+}
+
+.select {
+  appearance: none;
+  width: 100%;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  outline: none;
+
+  // The same flat field as TextInput (field background, border, hover and
+  // focus glow), with square corners: dropdowns are square.
+  @include controls.field-shell(
+    $interaction: native,
+    $background-property: background-color,
+    $radius: var(--radius-dropdown)
+  );
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Caret follows control state — brightens to primary on hover/focus.
+.select:hover:not(:disabled) ~ .caret,
+.select:focus-visible ~ .caret,
+.select:focus ~ .caret {
+  background-color: var(--color-primary);
+}
+
+.disabled .caret {
+  opacity: 0.5;
+}
+
+// Sizes
+// TextInput's heights, left padding and type sizes, so a select lines up with
+// the inputs beside it. Right padding leaves room for the leaf caret.
+
+.sizeSm .select {
+  height: 22px;
+  padding: 0 24px 0 8px;
+  font-size: 11px;
+}
+
+.sizeMd .select {
+  height: 28px;
+  padding: 0 24px 0 10px;
+  font-size: 12px;
+}

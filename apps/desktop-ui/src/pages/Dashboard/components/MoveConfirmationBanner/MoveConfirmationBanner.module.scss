@@ -1,0 +1,79 @@
+@use '../../../../styles/abstracts' as *;
+
+// Single-line slim banner anchored above the dashboard pane layout.
+// Square Nokia/Y2K chrome — sharp 1px border, mono typography, brand
+// accent on the destination so the eye lands there immediately.
+// Absolutely positioned so it overlays the pane briefly without forcing
+// a layout reflow; the dashboard's `<main>` is the position parent.
+
+.bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--color-popover, var(--color-foreground));
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: var(--letter-spacing-normal);
+  color: var(--color-text);
+  z-index: 50;
+  animation: move-confirm-in 160ms ease-out;
+}
+
+.tag {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+}
+
+.source,
+.destination,
+.detail {
+  max-width: 38ch;
+  @include layout-truncate;
+}
+
+.source {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.into {
+  color: var(--color-text-muted);
+}
+
+.destination {
+  color: var(--color-primary, var(--color-primary));
+  font-weight: 600;
+}
+
+.arrow {
+  color: var(--color-text-muted);
+}
+
+.detail {
+  color: var(--color-text-muted);
+}
+
+// Push to right edge of the banner; chrome (16px box + ghost hover) comes
+// from <Button variant="ghost" size="xs" iconOnly>.
+.dismiss {
+  margin-left: auto;
+}
+
+@keyframes move-confirm-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

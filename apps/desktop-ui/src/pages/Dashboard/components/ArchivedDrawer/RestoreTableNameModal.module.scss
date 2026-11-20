@@ -1,0 +1,31 @@
+// Rename-on-restore prompt. Same layout as the shared ConfirmModal so it reads
+// as one step in the drawer's confirm flow, with a name field between the
+// message and the actions.
+
+.content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.message {
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}

@@ -1,0 +1,8 @@
+// Forwards the theme vocabulary in styles/abstracts/_theme.scss for
+// `@use '../../styles/dashboard' as dash;` call sites.
+//
+// New modules should pull from the abstracts barrel instead:
+//   @use '../../../styles/abstracts' as *;
+//   .card { @include theme-card; }
+
+@forward '../../../styles/abstracts/theme';

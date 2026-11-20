@@ -1,0 +1,53 @@
+// Shared pill look for both chip systems: the <Chip> component
+// (components/Chip/Chip.module.scss) and node-ref pills (`.md-chip` in
+// styles/globals/_node-chips.scss, a stable global class because ProseMirror
+// serializes chips to raw HTML). Both `@include` these mixins, so editing here
+// or the `--chip-*` tokens reskins every pill. Padding, font size, gap and
+// hover behavior differ per system and stay with each caller.
+
+// Structural skeleton common to every pill.
+@mixin chip-base {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--chip-radius);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+// Compact node-kind marker used in Properties headers. Document and project
+// badges share identical geometry and typography; callers supply the node-kind
+// accent so each keeps its existing palette token.
+@mixin node-kind-badge($accent) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 0;
+  padding: 3px 8px;
+  border: 1px solid color-mix(in srgb, #{$accent} 40%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, #{$accent} 10%, transparent);
+  color: #{$accent};
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+// Rest-state tint from a single accent color. Applies the color trio
+// directly — used by `.md-chip`, whose accent is `--md-chip-color`.
+@mixin chip-tint($accent) {
+  color: #{$accent};
+  background: color-mix(in srgb, #{$accent} var(--chip-bg-tint), transparent);
+  border: 1px solid color-mix(in srgb, #{$accent} var(--chip-border-tint), transparent);
+}
+
+// Same formula, but written to the `--chip-fg/bg/border` instance vars
+// instead of applied directly — used by `<Chip>` tones, where tone
+// classes set the vars and variant classes consume them.
+@mixin chip-tone-vars($accent) {
+  --chip-fg: #{$accent};
+  --chip-bg: color-mix(in srgb, #{$accent} var(--chip-bg-tint), transparent);
+  --chip-border: color-mix(in srgb, #{$accent} var(--chip-border-tint), transparent);
+}

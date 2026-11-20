@@ -1,0 +1,170 @@
+/*
+ * Soft Pastel Garden: the default Snaglet color theme.
+ * Generated from packages/theme/src by `pnpm --filter @snaglet/theme generate`.
+ * Do not edit by hand.
+ */
+:root {
+  /* Palette */
+  /* The user-owned role colors, one per Theme view color. These are the */
+  /* defaults (Soft Pastel Garden); a saved theme overrides them inline on */
+  /* the root element. The tokens below only decide where each role appears. */
+  --disabled: #2a2a2a; /* dialog veil and app canvas; mixed into faded text and shadows */
+  --background: #0a0a0a; /* the page inside each pane */
+  --foreground: #1a1a1a; /* pop-up panels, menus, cards */
+  --activity-bar: #0f0f0f; /* far-left icon strip */
+  --sidebar: #0f0f0f; /* sidebar panel */
+  --status-bar: #0f0f0f; /* bottom status strip */
+  --raised: #1a1a1a; /* buttons, chat message box, badges */
+  --chrome: #0f0f0f; /* pane title bars */
+  --field: #1e1e1e; /* text boxes, dropdowns, code blocks */
+  --selected: #f5b398; /* selected and active things */
+  --text: #f5f5f5; /* body text */
+  --text-muted: #a1a1a1; /* secondary text, small icons */
+  --line: #f5d5e8; /* thin edges and outlines */
+  --border: #e291b5; /* strong outlines, split-pane line */
+  --detail: #e291b5; /* main accent (actions, links, focus) */
+  --detail-2: #d4a5d6; /* activity bar icons, tree arrows, idle tabs */
+  --color-container-project: #b8e6d5; /* project icons and badges */
+  --color-container-default: #d4e8e1; /* plain container icons */
+  --color-node-doc: #9ed4d1; /* doc icons and doc chips */
+  --color-node-thread: #f5b398; /* thread icons and chips; errors */
+  --agent: #e291b5; /* flower mood bubble, agent picture frame, mentions */
+  --color-node-tool: #e8c4a6; /* tool icons */
+  --color-node-memory: #d4a5d6; /* memory accents */
+  --color-node-image: #f5b398; /* image icons */
+
+  /* Derived from the palette */
+  /* Computed from the colors above (deriveThemeTokens) so any palette stays */
+  /* readable; the app sets them again inline for a saved theme. */
+  --on-selected: var(--background); /* text on Selected */
+  --accent-on-selected: var(--on-selected); /* accent glyphs on Selected */
+  --hover-mix: 18%; /* Selected tint under a hovered row */
+  --hover-mix-soft: 13%; /* lighter hover tint */
+  color-scheme: dark; /* native controls match the palette */
+
+  /* Surface tokens */
+  /* Large work areas stay calm. The backdrop/theme wash is available as */
+  /* --color-disabled (Theme view "Disabled") but not used for pane bodies. */
+  --color-disabled: var(--disabled);
+  --color-background: var(--background);
+  --color-surface-raised: var(--raised);
+  --color-surface-sunken: var(--field);
+  --color-foreground: var(--foreground);
+
+  /* App chrome */
+  /* Each region owns a palette role so the activity bar, the sidebar and */
+  /* the status bar can be themed independently. */
+  --color-activity-bar: var(--activity-bar);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-header: color-mix(in srgb, var(--sidebar) 82%, var(--selected));
+  --color-status-bar: var(--status-bar);
+  --color-popover: var(--raised);
+  --color-chrome: var(--chrome);
+
+  /* On the chrome bar */
+  /* Text and controls that sit on the chrome bar. A dedicated role so chrome */
+  /* text can track the chrome surface independently of the work surface; the */
+  /* chrome shares the work surface lightness, so it is the body-ink pair. */
+  --color-on-chrome: var(--text);
+  --color-on-chrome-muted: var(--text-muted);
+  --color-field: var(--field);
+  --color-selected: var(--selected);
+
+  /* Text tokens */
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: color-mix(in srgb, var(--text) 52%, var(--disabled));
+  --color-text-disabled: color-mix(in srgb, var(--text) 36%, var(--disabled));
+
+  /* On the Selected color */
+  /* Text, secondary text and accent glyphs on a solid Selected surface (the */
+  /* theme-on-selected mixin re-scopes the text roles to these). */
+  --color-on-selected: var(--on-selected);
+  --color-primary-on-selected: var(--accent-on-selected);
+  --color-on-selected-muted: color-mix(in srgb, var(--on-selected) 72%, var(--selected));
+
+  /* Border tokens */
+  --color-border: var(--line);
+  --color-border-strong: var(--border);
+  --color-border-subtle: color-mix(in srgb, var(--line) 58%, transparent);
+
+  /* Hover */
+  /* Only color-mix() here. The tint strength is derived (--hover-mix). */
+  --color-hover: color-mix(in srgb, var(--selected) var(--hover-mix), var(--raised));
+  --color-background-hover: color-mix(in srgb, var(--selected) var(--hover-mix-soft), var(--raised));
+
+  /* Primary / accent */
+  /* Accent is reserved for action, focus, and small highlights. Selected */
+  /* state has its own role so active rows do not always become CTA-colored. */
+  --color-primary: var(--detail);
+  --color-on-primary: var(--background);
+  --color-primary-foreground: var(--background);
+  --color-primary-bg: var(--selected);
+  --color-primary-bg-hover: color-mix(in srgb, var(--selected) 72%, var(--raised));
+  --color-primary-border: var(--detail);
+  --color-primary-muted: var(--detail-2);
+  --color-primary-dark: color-mix(in srgb, var(--detail) 78%, var(--background));
+  --color-selection: var(--selected);
+  --color-focus-ring: color-mix(in srgb, var(--detail) 45%, transparent);
+
+  /* Semantic states */
+  /* State colors borrow from the user palette / node colors so status UI */
+  /* does not introduce a hidden second theme. */
+  --color-success: var(--color-node-task);
+  --color-success-bg: color-mix(in srgb, var(--color-success) 18%, var(--field));
+  --color-success-border: color-mix(in srgb, var(--color-success) 62%, var(--line));
+  --color-warning: var(--detail);
+  --color-warning-bg: color-mix(in srgb, var(--color-warning) 16%, var(--field));
+  --color-warning-border: color-mix(in srgb, var(--color-warning) 58%, var(--line));
+  --color-error: var(--color-node-thread);
+  --color-error-bg: color-mix(in srgb, var(--color-error) 18%, var(--field));
+  --color-error-border: color-mix(in srgb, var(--color-error) 62%, var(--line));
+  --color-destructive: var(--color-error);
+  --color-destructive-bg: var(--color-error-bg);
+  --color-danger: var(--color-error);
+  --color-danger-bg: var(--color-error-bg);
+  --color-accent: var(--color-primary);
+  --color-info: var(--color-select-blue);
+  --color-info-bg: color-mix(in srgb, var(--color-info) 18%, var(--field));
+  --color-info-border: color-mix(in srgb, var(--color-info) 62%, var(--line));
+
+  /* Online/active status light */
+  /* The pulsing "live" dot and the agent-run indicator on tree rows. White so */
+  /* it reads calm; the <Light> control paints a hairline ring around it. */
+  --color-status-online: #ffffff;
+
+  /* Node identity colors */
+  /* Each -bg is a low-opacity tint over the canvas. Projects wear the Project */
+  /* color everywhere: tree, pane icons, palette results, badges and chips. */
+  /* Pane-open is an interaction state, so it keeps the main accent. */
+  --color-node-project: var(--color-container-project);
+  --color-node-project-bg: color-mix(in srgb, var(--color-node-project) 16%, var(--disabled));
+  --color-pane-open: var(--detail);
+  --color-node-container: #25778b; /* deep teal */
+  --color-node-container-bg: color-mix(in srgb, var(--color-node-container) 16%, var(--disabled));
+  --color-node-doc-bg: color-mix(in srgb, var(--color-node-doc) 16%, var(--disabled));
+  --color-node-file: var(--color-select-blue); /* a fixed blue, not the Doc color */
+  --color-node-thread-bg: color-mix(in srgb, var(--color-node-thread) 16%, var(--disabled));
+  --color-node-task: #8ab99a; /* muted sage */
+  --color-node-task-bg: color-mix(in srgb, var(--color-node-task) 16%, var(--disabled));
+  --color-agent: var(--agent);
+  --color-node-agent: var(--color-agent);
+  --color-node-tool-bg: color-mix(in srgb, var(--color-node-tool) 16%, var(--disabled));
+  --color-node-memory-bg: color-mix(in srgb, var(--color-node-memory) 16%, var(--disabled));
+  --color-node-image-bg: color-mix(in srgb, var(--color-node-image) 16%, var(--disabled));
+
+  /* Select option colors */
+  /* Swatches for table select options with no node identity to borrow from. */
+  /* Blue is the default Doc color, copied rather than linked so a changed */
+  /* Doc color leaves it alone (docColorScope.styles.test.ts). */
+  --color-select-blue: #9ed4d1; /* the default Doc color */
+  --color-select-pink: #f982b0; /* bubblegum pink */
+  --color-select-gray: #b6afb3; /* warm tan */
+  --color-select-yellow: #ffdb57; /* butter yellow */
+  --color-select-orange: #f9a658; /* warm amber */
+  --color-select-purple: #8a79c7; /* soft purple */
+
+  /* Container category colors */
+  --color-container-project-bg: color-mix(in srgb, var(--color-container-project) 16%, var(--disabled));
+  --color-container-default-bg: color-mix(in srgb, var(--color-container-default) 16%, var(--disabled));
+}

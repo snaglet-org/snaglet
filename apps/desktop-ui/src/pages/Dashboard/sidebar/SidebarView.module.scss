@@ -1,0 +1,74 @@
+@use '../../../styles/abstracts' as *;
+
+// Shared chrome for any sidebar view: a sticky header with the view's
+// name on the left and optional actions on the right, plus a scroll-
+// filling body region for the view's primary content.
+
+.root {
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// Compact mode for WorkspaceView hoisted above another sidebar view: only
+// the search bar renders, so the section sizes to its content instead of
+// taking the panel's flex space. `overflow: visible` and the local stacking
+// context (position + z-index) let the results dropdown paint over the
+// sibling view below.
+.rootCompact {
+  flex: 0 0 auto;
+  overflow: visible;
+  position: relative;
+  z-index: 10;
+}
+
+.header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: var(--density-chrome-height);
+  padding: 8px 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  background: var(--color-sidebar-header);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  user-select: none;
+}
+
+.title,
+.actions {
+  position: relative;
+}
+
+.title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  // Lets a shrinkable control in a view's actions (the Tools filter) give way
+  // on a narrow sidebar instead of pushing the actions past the header edge.
+  min-width: 0;
+}
+
+.body {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+}

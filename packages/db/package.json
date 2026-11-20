@@ -1,0 +1,53 @@
+{
+  "name": "@snaglet/db",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Type-safe SQL data layer for managed and external PostgreSQL",
+  "type": "module",
+  "main": "../../dist/db/index.js",
+  "types": "../../dist/db/index.d.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./db": "./db.ts",
+    "./Model": "./Model.ts",
+    "./View": "./View.ts",
+    "./sql-utils": "./sql-utils.ts",
+    "./tables/*": "./tables/*/index.ts",
+    "./adapters": "./adapters/index.ts",
+    "./adapters/postgres": "./adapters/postgres.ts",
+    "./actorMember": "./actorMember.ts",
+    "./ownerRef": "./ownerRef.ts",
+    "./migrations": "./migrations.ts",
+    "./adapters/types": "./adapters/types.ts",
+    "./runtime/snaglet-env": "./runtime/snaglet-env.ts",
+    "./runtime/postgres/binaries": "./runtime/postgres/binaries.ts",
+    "./runtime/postgres": "./runtime/postgres/index.ts",
+    "./runtime/postgres/runtime": "./runtime/postgres/runtime.ts",
+    "./runtime/postgres/version": "./runtime/postgres/version.ts"
+  },
+  "scripts": {
+    "init": "tsx db.ts",
+    "migrate": "tsx migrations.ts",
+    "scratch": "tsx scripts/create-scratch-database.ts",
+    "pg:runtime:build": "tsx scripts/build-postgres-runtime.ts",
+    "pg:runtime:path": "tsx scripts/print-postgres-runtime.ts",
+    "pg:runtime:verify": "tsx scripts/verify-postgres-runtime.ts",
+    "pg:backup:verify-recovery": "tsx scripts/verify-backup-restore-recovery.ts",
+    "pg:migration:verify": "tsx scripts/verify-fresh-bootstrap.ts",
+    "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.alias.json --resolve-full-paths --resolve-full-extension .js",
+    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=1024 tsc -p tsconfig.json --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@snaglet/shared": "workspace:*",
+    "dotenv": "^16.4.5",
+    "pg": "8.22.0"
+  },
+  "devDependencies": {
+    "@types/pg": "8.20.0",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.19.2",
+    "typescript": "^5.4.5"
+  }
+}

@@ -1,0 +1,150 @@
+@use '../../styles/abstracts' as *;
+
+// Viewer box
+// A clipped box the host sizes (pane canvas, modal body). The image is placed
+// inside it by size + translate, so zooming never reflows anything outside.
+.viewer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+  // Pinch / pan gestures belong to the viewer, not the page.
+  touch-action: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+
+  &[data-pannable] {
+    cursor: grab;
+  }
+
+  &[data-dragging] {
+    cursor: grabbing;
+  }
+
+  // A lightbox at fit: the area around the image closes it, like the dim
+  // backdrop it covers.
+  &[data-backdrop] {
+    cursor: zoom-out;
+
+    .image {
+      cursor: default;
+    }
+  }
+}
+
+.image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  max-height: none;
+  transform-origin: 0 0;
+  -webkit-user-drag: none;
+
+  // Hidden until its natural size and the box are known, so the first paint
+  // is already the fitted view.
+  &[data-ready='false'] {
+    visibility: hidden;
+  }
+
+  // Discrete steps (buttons, keys, double-click) ease; pinch, wheel and drag
+  // track the input directly.
+  @media (prefers-reduced-motion: no-preference) {
+    &[data-animate='true'] {
+      transition:
+        width var(--transition-fast),
+        height var(--transition-fast),
+        transform var(--transition-fast);
+    }
+  }
+}
+
+// Overlay layer: the image's natural size, translated and scaled to sit
+// exactly on it. It eases with the image, so overlay content never runs
+// ahead of a zoom step.
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+
+  @media (prefers-reduced-motion: no-preference) {
+    &[data-animate='true'] {
+      transition: transform var(--transition-fast);
+    }
+  }
+}
+
+// Zoom toolbar
+// − / readout / + / Fit in the bottom-right corner, shown while the pointer is
+// over the viewer or focus is inside it. Button chrome is the shared ghost xs.
+.toolbar {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: var(--color-popover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-muted);
+  cursor: default;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+
+  .viewer:hover &,
+  .viewer:focus-within & {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+// Sized in ch so 8%–800% doesn't jiggle the toolbar as the digits change.
+.readout {
+  min-width: 5ch;
+  padding: 0 2px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.fitButton {
+  padding-inline: 6px;
+  font-size: 11px;
+}
+
+// Loading / error states fill the same box the viewer will.
+.status {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,0 +1,17 @@
+{
+  "description": "Maximum accepted ESLint and Knip findings. CI fails on any increase. The two Knip duplicates are the intentional snaglet + default exports of the public SDK and its vendored runtime.",
+  "eslint": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "knip": {
+    "files": 0,
+    "binaries": 0,
+    "dependencies": 0,
+    "unlisted": 0,
+    "unresolved": 0,
+    "exports": 0,
+    "types": 0,
+    "duplicates": 2
+  }
+}

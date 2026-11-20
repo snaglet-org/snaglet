@@ -1,0 +1,131 @@
+@use '../../../styles/abstracts' as *;
+
+.empty {
+  padding: space(1) space(2);
+  color: var(--color-text-muted);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.surface {
+  width: min(290px, calc(100vw - 28px));
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(2);
+  padding: 0 space(1) space(2);
+  color: var(--color-text-muted);
+  font: 10px var(--font-mono);
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 280px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 3px minmax(0, 1fr);
+  min-width: 0;
+  background: var(--color-background);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.rail {
+  background: var(--color-error);
+}
+
+.item[data-status='running'] .rail {
+  background: var(--color-primary);
+  animation: hook-status-pulse 1.3s ease-in-out infinite;
+}
+
+.item[data-status='succeeded'] .rail {
+  background: var(--color-success);
+}
+
+.item[data-status='timed_out'] .rail {
+  background: var(--color-warning);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 7px 8px;
+}
+
+.runTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: space(2);
+  min-width: 0;
+}
+
+.runTop strong {
+  @include layout-truncate;
+  color: var(--color-text);
+  font: 600 12px var(--font-mono);
+}
+
+.status {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font: 9px var(--font-mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.item[data-status='running'] .status {
+  color: var(--color-primary);
+}
+
+.item[data-status='succeeded'] .status {
+  color: var(--color-success);
+}
+
+.item[data-status='failed'] .status {
+  color: var(--color-error);
+}
+
+.item[data-status='timed_out'] .status {
+  color: var(--color-warning);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 8px;
+  color: var(--color-text-muted);
+  font: 10px var(--font-mono);
+}
+
+@keyframes hook-status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item[data-status='running'] .rail {
+    animation: none;
+  }
+}

@@ -1,0 +1,259 @@
+@use '../../../../styles/abstracts' as *;
+
+// Shared chrome for node "Properties" disclosures. PropertiesDisclosure owns
+// this complete shell so pane implementations cannot drift in spacing, color,
+// or overlay behavior.
+
+.host {
+  position: relative;
+  flex-shrink: 0;
+  min-width: 0;
+  padding: 10px 12px 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-width: 0;
+  container-type: inline-size;
+  background: color-mix(in srgb, var(--color-foreground) 84%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 52%, transparent);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-xs);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 7px 12px;
+  min-width: 0;
+  background: color-mix(in srgb, var(--color-foreground) 78%, var(--color-selected));
+  border-radius: var(--radius-card);
+}
+
+.headerBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  // The toggle stays intrinsic-width so a growing trailing sibling (the project
+  // DetailsPanel's inline name field) can claim the free space; the doc /
+  // container panels right-align their trailing controls with margin-left: auto
+  // regardless, so their layout is unchanged.
+  flex: 0 1 auto;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  color: var(--color-text);
+
+  @include focus-ring;
+
+  &:hover .headerLeaf {
+    color: var(--color-primary);
+  }
+}
+
+// Leaf disclosure glyph (shared LeafToggle).
+// Collapsed → tip points right (90deg); expanded → tip points down (180deg).
+.headerLeaf {
+  @include theme-disclosure-leaf;
+}
+
+.title {
+  @include theme-mono-label(wide);
+  // Deliberately understated — the disclosure label is a quiet affordance,
+  // not a heading, so it stays muted + lighter-weight rather than shouting.
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+// Split panes can make the document surface much narrower than the window.
+// Wrap based on the Properties section itself rather than a viewport media
+// query, keeping every action reachable even beside a wide workspace sidebar.
+@container (max-width: 280px) {
+  .header {
+    gap: 6px;
+    padding: 6px 8px;
+  }
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  min-height: 0;
+  padding: 8px 12px 18px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 34%, transparent);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  background: color-mix(in srgb, var(--color-foreground) 64%, transparent);
+}
+
+// Overlay variant (all Properties dropdowns)
+// Each Properties section sits atop its pane's content, so expanding the body
+// in normal flow would shove that content down and disturb scroll. These two
+// modifiers — used by ContainerProperties and DocProperties (and mirrored by
+// the project DetailsPanel's own overlay class) — float the body as a popover
+// instead: the section stays header-height in flow (content never moves) and
+// the body drops over what's beneath.
+.overlayAnchor {
+  // Containing block for the absolute body below. (container-type already
+  // makes this a containing block; the explicit relative states the intent.)
+  position: relative;
+}
+
+.overlayBody {
+  position: absolute;
+  // Butt against the section's own bottom border so there's no double rule.
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20; // above the contents grid (unstacked), below toasts/menus
+  border-top: 0;
+  border-right: 1px solid color-mix(in srgb, var(--color-border) 52%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 52%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 52%, transparent);
+  // Opaque, lifted surface — the shared body is semi-transparent by default,
+  // but a popover floating over content needs a solid backdrop.
+  background: var(--color-foreground);
+  box-shadow: var(--shadow-md, var(--shadow-sm));
+  border-radius: 0 0 var(--radius-overlay) var(--radius-overlay);
+  // Fill the room below the header down to a small margin above the viewport
+  // bottom, scrolling internally (via `.body`'s overflow-y: auto) when the
+  // content is taller — no arbitrary fixed cap. The precise cap is measured and
+  // applied inline (useOverlayFillHeight) because the header's viewport offset
+  // isn't fixed; this calc is only the pre-measure fallback.
+  max-height: calc(100vh - 96px);
+  animation: overlayDrop 120ms ease both;
+}
+
+@container (max-width: 360px) {
+  .body {
+    gap: 8px;
+    padding: 8px 8px 14px;
+  }
+}
+
+@keyframes overlayDrop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Footer metadata line — the read-only "Created by · Updated · Edited by"
+// attribution, pinned to the bottom of the expanded doc panel after every
+// property section. Full-width and left-aligned (overriding the compact
+// right-pinned treatment `.readonlyInline` gets when it shares a `.hintRow`).
+.metaFooter {
+  display: flex;
+  min-width: 0;
+
+  .readonlyInline {
+    margin-left: 0;
+  }
+}
+
+.fieldLabel {
+  @include theme-mono-label(wide);
+  font-size: var(--text-3xs);
+  color: var(--color-text-muted);
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.3;
+}
+
+// Compact small-print metadata line (e.g. "Created by X · Jul 4 · Updated
+// 2h ago") — the space-saving alternative to full label+value rows. Wraps
+// rather than overflows on narrow panes; each `·` divider is its own
+// aria-hidden span so screen readers get the segments without the noise.
+.readonlyInline {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 5px;
+  margin-left: auto;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: var(--letter-spacing-normal);
+  color: var(--color-text-disabled);
+}
+
+// A single one-way action in a Properties body (the folder "Make this a
+// project" button) and the inline confirm it swaps to. No modal: the sentence
+// and the Confirm / Cancel pair sit where the button was.
+.actionRow {
+  display: flex;
+  flex-direction: column;
+  // A compact button at its own width, not a full-width bar.
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.inlineConfirm {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 52%, transparent);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--color-foreground) 78%, var(--color-selected));
+}
+
+.inlineConfirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.error {
+  padding: 8px 12px;
+  background: var(--color-error-bg, var(--color-hover));
+  border: 1px solid var(--color-error-border, var(--color-error, var(--color-border)));
+  color: var(--color-error, var(--color-text));
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+// Read-only key/value list for the pull-out Properties panel (Info group).
+.infoList {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 12px;
+  margin: 0;
+  font-size: var(--text-xs);
+
+  dt {
+    color: var(--color-text-muted);
+  }
+
+  dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--color-text);
+
+    &[data-state='error'] {
+      color: var(--color-error);
+    }
+  }
+}

@@ -1,0 +1,59 @@
+@use '../../../styles/abstracts' as *;
+
+// Zoom control cluster: − / percentage / +. The icon buttons reuse the
+// quiet trigger chrome from ReloadSlot; the percentage is the same chrome
+// with text instead of a glyph, sized in ch so 80%–200% doesn't jiggle
+// the bar as the digits change.
+
+.group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  width: 22px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.percent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  min-width: 4.5ch;
+  padding: 0 2px;
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+}

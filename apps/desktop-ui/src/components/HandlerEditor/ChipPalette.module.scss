@@ -1,0 +1,40 @@
+@use '../../styles/abstracts' as *;
+
+// ChipPalette — shared chip row for the editor chip palettes.
+// Same field-hint vocabulary as ToolBuilderPanel /
+// HookBuilderPanel's own .module.scss files (10px uppercase heading,
+// muted-foreground body) so the palettes read as part of the same form.
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.heading {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--color-text-disabled);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dragWrap {
+  display: inline-flex;
+  cursor: grab;
+}
+
+.dragWrap:active {
+  cursor: grabbing;
+}
+
+.empty {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}

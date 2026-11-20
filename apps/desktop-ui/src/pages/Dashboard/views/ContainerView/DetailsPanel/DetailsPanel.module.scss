@@ -1,0 +1,489 @@
+@use '../../../../../styles/abstracts' as *;
+@use './banners' as *;
+
+// Collapsible details panel
+//
+// Collapsed = one-line "▶ name" summary. Expanded = project identity and
+// description first; optional folder / Git / indexing properties are
+// compact chips and opt-in editors.
+
+.detailsPanel {
+  display: flex;
+  flex-direction: column;
+  // Containing block for the collapsible-mode overlay body below, which floats
+  // over the pane content (position: absolute) instead of pushing it down.
+  position: relative;
+  margin: 0 12px 10px;
+  background: color-mix(in srgb, var(--color-foreground) 84%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 52%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--color-node-project) 70%, transparent);
+
+  // Fill mode — the panel owns the pane. Grow to occupy all remaining
+  // height so the body has room to breathe.
+  &[data-fill] {
+    flex: 1;
+    min-height: 0;
+  }
+  border-radius: var(--radius-md);
+}
+
+.detailsHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  min-width: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 24%, transparent);
+}
+
+// Collapsed summary — name only. The container category badge lives at the
+// far right of the header in both collapsed and expanded states.
+.detailsSummary {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-tight);
+  white-space: nowrap;
+  overflow: hidden;
+
+  &:hover .detailsSummaryName {
+    color: var(--color-primary);
+  }
+
+  @include focus-ring;
+}
+
+.detailsSummaryName {
+  flex-shrink: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--transition-fast);
+}
+
+// Inline title input — always editable, but styled to read like a heading
+// until the user hovers or focuses. Hover reveals a subtle background tint;
+// focus draws the real input chrome.
+.detailsNameInput {
+  // Grow to fill the header row, but with an intrinsic (auto) flex-basis rather
+  // than `width: 100%`: a 100% basis in the collapsible header's flex-wrap row
+  // would force the name onto its own line and stack the header three tall.
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 24px;
+  padding: 2px 5px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+
+  &:hover:not(:disabled):not(:focus) {
+    background: var(--color-hover);
+  }
+
+  &:focus {
+    background: var(--color-background);
+    border-color: var(--color-primary);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Collapsible Properties-header mode: the name shares one compact inline row
+// with the leaf "Properties" label, the Project pill, and the autosave status
+// (matching the DocProperties header's density). Dial the display title down
+// from the Overview page-heading size to a compact inline field so a doc header
+// and a project header read as the same component with different contents.
+.detailsNameInputCompact {
+  min-height: 22px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.detailsStatus {
+  @include theme-mono-label;
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  min-width: auto;
+  text-align: right;
+
+  &[data-state='saving'] {
+    color: var(--color-text-muted);
+  }
+  &[data-state='saved'] {
+    color: var(--color-success, var(--color-primary));
+  }
+  &[data-state='dirty'] {
+    color: var(--color-text-muted);
+  }
+  &[data-state='error'] {
+    color: var(--color-error, var(--color-error));
+  }
+}
+
+.detailsBody {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 150px;
+  padding: 10px 12px 16px;
+  // Content-driven height: the body grows to fit its content and (in overlay
+  // mode) caps at the measured room below the header. Hide panel overflow so
+  // the description editor scrolls inside its own bounds instead of spilling
+  // past the dropdown boundary.
+  overflow: hidden;
+  @include layout-scrollbar-thin;
+
+  // Inside a fill-mode panel: drop the cap and use all available height
+  // from the parent flex container instead.
+  [data-fill] > & {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+  }
+
+  &[data-resizing] {
+    user-select: none;
+  }
+}
+
+// Overlay variant (collapsible / ContainerView Properties dropdown)
+// As a dropdown atop the contents grid (`!alwaysExpanded`, not the Overview
+// tab), the panel stays header-height in flow and the body floats over the
+// content as a popover, so the grid never moves. Mirrors `.overlayBody` in
+// the shared NodeProperties module so all three Properties panels expand the
+// same way.
+.detailsBodyOverlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20; // above the contents grid (unstacked), below toasts/menus
+  border: 1px solid color-mix(in srgb, var(--color-border) 52%, transparent);
+  border-top: 0;
+  // Opaque, lifted surface — a popover over content needs a solid backdrop.
+  background: var(--color-foreground);
+  box-shadow: var(--shadow-md, var(--shadow-sm));
+  // Fill the room below the header down to a small margin above the viewport
+  // bottom, and scroll internally when tall content (indexing panels
+  // + description) overruns it — no arbitrary fixed cap. The precise cap is
+  // measured and applied inline (useOverlayFillHeight), since the header's
+  // viewport offset isn't fixed; this calc is only the pre-measure fallback.
+  // Overrides the base `.detailsBody` overflow: hidden on the vertical axis.
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  animation: detailsOverlayDrop 120ms ease both;
+}
+
+@keyframes detailsOverlayDrop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.detailsField {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.projectMetaStrip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+// Prose inside the "How project embeddings work" leaf.
+.embeddingsExplainer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 68ch;
+
+  p {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    color: var(--color-text);
+    background: color-mix(in srgb, var(--color-field) 60%, transparent);
+    padding: 0 3px;
+  }
+
+  strong {
+    color: var(--color-text);
+  }
+}
+
+.connectionChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 42%, transparent);
+  background: color-mix(in srgb, var(--color-field) 36%, transparent);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.projectKindBadge {
+  @include node-kind-badge(var(--color-node-project));
+}
+
+.connectionChip {
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    color var(--transition-fast);
+
+  &:hover {
+    color: var(--color-text);
+    border-color: color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
+    background: color-mix(in srgb, var(--color-primary) 8%, var(--color-field));
+  }
+
+  &[data-state='saving'] {
+    color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+  }
+}
+
+.inlineConnectionEditor {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 260px;
+  min-width: min(100%, 240px);
+}
+
+.descriptionField {
+  padding-top: 2px;
+}
+
+// The description field grows to fill all height left under the metadata
+// block, and hands that height down to the editor host so the document
+// surface fills the pane instead of sitting in an 80px box.
+.detailsFieldGrow {
+  flex: 1;
+  min-height: 0;
+
+  > .detailsOverviewHost {
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+// Overlay (collapsible Properties dropdown) description: the editor opens at
+// a roomy min-height, grows with the text, and scrolls internally at its max,
+// keeping the metadata strip in view. Fill mode (`[data-fill]`) keeps the
+// flex-fill behavior above. The min/max live on the host, not the editor
+// body: a higher-specificity rule in ChipEditableInput forces `min-height: 0`
+// onto the `.tiptap` element `.detailsOverviewEditor` lands on.
+.detailsPanel:not([data-fill]) {
+  .detailsFieldGrow,
+  .detailsFieldGrow > .detailsOverviewHost {
+    // Size to content within the content-driven body rather than filling it.
+    flex: 0 0 auto;
+  }
+
+  .detailsFieldGrow > .detailsOverviewHost {
+    min-height: 200px; // roomy default — a real description box, not a one-liner
+    max-height: 440px; // grow to here as you type, then scroll internally
+  }
+}
+
+// The description editor opens inside a collapsed leaf, where fill mode does
+// not stretch it to the pane, so give it a real working height there too.
+.detailsPanel[data-fill] {
+  .detailsFieldGrow,
+  .detailsFieldGrow > .detailsOverviewHost {
+    flex: 0 0 auto;
+  }
+
+  .detailsFieldGrow > .detailsOverviewHost {
+    min-height: 220px;
+    max-height: 480px;
+  }
+}
+
+.folderSaveMsg {
+  margin-top: -4px;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.folderPickerBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-hover);
+    border-color: var(--color-border-strong);
+    color: var(--color-text);
+  }
+
+  &:active {
+    background: var(--color-surface-sunken);
+  }
+}
+
+.detailsFieldLabel {
+  @include theme-mono-label(wide);
+  // Micro mono HUD label at the small floor — kept fixed (exempt).
+  font-size: var(--text-3xs);
+  color: var(--color-text-muted);
+}
+
+// Description / overview host: layout only. The editor draws its own field
+// (and its focus outline) and the manual Save bar sits plainly under it, so
+// the host adds no border or tint (a box around both would read as a tail
+// around the Save button).
+.detailsOverviewHost {
+  position: relative;
+  width: 100%;
+  min-height: 64px;
+  display: flex;
+  // No overflow clip: the editor's focus ring draws just outside its field.
+  // The editor body scrolls its own overflow.
+
+  // ChipEditableInput's outer wrapper sits as the flex child; let it
+  // stretch so the editable surface inherits the available height.
+  > div {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+  }
+}
+
+// Applied to ChipEditableInput's contenteditable (and its preview
+// pane) via the host's `className` prop. Background stays transparent
+// so the editor's own field shows through; padding is the real
+// click/drop target so the editor accepts focus and chip drops. Mirrors
+// `docBody` in DocView but trimmed down for the inline panel.
+.detailsOverviewEditor {
+  width: 100%;
+  height: 100%;
+  min-height: 54px;
+  padding: 7px 8px;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  outline: none;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.detailsPlaceholder {
+  padding: 8px;
+  color: var(--color-text-muted);
+  @include theme-mono-label;
+  font-size: var(--text-2xs);
+  border: 1px dashed var(--color-border);
+}
+
+.errorBanner {
+  @include error-banner;
+}
+
+.warningBanner {
+  @include warning-banner;
+}
+
+@container pane (inline-size < 640px) {
+  .detailsPanel {
+    margin: 0 8px 8px;
+  }
+
+  .detailsHead {
+    flex-wrap: wrap;
+  }
+
+  .detailsStatus {
+    min-width: auto;
+  }
+}
+
+@container pane (inline-size < 420px) {
+  .detailsBody {
+    padding-inline: 8px;
+  }
+}
+
+// Inside the pull-out Properties panel the panel owns the surface: drop the
+// card (margin, border, tint, accent rule) and let fields sit flush.
+.detailsPanel[data-flat] {
+  flex: 0 0 auto;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+
+  .detailsHead {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .detailsBody {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}

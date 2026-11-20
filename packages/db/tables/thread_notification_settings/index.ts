@@ -1,0 +1,1 @@
+export { ThreadNotificationSettingsTable } from './ThreadNotificationSettingsModel';

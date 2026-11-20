@@ -1,0 +1,3 @@
+// This barrel is deliberately non-emitting: safe to @use from every CSS module.
+@forward 'spacing';
+@forward 'tree';

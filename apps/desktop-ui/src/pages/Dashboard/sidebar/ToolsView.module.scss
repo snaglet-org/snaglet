@@ -1,0 +1,216 @@
+@use '../../../styles/abstracts' as *;
+
+// ToolsView — sidebar tree of categories (collapsible) and tools
+// (leaves). Tracks the LibraryTree row/leaf-toggle pattern so the two
+// sidebar views feel like siblings (same chrome, same density).
+
+// The tree frame (body, rows, chevrons, guides) ships from the shared
+// SidebarTree kit — only Tools-specific pieces live here (tints, counts,
+// the header filter, tier badges, list states).
+
+.placeholder,
+.error {
+  padding: 14px 12px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.error {
+  color: var(--color-error, var(--color-text-muted));
+  font-style: normal;
+}
+
+// Counts (the header total and each category's) read like the workspace
+// tree's group counts (THREADS 2): a plain muted number at the row's right
+// edge, no box. The weight resets the bold a category row sets on its label.
+.count {
+  @include tree-group-count;
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+// Header All / Enabled / Disabled select. The wrapper sizes to the select's
+// own content, so the field never stretches across the header. On a narrow
+// sidebar it is the header control that gives way (its text clips), so the
+// count and "+" stay inside the header.
+.filter {
+  display: inline-flex;
+  flex: 0 1 auto;
+  min-width: 0;
+
+  // The Select's shell and the native field inside it shrink with it.
+  > span,
+  select {
+    min-width: 0;
+  }
+}
+
+// Header "+" — mirrors AgentsView's `.addBtn` vocabulary so the two sidebar
+// headers read as the same surface. Opens ToolBuilderPanel in create mode.
+.addBtn {
+  background: var(--color-popover);
+  border-color: var(--color-border);
+  color: var(--color-primary);
+  font-size: var(--text-md);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    color var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    background: var(--color-primary);
+    border-color: var(--color-primary-border);
+    color: var(--color-on-primary);
+    transform: scale(1.08);
+  }
+}
+
+// Per-row Edit affordance — workspace-sourced tools only. Quiet by default,
+// same "lights up on intent" hover as the rest of the row's trailing chrome.
+.editBtn {
+  color: var(--color-text-disabled);
+
+  &:hover:not(:disabled) {
+    color: var(--color-primary);
+  }
+}
+
+.exposureBadge {
+  @include theme-mono-label;
+  flex-shrink: 0;
+  padding: 1px 4px;
+  font-size: 8px;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border-subtle);
+  white-space: nowrap;
+}
+
+.exposureCore {
+  color: var(--color-primary);
+  border-color: var(--color-primary-border);
+}
+
+// Per-row Delete affordance — sibling of .editBtn, same quiet-until-intent
+// treatment but tinted toward the error palette on hover (destructive).
+.deleteBtn {
+  color: var(--color-text-disabled);
+
+  &:hover:not(:disabled) {
+    color: var(--color-error);
+  }
+}
+
+.group {
+  display: block;
+}
+
+.section {
+  display: block;
+}
+
+.rowSection {
+  font-weight: 600;
+  --tree-label-color: var(--color-primary);
+  --tree-icon-color: var(--color-primary);
+}
+
+.rowGroup {
+  font-weight: 600;
+  --tree-label-color: var(--color-text);
+  --tree-icon-color: var(--color-text-muted);
+}
+
+// A tool's own row: its icon takes the theme's Tool color (editable in the
+// Theme view), like board rows take the thread color. Each row is also a
+// size container, so its trailing chrome can step down when the row itself
+// is narrow (see "Narrow rows" below).
+.rowTool {
+  --tree-icon-color: var(--color-node-tool);
+  container-type: inline-size;
+  container-name: tool-row;
+}
+
+// Far-right glow-light status indicator. Display-only — enabled/disabled is
+// expressed by the light glow; toggling lives in the tool detail pane, so
+// there is no cursor, hover, or focus affordance here.
+.lightStatus {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+}
+
+// State badges use the canonical Chip component.
+
+// Narrow rows
+// The name truncates first: the kit's label shrinks, the trailing chrome
+// above doesn't. Once the name is down to a few characters, a row sheds
+// optional chrome in steps, measured against its own content box so nesting
+// depth counts, keeping everything inside the row down to the sidebar's
+// 200px minimum. Each threshold is the row's fixed chrome (chevron slot,
+// icon, gaps, light) plus what it keeps beside the name.
+@container tool-row (inline-size < 176px) {
+  .exposureBadge {
+    display: none;
+  }
+}
+
+// Workspace tools also carry Edit + Delete.
+@container tool-row (inline-size < 220px) {
+  .rowWorkspace .exposureBadge {
+    display: none;
+  }
+}
+
+// Rows waiting on set-up carry a text chip as well. They give it room
+// early because sibling integration tools share long name prefixes
+// ("Google …"), so a name cut to a few characters can't tell them apart.
+// "On demand" is most tools' default, so it gives way at the same width
+// for every row: at the default sidebar width the names stay readable and
+// only the exception, "Core", keeps its badge.
+@container tool-row (inline-size < 300px) {
+  .rowNeedsSetup .exposureBadge {
+    display: none;
+  }
+
+  .exposureOnDemand {
+    display: none;
+  }
+}
+
+// The chip then folds into a dot in its tone color. The label text stays in
+// the DOM at font-size 0 so the chip keeps its accessible name; the dot is
+// a pseudo-element so the chip's own hover tint still shows around it.
+@container tool-row (inline-size < 260px) {
+  .rowNeedsSetup .setupChip {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    min-height: 14px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    font-size: 0;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border-radius: inherit;
+      background: currentColor;
+    }
+  }
+}
+
+@container tool-row (inline-size < 140px) {
+  .lightStatus {
+    width: 14px;
+  }
+}

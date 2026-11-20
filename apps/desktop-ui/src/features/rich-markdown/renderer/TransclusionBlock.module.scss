@@ -1,0 +1,176 @@
+@use '../../../styles/abstracts' as *;
+
+// An expanded include rendered inline: a left rail and slightly smaller prose
+// mark it as nested content, with a small header for its controls.
+
+.block {
+  display: block;
+  margin: 8px 0;
+  border-left: 2px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+  padding-left: 12px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  // The header is the drag handle; the body keeps its text cursor.
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.indicator {
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--color-primary) 65%, transparent);
+  line-height: 1;
+}
+
+.title {
+  flex: 1 1 auto;
+  min-width: 0;
+  @include layout-truncate;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: none; // keep title in its natural casing
+  letter-spacing: 0;
+}
+
+// Show as link, copy and remove, kept together at the header's end.
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+// Borderless, muted controls with a hover background.
+.toggle {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  font-family: inherit;
+  font-size: var(--text-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+
+  &:hover {
+    color: var(--color-text);
+    background: var(--color-hover);
+  }
+}
+
+.removeBtn {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: var(--text-md);
+  line-height: 1;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+
+  &:hover {
+    color: var(--color-error);
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  }
+}
+
+.copyBtn {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+
+  &:hover {
+    color: var(--color-text);
+    background: var(--color-hover);
+  }
+
+  &[data-copied='true'] {
+    color: var(--color-success);
+  }
+}
+
+// The body flows as ordinary prose with no height cap or scroll box.
+.body {
+  padding: 0;
+
+  // One size smaller than the host. The nested MarkdownRenderer sets its own
+  // `--text-base`, so this descendant selector's specificity wins whatever
+  // the bundle order; headings and tables are sized in em and follow.
+  .markdown {
+    font-size: var(--text-sm);
+
+    & > :first-child {
+      margin-top: 0;
+    }
+    & > :last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.markdown {
+  // Just a hook for the host (.body uses `.markdown` selector above).
+}
+
+.status,
+.error {
+  padding: 4px 0;
+  font-size: var(--text-xs);
+  font-style: italic;
+  letter-spacing: var(--letter-spacing-snug);
+  color: var(--color-text-muted);
+}
+
+.error {
+  color: var(--color-error);
+  font-style: normal;
+}
+
+// Line-link embeds (`![](doc-…#L12-L20)`) name the lines they show.
+.lines {
+  flex: none;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}

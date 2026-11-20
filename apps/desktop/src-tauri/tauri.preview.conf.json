@@ -1,0 +1,11 @@
+{
+  "productName": "Snaglet Preview",
+  "identifier": "com.snaglet.app.preview",
+  "build": {
+    "beforeBuildCommand": ""
+  },
+  "bundle": {
+    "active": true,
+    "createUpdaterArtifacts": false
+  }
+}

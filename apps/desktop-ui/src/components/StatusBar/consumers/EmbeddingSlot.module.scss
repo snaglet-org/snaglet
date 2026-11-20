@@ -1,0 +1,8 @@
+@use '../../../styles/abstracts' as *;
+.idle {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+  opacity: 0.55;
+}

@@ -1,0 +1,191 @@
+@use '../../../styles/abstracts' as *;
+
+// Inline search widget (shrunk-down Cmd+K)
+.searchWidget {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+}
+
+// Mirrors the command palette `.inputRow`: glyph + inline filter chips + input.
+.searchInputRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-field);
+  transition: border-color var(--transition-fast);
+
+  &:focus-within {
+    border-color: var(--color-primary);
+  }
+}
+
+.searchModeControl {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+}
+
+.searchGlyph {
+  flex-shrink: 0;
+  color: var(--color-text-disabled);
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 60px;
+  box-sizing: border-box;
+  padding: 1px 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.2;
+  outline: none;
+
+  &::placeholder {
+    color: var(--color-text-disabled);
+  }
+}
+
+// Layout only: the chip is <Chip size="xs"> and the searchClear × is
+// <Button variant="ghost" size="xs" iconOnly>. Chip tone per kind comes from
+// KIND_TO_TONE (treeHelpers.ts).
+.searchClear {
+  flex-shrink: 0;
+}
+
+.searchResults {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: calc(100% - 1px);
+  z-index: 5;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-top: none;
+  background: var(--color-foreground);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 20%, transparent),
+    var(--shadow-md);
+}
+
+.searchEmpty {
+  padding: 18px 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: var(--letter-spacing-widest);
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--color-text-disabled);
+}
+
+.searchSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px 6px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-widest);
+  text-transform: uppercase;
+  user-select: none;
+}
+
+// Rows read like tree rows: the tree's label font and size (`tree-body`) at
+// tree-row height, so names get the width and more results fit.
+.searchResultRow {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 8px;
+  min-height: var(--density-row-height);
+  box-sizing: border-box;
+  padding: 2px 8px 2px 10px;
+  border: none;
+  border-top: 1px solid var(--color-border);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  transition: background var(--transition-fast);
+
+  // Keyed rows (node hits, table rows) show only their tracked highlight, which
+  // follows a moving pointer: a hover tint would also mark the row a resting
+  // pointer happens to sit on. File rows have no keyboard state and keep it.
+  &:not(.searchResultRowKeyed):hover {
+    background: color-mix(in srgb, var(--color-primary) 6%, var(--color-foreground));
+  }
+}
+
+// Keyboard-active / closest-match row — same row treatment as Cmd+K and
+// editor query popovers.
+.searchResultRowActive {
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-foreground));
+}
+
+.searchResultKind {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 0 6px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  line-height: 14px;
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.searchResultBadges {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+// The tree label: full width up to the kind badge, cut with an ellipsis (the
+// row's title tooltip holds the whole name).
+.searchResultLabel {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  @include tree-label;
+  white-space: nowrap;
+  font: inherit;
+}
+
+// Secondary line (a summary's thread and time, a table's kind, a row's table).
+.searchResultMeta {
+  grid-column: 1 / -1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: var(--text-2xs);
+  line-height: 14px;
+  color: var(--color-text-disabled);
+  @include layout-truncate;
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+}

@@ -1,0 +1,6 @@
+@use '../../../styles/abstracts' as *;
+
+// The heading an outline jump landed on, in the rendered editor.
+.flash {
+  @include theme-line-flash;
+}

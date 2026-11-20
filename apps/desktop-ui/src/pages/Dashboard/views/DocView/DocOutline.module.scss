@@ -1,0 +1,100 @@
+@use '../../../../styles/abstracts' as *;
+
+// Properties panel → Outline: the doc's headings, indented by level.
+
+.outline {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+// A long outline scrolls in its own box so Versions stays in reach.
+.list {
+  // Rows measure their offsetTop from here.
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: min(50vh, 480px);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+
+  @include layout-scrollbar-thin($size: 6px, $inset: true, $hover: true);
+}
+
+.row {
+  min-width: 0;
+}
+
+.item {
+  --outline-indent: 12px;
+  --outline-depth: 0;
+
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 3px 6px 3px calc(6px + var(--outline-depth) * var(--outline-indent));
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+
+  @include layout-truncate;
+
+  @for $depth from 1 through 5 {
+    &[data-depth='#{$depth}'] {
+      --outline-depth: #{$depth};
+    }
+  }
+
+  &[data-level='1'] {
+    font-weight: 600;
+  }
+
+  &[data-level='4'],
+  &[data-level='5'],
+  &[data-level='6'] {
+    color: var(--color-text-muted);
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+  }
+
+  // Drawn inside the row: the list's scroll box would clip a ring outside it.
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+
+  &[aria-current='location'] {
+    border-left-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+// A narrow panel keeps more of each title with shallower indents.
+@container (max-width: 200px) {
+  .item {
+    --outline-indent: 6px;
+  }
+}
+
+.empty {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}

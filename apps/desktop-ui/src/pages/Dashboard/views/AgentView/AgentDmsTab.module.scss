@@ -1,0 +1,205 @@
+@use '../../../../styles/abstracts' as *;
+
+// The agent page's Direct messages tab: this agent's conversations in a list
+// on the left, the reading pane for the selected one on the right. Tokens only.
+// Too narrow for two columns (a small preview modal, a thin pane), the list
+// stacks above the reading pane.
+
+.root {
+  // Named so the stacked layout below follows the tab's own width, whatever
+  // hosts it.
+  container: agent-dms / inline-size;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.layout {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  overflow: hidden;
+}
+
+// The list's column: its width comes from the drag (`--dm-list-width`, set
+// inline); the handle sits on its right edge.
+.listColumn {
+  position: relative;
+  display: flex;
+  flex: none;
+  width: var(--dm-list-width);
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--color-border-subtle);
+}
+
+// Stacked: the list runs full width on top, at most a few rows tall (it
+// scrolls past that), and the reading pane takes the rest. Same threshold as
+// DmView's own narrow layout (its settings become a top drawer below 520px).
+@container agent-dms (max-width: 520px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .listColumn {
+    width: auto;
+    max-height: 30%;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  // A width drag means nothing once the list is full width.
+  .resizer {
+    display: none;
+  }
+}
+
+.list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+// Same handle as the workspace sidebar's: a 6px hit area over the edge.
+.resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 5;
+  background: transparent;
+  transition: background var(--transition-fast);
+
+  &:hover,
+  &:focus-visible,
+  &.resizerActive {
+    background: var(--color-primary);
+    opacity: 0.6;
+  }
+}
+
+.pane {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.row {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: none;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  // List text, the size of the chat header's title beside it; inherited, it
+  // was the page's default 16px.
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+}
+
+// The open conversation looks like the open row in the workspace sidebar:
+// the shared tree-row-active mixin (selected tint, brand stripe, bold label).
+// The class pair outranks .row:hover so hover never hides it.
+.row.rowSelected {
+  @include tree-row-active;
+
+  .name {
+    color: var(--color-text);
+  }
+}
+
+.identity {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  @include layout-truncate;
+
+  color: var(--color-text);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.meta {
+  @include layout-truncate;
+
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.badge {
+  flex: none;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-error);
+  color: var(--color-on-primary);
+  font-size: var(--text-3xs);
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.note,
+.error {
+  margin: 0;
+  padding: 14px 12px;
+  font-size: var(--text-xs);
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.error {
+  color: var(--color-error);
+}
+
+// The pane when the user's conversation does not exist yet (or DMs are off).
+.empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}

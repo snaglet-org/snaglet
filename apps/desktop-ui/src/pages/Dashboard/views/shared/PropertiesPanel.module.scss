@@ -1,0 +1,181 @@
+@use '../../../../styles/abstracts' as *;
+
+// PropertiesPanel: the view, plus a pull-out properties panel.
+//   .shell
+//     .topDrawer   (narrow pane + open: drops from the top)
+//     .row
+//       .content   (the view)
+//       .sidebar
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+
+  > * {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+// Subtle by design: no card, just a hairline edge and the raised surface.
+.sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 280px;
+  min-height: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-raised);
+  animation: propsSlideIn 160ms var(--ease-out) both;
+}
+
+@keyframes propsSlideIn {
+  from {
+    transform: translateX(16px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.topDrawer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  max-height: 60%;
+  min-height: 0;
+  overflow: hidden;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-raised);
+  animation: propsDropIn 160ms var(--ease-out) both;
+}
+
+@keyframes propsDropIn {
+  from {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.panelBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 14px 16px;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+
+  @include layout-scrollbar-thin($size: 6px, $inset: true, $hover: true);
+}
+
+// "Open in sidebar" at the top of the panel: a compact button, not stretched
+// across the column.
+.openInSidebar {
+  align-self: flex-start;
+  flex: none;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.groupLabel {
+  @include theme-mono-label(wide);
+  font-size: var(--text-3xs);
+  color: var(--color-text-muted);
+}
+
+.sidebarHandle,
+.drawerHandle {
+  position: absolute;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.15s;
+
+  &:hover,
+  &:active {
+    background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  }
+}
+
+.sidebarHandle {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 5px;
+  cursor: ew-resize;
+}
+
+.drawerHandle {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5px;
+  cursor: ns-resize;
+}
+
+.toggle {
+  color: var(--color-text-muted);
+}
+
+.toggleOn {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.topbarSlot {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  &:empty {
+    display: none;
+  }
+}
+
+// Outside a pane (preview modal): the controls the topbar would host.
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}

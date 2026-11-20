@@ -1,0 +1,93 @@
+@use '../../styles/abstracts' as *;
+
+// AgentsList — sidebar roster of agents. Token-driven so light + dark
+// track together. Row vocabulary mirrors WorkspaceTree so a workspace
+// doc row and an agent row read as the same surface.
+
+// The tree frame (body, group header, rows, chevrons, guides) ships
+// from the shared SidebarTree kit — only agent-specific pieces live
+// here (avatar, identity block, list states).
+
+// Square frame for an uploaded avatar image. An agent without one shows its
+// generated flower (`.avatarFlower`) with no frame. Square (not round) to mirror
+// the workspace's broader retro/grid aesthetic and stay consistent with
+// the rest of the row vocabulary (containers, project chips, etc.).
+.avatar {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--color-agent);
+  border: 1px solid color-mix(in srgb, var(--color-agent) 70%, var(--color-text));
+  color: var(--color-text);
+  overflow: hidden;
+}
+
+.avatarFlower {
+  // The generated flower draws its own shape: no box, background or border.
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: 0;
+  overflow: visible;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+// Two-line identity block (name on top, role beneath). `min-width: 0`
+// lets the inner text truncate without forcing the row to widen.
+.identity {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.role {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.loading,
+.empty,
+.error {
+  padding: 14px 16px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.error {
+  color: var(--color-error);
+  font-style: normal;
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  margin: 8px;
+  white-space: pre-wrap;
+}
+
+// The reveal pulse comes from the SidebarTree kit (`reveal` prop).

@@ -1,0 +1,459 @@
+@use '../../styles/abstracts' as *;
+
+// ToolAccessEditor — sibling to AgentModelEditor.
+// Sharp 1px borders, monospace type (var(--font-mono)), no rounded corners, Detail accents.
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.headerLabel {
+  @include theme-mono-label(wide);
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+// Guarded indicator + Trusted-mode action (agent-level consumer only).
+// Same visual family as the badges/hints below: 1px border, mono type.
+.guardedNotice {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-field);
+}
+
+.guardedLine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.guardedBadge {
+  padding: 0 4px;
+  @include theme-mono-label;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-widest);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+
+.trustedBadge {
+  padding: 0 4px;
+  @include theme-mono-label;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-widest);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+}
+
+.guardedCopy {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.trustBtn,
+.trustConfirmBtn,
+.trustCancelBtn {
+  appearance: none;
+  align-self: flex-start;
+  padding: 3px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  @include theme-mono-label;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+
+  // The hover tint, not the solid Selected fill: accent text on Selected
+  // reads at about 1.3:1 in the default palette.
+  &:hover:not(:disabled) {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    background: var(--color-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// The armed confirm reads as consequential — error accent on the yes button.
+.trustConfirmBtn {
+  color: var(--color-error);
+  border-color: var(--color-error);
+
+  &:hover:not(:disabled) {
+    color: var(--color-error);
+    border-color: var(--color-error);
+    background: var(--color-hover);
+  }
+}
+
+.trustConfirm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.trustConfirmText {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text);
+}
+
+// Mode toggle (All / Allow list / Deny list): the shared <Segmented>, sized
+// to its options rather than stretched by the column.
+.modeRow {
+  align-self: flex-start;
+  width: max-content;
+}
+
+.hint {
+  margin: 0;
+  padding: 2px 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+}
+
+.search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  background: var(--color-field);
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  outline: none;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--color-text);
+  transition: border-color var(--transition-fast);
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &:focus-visible {
+    border-color: var(--color-primary);
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  padding: 5px;
+  background: var(--color-field);
+
+  @include layout-scrollbar-thin;
+}
+
+.empty {
+  padding: 10px 8px;
+  text-align: center;
+  @include theme-mono-label;
+  color: var(--color-text-muted);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.groupLabel {
+  padding: 3px 5px;
+  @include theme-mono-label;
+  font-size: var(--text-3xs); // override: group labels read better tiny
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+}
+
+// Wraps a tool's row + (for guarded tools) its inline rule editor.
+.rowWrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 4px 5px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-hover);
+  }
+}
+
+// "rules" badge on guarded tools (shell/file/sql) — signals per-call scoping.
+// Inline rule editor for a checked guarded tool (chips + add input).
+.rules {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 3px 5px 6px 24px; // align under the tool name (past the checkbox)
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 4px;
+  border: 1px solid var(--color-border);
+  background: var(--color-field);
+}
+
+.chipText {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+.chipRemove {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0 2px;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--color-error);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.rulesHint {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.addRule {
+  display: flex;
+  gap: 4px;
+}
+
+.ruleInput {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 3px 6px;
+  background: var(--color-field);
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text);
+  transition: border-color var(--transition-fast);
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &:focus-visible {
+    border-color: var(--color-primary);
+  }
+}
+
+.addRuleBtn {
+  appearance: none;
+  padding: 3px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  @include theme-mono-label;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    background: var(--color-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// A ticked tool sits on the solid Selected fill, so its name, description,
+// checkbox and help glyph switch to the on-Selected roles.
+.rowChecked {
+  background: var(--color-selected);
+  @include theme-on-selected;
+  @include theme-on-selected-accents;
+
+  &:hover {
+    background: var(--color-selected);
+  }
+}
+
+.rowBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.rowTitle {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.rowName {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.saveBtn,
+.resetBtn {
+  appearance: none;
+  padding: 5px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  @include theme-mono-label(wide);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    color: var(--color-text);
+    border-color: var(--color-border);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.saveBtn {
+  &:not(:disabled) {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+
+  &:hover:not(:disabled) {
+    color: var(--color-primary);
+    background: var(--color-hover);
+  }
+}
+
+.status {
+  @include theme-mono-label;
+  letter-spacing: var(--letter-spacing-wider);
+  color: var(--color-text-muted);
+}
+
+.errorText {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-error);
+}
+
+.rowOps {
+  margin-left: 6px;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.rowWas {
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  color: var(--color-text-muted);
+}
+
+// A stored entry that shows on no tool row ("Not in the tool list").
+.unmatchedRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 5px;
+}
+
+.unmatchedText {
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+.unmatchedReason {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  color: var(--color-text-muted);
+}

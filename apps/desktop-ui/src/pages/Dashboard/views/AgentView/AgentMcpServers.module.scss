@@ -1,0 +1,39 @@
+.mcpHint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+
+.mcpList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  // Bound + scroll like the tool-access list (max-height: 220px) so a long
+  // server list can't blow the MCP card's height past its row-mates.
+  max-height: 180px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  // Bottom padding absorbs the checkbox focus/checked glow (7px blur)
+  // so it doesn't bleed into the parent scroll container and cause a jump.
+  padding-bottom: 8px;
+}
+
+.mcpItemName {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.mcpItemId {
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.mcpError {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  line-height: 1.35;
+}

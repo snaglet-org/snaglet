@@ -1,0 +1,585 @@
+@use '../../styles/abstracts' as *;
+@use './calendarShared' as cal;
+
+// Floating calendar surfaces (quick add, event popover, "+N more", field
+// picker, palette). Same paper as the table field editor popover.
+
+.surface {
+  @include cal.calendar-color-tokens;
+  position: fixed;
+  z-index: 2000;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-foreground);
+  color: var(--color-text);
+  box-shadow: var(--shadow-md);
+  font-size: var(--text-sm);
+  animation: reveal 120ms ease-out;
+  // A popover whose content changes size (Mark done drops rows) is placed
+  // again; glide to the new spot rather than jump.
+  transition:
+    top 160ms ease,
+    left 160ms ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.muted {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.titleInput {
+  width: 100%;
+}
+
+// Quick add's form: title, when, description, then a ruled block of
+// properties (calendar, table field, repeat).
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.when {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border-subtle);
+
+  .pickers {
+    margin-top: 0;
+  }
+}
+
+// The description's chip editor: the shell draws the border and focus glow
+// around the editor's contenteditable.
+.descriptionShell {
+  @include field-shell;
+
+  min-width: 0;
+
+  &[data-drag-over='true'] {
+    border-color: var(--color-primary);
+  }
+}
+
+.descriptionInput {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 64px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: var(--space-2);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  @include field-focus-reset;
+}
+
+.timeLine {
+  @include cal.button-reset;
+  align-self: flex-start;
+  padding: var(--space-1) var(--space-2);
+  margin-left: calc(-1 * var(--space-2));
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+}
+
+.timeEditor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--cal-accent);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-top: var(--space-1);
+}
+
+.iconButton {
+  @include cal.button-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+// Field picker
+
+.pickerHead {
+  position: sticky;
+  top: 0;
+}
+
+.pickerList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 340px;
+  overflow: auto;
+}
+
+.pickerGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.pickerProject {
+  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pickerTable {
+  padding: var(--space-1) 0;
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.pickerField {
+  @include cal.button-reset;
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+  }
+
+  &:disabled {
+    cursor: progress;
+    opacity: 0.6;
+  }
+}
+
+.pickerTypeIcon {
+  color: var(--color-text-muted);
+}
+
+// "+N more" list
+
+.moreTitle {
+  @include cal.button-reset;
+  align-self: flex-start;
+  margin: 0;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-primary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+.moreList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+// Color popover and custom picker
+
+.colorBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.colorHeading {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+
+  .palette + & {
+    margin-top: var(--space-1);
+  }
+}
+
+.palette {
+  display: grid;
+  grid-template-columns: repeat(7, 22px);
+  gap: var(--space-2);
+}
+
+.paletteSwatch,
+.paletteAdd {
+  @include cal.button-reset;
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+// A hairline keeps a swatch the color of the popover itself visible.
+.paletteSwatch {
+  background: var(--cal-accent);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+
+  &[aria-pressed='true'] {
+    box-shadow:
+      inset 0 0 0 1px var(--color-border),
+      var(--shadow-focus-ring);
+
+    &::after {
+      content: '✓';
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--cal-on-accent, var(--color-text));
+      font-size: var(--text-xs);
+      font-weight: 700;
+    }
+  }
+}
+
+.paletteAdd {
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+}
+
+.paletteAuto {
+  @include cal.button-reset;
+  align-self: flex-start;
+  padding: var(--space-1) var(--space-2);
+  margin-left: calc(-1 * var(--space-2));
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  &[aria-pressed='true']::before {
+    content: '✓ ';
+  }
+}
+
+.colorWell {
+  flex: none;
+  width: 36px;
+  height: 28px;
+  padding: 1px 2px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  cursor: pointer;
+}
+
+// What an event in this color looks like (the pane's .event tint and bar).
+.colorPreview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-1) 9px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--cal-accent) 16%, var(--color-background));
+  box-shadow: inset 3px 0 0 var(--cal-accent);
+  color: var(--color-text);
+  font-size: var(--text-xs);
+}
+
+.colorPreviewDot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--cal-accent);
+}
+
+// Repeating-row move choice: Only this one / All upcoming / Cancel.
+.choice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.choiceTitle {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+// Period popover and Repeat…
+
+.periodState {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+// An automation's countdown to its next run, under the date.
+.countdown {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--text-xs);
+}
+
+// Automation popover: two label / value pairs.
+.facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+
+  dd {
+    margin: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// Searchable picker (Calendar, Table field). A dropdown: the trigger is the
+// popovers' small text field (TextInput sm: 22px, 11px type) with square
+// corners, and its menu and option highlights are square too.
+
+.selectTrigger {
+  @include cal.button-reset;
+  @include field-shell($interaction: native, $radius: var(--radius-dropdown));
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+  height: 22px;
+  padding: 0 var(--space-2);
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.selectValue {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selectMuted {
+  color: var(--color-text-muted);
+}
+
+.selectDetail {
+  flex: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+}
+
+// The shared <Select>'s leaf caret: tip down at rest, up while the list is
+// open, primary on hover and focus.
+.selectChevron {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  color: var(--color-text-muted);
+  transform: rotate(180deg);
+  transition:
+    transform var(--transition-fast),
+    color var(--transition-fast);
+
+  &[data-open='true'] {
+    transform: rotate(0deg);
+  }
+
+  .selectTrigger:hover:not(:disabled) &,
+  .selectTrigger:focus-visible &,
+  &[data-open='true'] {
+    color: var(--color-primary);
+  }
+}
+
+.selectIcon {
+  flex: none;
+  width: 12px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.selectSurface {
+  padding: var(--space-2);
+  border-radius: var(--radius-dropdown);
+}
+
+.selectList {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.selectOption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-dropdown);
+  color: var(--color-text);
+  cursor: pointer;
+
+  &[aria-selected='true'] {
+    font-weight: 600;
+  }
+}
+
+.selectOptionActive {
+  background: var(--color-hover);
+}
+
+.pickerLabel {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+// Calendar / Table field: label column + picker column.
+.pickers {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-2);
+}
+
+// Row popover (a table row on the calendar)
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+// Undo of a Mark / Skip in the row popover: dashed and quiet, so it reads as
+// taking the mark back rather than as another way to complete.
+.undoAction {
+  border-style: dashed;
+  background: transparent;
+  color: var(--color-text-muted);
+  box-shadow: none;
+}

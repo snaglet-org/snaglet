@@ -1,0 +1,42 @@
+// Spacing scale on a 4px grid.
+
+@use 'sass:map';
+
+$spacing-scale: (
+  0: 0,
+  1: 4px,
+  2: 8px,
+  3: 12px,
+  4: 16px,
+  5: 20px,
+  6: 24px,
+  7: 28px,
+  8: 32px,
+  10: 40px,
+  12: 48px,
+  16: 64px,
+  20: 80px,
+  24: 96px,
+);
+
+// Usage: space(4) -> 16px
+@function space($key) {
+  @if map.has-key($spacing-scale, $key) {
+    @return map.get($spacing-scale, $key);
+  } @else {
+    @warn "Invalid spacing key: #{$key}";
+    @return 0;
+  }
+}
+
+// Responsive spacing
+// Usage: responsive-space(3, 6) -> 12px on mobile, 24px on desktop
+@function responsive-space($min, $max) {
+  $min-val: space($min);
+  $max-val: space($max);
+  @return clamp(
+    $min-val,
+    #{$min-val} + (#{$max-val} - #{$min-val}) * ((100vw - 320px) / (1920 - 320)),
+    $max-val
+  );
+}

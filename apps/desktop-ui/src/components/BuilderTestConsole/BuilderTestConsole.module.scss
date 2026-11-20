@@ -1,0 +1,279 @@
+// BuilderTestConsole supplies only test-specific content. The shared
+// PropertiesDisclosure owns the outer card, leaf toggle, overlay, and spacing.
+
+.count {
+  padding: 1px 6px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0;
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.headerAction.headerAction {
+  margin-left: auto;
+  border-radius: 0;
+}
+
+.body {
+  gap: 8px;
+}
+
+.notice {
+  margin: 0;
+  padding-left: 8px;
+  border-left: 2px solid var(--color-warning);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+
+.log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.empty {
+  margin: 0;
+  padding: 12px;
+  text-align: center;
+  border: 1px dashed var(--color-border-subtle);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-sunken);
+}
+
+.entryHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.badgeOk,
+.badgeFail {
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-snug);
+}
+
+.badgeOk {
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+}
+
+.badgeFail {
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.entryLabel {
+  font: 600 12px var(--font-mono);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.entryMeta {
+  font: 11px var(--font-mono);
+  color: var(--color-text-muted);
+}
+
+.entryNote {
+  margin: 0;
+  padding: 6px 8px;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--color-warning);
+  border: 1px solid var(--color-border-subtle);
+  border-left: 2px solid var(--color-warning);
+  background: var(--color-background);
+}
+
+.payload {
+  min-width: 0;
+}
+
+.payloadSummary {
+  cursor: pointer;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  user-select: none;
+}
+
+.payloadJson,
+.stdout,
+.stderr {
+  margin: 0;
+  padding: 6px 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  font: 11px / 1.5 var(--font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-radius: 0;
+}
+
+.payloadJson {
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  background: var(--color-field);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.stdout {
+  color: var(--color-text);
+  background: var(--color-field);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.stderr {
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+}
+
+// Shared control grammar for the variant-supplied `controls` block
+// Both consoles (hook + tool) compose these; keeping them here keeps the two
+// variants reading as one family.
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+
+  select,
+  input,
+  textarea,
+  button {
+    border-radius: 0;
+  }
+}
+
+.controlRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.controlField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  // This component normally lives in the vertical `.controls` stack. Giving
+  // it a 180px flex-basis there stretches every field vertically and creates
+  // large blank gaps. Only horizontal `.controlRow` fields should flex.
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.controlRow > .controlField {
+  flex: 1 1 180px;
+}
+
+.controlLabel {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--color-text-disabled);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.controlHint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.controlError {
+  margin: 0;
+  padding: 6px 8px;
+  font: 11px / 1.5 var(--font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: 0;
+}
+
+// Composer-style box owning all layout for a chip input. The input's plain
+// branch renders EditorContent in an unclassed div, so the wrapper supplies
+// the block-flow column layout rather than allowing an accidental flex row.
+.chipBox {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  background: var(--color-field);
+}
+
+// Typography only — lands on the ProseMirror contenteditable itself.
+.chipInput {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  max-height: 96px;
+  overflow-y: auto;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  line-height: 1.35;
+}
+
+.jsonInput {
+  display: block;
+  width: 100%;
+  min-height: 64px;
+  max-height: 120px;
+  box-sizing: border-box;
+  padding: 7px 9px;
+  overflow-y: auto;
+  resize: vertical;
+  color: var(--color-text);
+  background: var(--color-field);
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  outline: none;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 1px var(--color-primary);
+  }
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+  padding-top: 2px;
+}

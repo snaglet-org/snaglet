@@ -1,0 +1,259 @@
+/**
+ * UpdateCheckService — daily check for a newer GitHub Release (non-draft,
+ * non-prerelease, compared semver-style against `SNAGLET_APP_VERSION` or the npm
+ * package version), surfaced as an `app_update` notification. Ticked hourly so
+ * a sleeping laptop catches up; the watermark and last-notified version persist
+ * in `settings`. A manual check (POST /api/server/update-check) skips the
+ * cadence but not the per-version dedupe. The request is unauthenticated and
+ * never carries a stored credential. Failures log at debug.
+ */
+
+import { getErrorMessage } from '@snaglet/shared/utils';
+import { SNAGLET_REPOSITORY } from '@snaglet/shared/constants';
+import { logger } from '@server/config/logger';
+import { notificationService } from '@server/services/NotificationService';
+import { Settings } from '@snaglet/db/tables/settings';
+
+const LOG_PREFIX = '[update-check]';
+
+/** GitHub repo to check, overridable for forks. */
+const REPO = process.env.SNAGLET_UPDATE_REPO?.trim() || SNAGLET_REPOSITORY;
+
+/** One real check per day. */
+const UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+/** Tick hourly so sleep/wake gaps self-heal within an hour. */
+const TICK_MS = 60 * 60 * 1000;
+
+/** Don't compete with server boot. */
+const INITIAL_DELAY_MS = 90_000;
+
+/** GitHub answers a rate-limited request with 403 or 429. */
+const RATE_LIMITED_STATUSES = new Set([403, 429]);
+
+/** settings-table coordinates for persisted check state. The category must
+ * match the settings table's lowercase_underscore format constraint. */
+const STATE_CATEGORY = 'update_check';
+const STATE_KEY = 'state';
+
+interface UpdateCheckState {
+  lastCheckedAt: string | null;
+  lastNotifiedVersion: string | null;
+  /** Latest known release, kept for the status endpoint / UI. */
+  latest: LatestRelease | null;
+}
+
+interface LatestRelease {
+  version: string;
+  url: string;
+  publishedAt: string | null;
+  name: string | null;
+}
+
+interface UpdateStatus {
+  currentVersion: string;
+  lastCheckedAt: string | null;
+  latest: LatestRelease | null;
+  updateAvailable: boolean;
+}
+
+function appVersion(): string {
+  return (
+    process.env.SNAGLET_APP_VERSION?.trim() || process.env.npm_package_version?.trim() || '0.1.0'
+  );
+}
+
+/**
+ * Loose semver compare on dot-separated numeric parts ("v" prefix tolerated,
+ * pre-release suffixes compared lexically only when numerics tie). Returns
+ * >0 when a is newer than b.
+ */
+export function compareVersions(a: string, b: string): number {
+  const parse = (v: string) => {
+    const clean = v.trim().replace(/^v/i, '');
+    const [core, pre] = clean.split('-', 2);
+    const parts = core.split('.').map((p) => Number.parseInt(p, 10) || 0);
+    while (parts.length < 3) parts.push(0);
+    return { parts, pre: pre ?? null };
+  };
+  const pa = parse(a);
+  const pb = parse(b);
+  for (let i = 0; i < 3; i++) {
+    if (pa.parts[i] !== pb.parts[i]) return pa.parts[i] - pb.parts[i];
+  }
+  // Same numeric core: a release (no pre tag) outranks a pre-release.
+  if (pa.pre === pb.pre) return 0;
+  if (pa.pre === null) return 1;
+  if (pb.pre === null) return -1;
+  return pa.pre < pb.pre ? -1 : 1;
+}
+
+class UpdateCheckServiceClass {
+  private timer: ReturnType<typeof setInterval> | null = null;
+  private initialTimer: ReturnType<typeof setTimeout> | null = null;
+  private checking = false;
+
+  start(): void {
+    if (this.timer) return;
+    this.initialTimer = setTimeout(() => {
+      void this.tick();
+    }, INITIAL_DELAY_MS);
+    this.timer = setInterval(() => {
+      void this.tick();
+    }, TICK_MS);
+    logger.info(`${LOG_PREFIX} started (repo ${REPO}, daily cadence, hourly tick)`);
+  }
+
+  stop(): void {
+    if (this.initialTimer) clearTimeout(this.initialTimer);
+    if (this.timer) clearInterval(this.timer);
+    this.initialTimer = null;
+    this.timer = null;
+  }
+
+  /** Status snapshot for the UI (no network). */
+  async status(): Promise<UpdateStatus> {
+    const state = await this.readState();
+    const current = appVersion();
+    const latest = state.latest;
+    return {
+      currentVersion: current,
+      lastCheckedAt: state.lastCheckedAt,
+      latest,
+      updateAvailable: latest !== null && compareVersions(latest.version, current) > 0,
+    };
+  }
+
+  /** Cadence-gated tick. */
+  private async tick(): Promise<void> {
+    const state = await this.readState();
+    if (state.lastCheckedAt) {
+      const elapsed = Date.now() - Date.parse(state.lastCheckedAt);
+      if (Number.isFinite(elapsed) && elapsed < UPDATE_CHECK_INTERVAL_MS) return;
+    }
+    await this.checkNow();
+  }
+
+  /**
+   * Perform one real check. Manual entry point for the REST route — bypasses
+   * the daily cadence, keeps per-version notification dedupe.
+   */
+  async checkNow(): Promise<UpdateStatus> {
+    if (this.checking) return this.status();
+    this.checking = true;
+    try {
+      const state = await this.readState();
+      const release = await this.fetchLatestRelease();
+      // Leave lastCheckedAt alone so the next hourly tick retries instead of
+      // waiting a full day.
+      if (release === 'rate-limited') return this.status();
+      const now = new Date().toISOString();
+
+      if (release === null) {
+        // No release yet (or fetch failed — already logged at debug).
+        await this.writeState({ ...state, lastCheckedAt: now });
+        return this.status();
+      }
+
+      const current = appVersion();
+      const newer = compareVersions(release.version, current) > 0;
+      const nextState: UpdateCheckState = {
+        lastCheckedAt: now,
+        lastNotifiedVersion: state.lastNotifiedVersion,
+        latest: release,
+      };
+
+      if (newer && state.lastNotifiedVersion !== release.version) {
+        await notificationService.create({
+          type: 'app_update',
+          title: `Snaglet ${release.version} is available`,
+          body: `You are on ${current}. Click to update.`,
+        });
+        nextState.lastNotifiedVersion = release.version;
+        logger.info(`${LOG_PREFIX} update available: ${current} → ${release.version} (notified)`);
+      }
+
+      await this.writeState(nextState);
+      return this.status();
+    } finally {
+      this.checking = false;
+    }
+  }
+
+  private async fetchLatestRelease(): Promise<LatestRelease | null | 'rate-limited'> {
+    const headers: Record<string, string> = {
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'Snaglet',
+    };
+    try {
+      const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+        headers,
+      });
+      if (res.status === 404) {
+        // No release published yet, a normal state: stay quiet.
+        logger.debug(`${LOG_PREFIX} no release found (404) for ${REPO}`);
+        return null;
+      }
+      if (RATE_LIMITED_STATUSES.has(res.status)) {
+        logger.debug(`${LOG_PREFIX} GitHub API ${res.status} for ${REPO}; retrying next tick`);
+        return 'rate-limited';
+      }
+      if (!res.ok) {
+        logger.debug(`${LOG_PREFIX} GitHub API ${res.status} for ${REPO}`);
+        return null;
+      }
+      const body = (await res.json()) as {
+        tag_name?: string;
+        name?: string | null;
+        html_url?: string;
+        published_at?: string | null;
+        draft?: boolean;
+        prerelease?: boolean;
+      };
+      if (!body.tag_name || body.draft || body.prerelease) return null;
+      return {
+        version: body.tag_name,
+        url: body.html_url ?? `https://github.com/${REPO}/releases/latest`,
+        publishedAt: body.published_at ?? null,
+        name: body.name ?? null,
+      };
+    } catch (err) {
+      // Network down is an everyday laptop condition, not an error.
+      logger.debug(`${LOG_PREFIX} fetch failed: ${getErrorMessage(err)}`);
+      return null;
+    }
+  }
+
+  private async readState(): Promise<UpdateCheckState> {
+    try {
+      const row = await Settings.read(STATE_CATEGORY, STATE_KEY);
+      const raw = row?.value;
+      if (raw && typeof raw === 'object') {
+        const s = raw as Partial<UpdateCheckState>;
+        return {
+          lastCheckedAt: typeof s.lastCheckedAt === 'string' ? s.lastCheckedAt : null,
+          lastNotifiedVersion:
+            typeof s.lastNotifiedVersion === 'string' ? s.lastNotifiedVersion : null,
+          latest:
+            s.latest && typeof s.latest === 'object' && typeof s.latest.version === 'string'
+              ? (s.latest as LatestRelease)
+              : null,
+        };
+      }
+    } catch (err) {
+      logger.debug(`${LOG_PREFIX} state read failed: ${getErrorMessage(err)}`);
+    }
+    return { lastCheckedAt: null, lastNotifiedVersion: null, latest: null };
+  }
+
+  private async writeState(state: UpdateCheckState): Promise<void> {
+    try {
+      await Settings.write(STATE_CATEGORY, STATE_KEY, state);
+    } catch (err) {
+      logger.warn(`${LOG_PREFIX} state write failed: ${getErrorMessage(err)}`);
+    }
+  }
+}
+
+export const updateCheckService = new UpdateCheckServiceClass();

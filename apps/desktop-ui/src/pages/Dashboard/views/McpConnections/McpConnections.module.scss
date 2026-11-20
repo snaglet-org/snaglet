@@ -1,0 +1,326 @@
+@use '../../../../styles/abstracts' as *;
+
+.shell {
+  container: mcp-connection / inline-size;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.flowLabel {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  color: var(--color-text-muted);
+}
+
+.flowArrow {
+  color: var(--color-primary);
+  font-size: var(--text-md);
+  line-height: 1;
+}
+
+.title,
+.titleInput {
+  margin: 0;
+  max-width: 560px;
+}
+
+.title {
+  font-family: var(--font-display, var(--font-sans));
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  cursor: text;
+}
+
+.titleInput {
+  font-family: var(--font-display, var(--font-sans));
+  font-size: var(--text-2xl);
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 0;
+  max-width: 70ch;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+
+  code {
+    font-family: var(--font-mono);
+    color: var(--color-text);
+  }
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 24px 32px;
+}
+
+.errorBanner {
+  @include theme-error-banner;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 0;
+}
+
+.section {
+  border: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+  background: color-mix(in srgb, var(--color-foreground) 42%, transparent);
+}
+
+.sectionHeading {
+  padding: 8px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.tokenReveal,
+.keyUnavailable {
+  padding: 12px;
+}
+
+.tokenReveal {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: inset 3px 0 0 var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.tokenNotice,
+.keyUnavailable {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.tokenValue {
+  user-select: all;
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: minmax(110px, max-content) minmax(0, 1fr);
+  gap: 8px 16px;
+  margin: 0;
+  padding: 12px;
+  font-size: var(--text-sm);
+
+  dt {
+    color: var(--color-text-muted);
+  }
+
+  dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+}
+
+.connect {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+}
+
+.connectLine,
+.connectNotice {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+}
+
+.connectNotice {
+  color: var(--color-text-muted);
+}
+
+.snippet {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.snippetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.snippetLabel {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.snippetHint {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.snippetValue {
+  margin: 0;
+  padding: 8px 10px;
+  overflow-x: auto;
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  background: color-mix(in srgb, var(--color-background) 70%, transparent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.copyButton {
+  flex: none;
+  padding: 2px 10px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+}
+
+.dangerRow {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+@container mcp-connection (inline-size < 560px) {
+  .header,
+  .body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .headerActions {
+    align-items: flex-start;
+    flex-direction: column;
+
+    > button {
+      width: 100%;
+    }
+  }
+}
+
+@container mcp-connection (inline-size < 380px) {
+  .detailGrid {
+    grid-template-columns: 1fr;
+    gap: 3px;
+
+    dd + dt {
+      margin-top: 8px;
+    }
+  }
+}
+
+// Which agents may use the server (McpServerAgents).
+.agentsHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-right: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+
+  .sectionHeading {
+    border-bottom: 0;
+  }
+}
+
+.agentsCount {
+  flex: 1;
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.agentsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 4px 12px;
+  padding: 10px 12px;
+}
+
+.agentsHint,
+.agentsError {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.agentsError {
+  color: var(--color-error);
+}

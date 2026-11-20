@@ -1,0 +1,36 @@
+@use '../../../styles/abstracts' as *;
+
+// Quick-search status-bar button: "Quick search" label + a ⌘K / Ctrl+K
+// keycap hint, rendered inside the shared outline Chip. The keycap mirrors
+// the CommandPalette footer <kbd> grammar so shortcut hints read the same
+// everywhere in the app.
+
+.body {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.label {
+  white-space: nowrap;
+}
+
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: 1.2;
+  background: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  padding: 0 4px;
+  color: var(--color-text);
+}
+
+// The letter after the modifier — a hair of spacing so "⌘K" / "CtrlK"
+// don't visually collide.
+.key {
+  margin-left: 1px;
+}

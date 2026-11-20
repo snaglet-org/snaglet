@@ -1,0 +1,1028 @@
+@use '../../../../styles/abstracts' as *;
+@use './insertButton';
+
+// Database table pane (saved table and unsaved draft). Same shell/header/
+// body rhythm as the other entity panes (MCP connections, providers).
+
+.shell {
+  // Positioned so the entry preview modal stays inside this pane.
+  position: relative;
+  container: table-view / inline-size;
+  --table-column-min: 150px;
+  --table-name-min: 180px;
+  --table-id-width: 116px;
+  --table-created-width: 172px;
+  --table-cell-pad-x: 12px;
+  --table-cell-pad-y: 9px;
+  // Side gutter of the header and the grid/board: wider panes get more room.
+  --table-pad-x: clamp(20px, 4cqi, 48px);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+.header {
+  padding: 20px var(--table-pad-x) 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+// Grid | Board switcher (and the Board's "Group by" field) at the end of
+// the heading line; wraps under the title in a narrow pane.
+.viewControls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.groupBy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.groupByLabel {
+  white-space: nowrap;
+}
+
+.viewHint {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.title {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-display, var(--font-sans));
+  font-size: clamp(var(--type-header-min), 3.5cqi, var(--type-header-max));
+  font-weight: 700;
+}
+
+// A custom table's title is its rename affordance: double-click or F2.
+.titleButton {
+  @include layout-button-reset;
+
+  // The hover pad hangs 6px past the text on each side via the negative
+  // margins, so the cap must include it: at a bare 100% the button is wider
+  // than its shrink-to-fit heading and wraps a title that would fit.
+  max-width: calc(100% + 12px);
+  margin: -2px -6px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: text;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+.titleField {
+  flex: 1;
+  min-width: 0;
+  max-width: 560px;
+}
+
+.titleInput {
+  font-family: var(--font-display, var(--font-sans));
+  font-size: clamp(var(--type-header-min), 3.5cqi, var(--type-header-max));
+  font-weight: 700;
+}
+
+input.titleInput {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  line-height: inherit;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+.renameError {
+  margin: 6px 0 0;
+  color: var(--color-error);
+  font-size: var(--text-sm);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  // Line the buttons up with the input box rather than its error text.
+  padding-top: 4px;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  // The pane's bottom padding; the pinned pager bar offsets itself by it so it
+  // sits flush with the bottom edge (TablePagerBar.module.scss).
+  --table-body-pad-bottom: 32px;
+  padding: 16px var(--table-pad-x) var(--table-body-pad-bottom);
+}
+
+.customTable {
+  position: relative;
+  container: table-fields / inline-size;
+}
+
+// Board view fills the pane's height: each column is as tall as the pane
+// under the toolbar and scrolls its own cards (TableBoard.module.scss).
+.body:has([data-table-board]) {
+  display: flex;
+  flex-direction: column;
+
+  .customTable,
+  .tableContents {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .fieldLayout {
+    flex: 1;
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    min-height: 0;
+  }
+}
+
+.fieldLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+
+.tableContents {
+  min-width: 0;
+}
+
+.fieldButton {
+  @include layout-button-reset;
+  width: 100%;
+  min-width: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  &:hover:not(:disabled):not([aria-disabled='true']) {
+    color: var(--color-primary);
+  }
+  &:disabled,
+  &[aria-disabled='true'] {
+    cursor: default;
+  }
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+// Keep wide column strips inside the pane instead of spilling beyond the grid.
+// An edge with columns scrolled past it fades (useScrollEdges in TableGrid).
+.gridContainer {
+  overflow-x: auto;
+  min-width: 0;
+  @include layout-scroll-edge-fade;
+  // Leave room for the insertion squares centered on the outside boundaries.
+  padding-inline: 12px;
+  margin-inline: -12px;
+  padding-top: 22px;
+  margin-top: -22px;
+
+  &[data-column-dragging],
+  &[data-column-dragging] * {
+    cursor: grabbing;
+  }
+
+  &[data-resizing-column],
+  &[data-resizing-column] * {
+    cursor: col-resize;
+  }
+}
+
+// Shared by metadata-only Snaglet tables and editable custom entries.
+.grid {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-sm);
+}
+
+.column {
+  position: relative;
+  min-width: var(--table-column-min, 150px);
+  padding: 8.5px var(--table-cell-pad-x, 12px);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
+  text-align: left;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.systemIdColumn {
+  width: var(--table-id-width, 116px);
+  min-width: var(--table-id-width, 116px);
+  max-width: var(--table-id-width, 116px);
+}
+
+.systemDateColumn {
+  width: var(--table-created-width, 172px);
+  min-width: var(--table-created-width, 172px);
+  max-width: var(--table-created-width, 172px);
+}
+
+.column[data-title-field='true']:not([data-field-collapsed='true']) {
+  min-width: var(--table-name-min, 180px);
+  font-size: max(var(--text-sm), var(--font-size-sm));
+}
+
+.headerContents {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  // Both states occupy the same 36px header, including padding and divider.
+  height: 18px;
+  padding-right: 22px;
+}
+
+.fieldHide {
+  @include layout-button-reset;
+  display: grid;
+  place-items: center;
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 28px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+
+  &:hover:not(:disabled):not([aria-disabled='true']) {
+    color: var(--color-primary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-focus-ring);
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    cursor: default;
+  }
+
+  @media (hover: none) {
+    opacity: 1;
+  }
+}
+
+.column:hover .fieldHide,
+.column:focus-within .fieldHide {
+  opacity: 1;
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: 0.4;
+  }
+}
+
+// One-click sort on a sortable field header (see TableGrid's sortControl):
+// revealed on hover or focus, and kept in the primary color, with its level
+// number when there are several, while the column sorts the view.
+.sortToggle {
+  @include layout-button-reset;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 1px;
+  height: 20px;
+  padding: 0 3px;
+  margin-left: auto;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity var(--transition-fast),
+    color var(--transition-fast);
+
+  &:hover:not([aria-disabled='true']) {
+    color: var(--color-primary);
+  }
+
+  &[data-active='true'] {
+    color: var(--color-primary);
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+
+  &[aria-disabled='true'] {
+    cursor: default;
+  }
+
+  @media (hover: none) {
+    opacity: 1;
+  }
+}
+
+.column:hover .sortToggle,
+.column:focus-within .sortToggle {
+  opacity: 1;
+}
+
+.sortLevel {
+  font-weight: 600;
+}
+
+// The sort toggle's leaf: tip down for ascending (A→Z reads downward), tip
+// up for descending, and lying sideways while the column is unsorted.
+.sortLeaf {
+  display: grid;
+  place-items: center;
+
+  svg {
+    display: block;
+    width: 13px;
+    height: 13px;
+    transform-origin: 50% 50%;
+    transition: transform var(--transition-fast);
+  }
+
+  &[data-sort-direction='none'] svg {
+    transform: rotate(90deg);
+  }
+
+  &[data-sort-direction='asc'] svg {
+    transform: rotate(180deg);
+  }
+
+  &[data-sort-direction='desc'] svg {
+    transform: rotate(0deg);
+  }
+}
+
+// Hidden-fields menu in the grid toolbar (TableHiddenFields).
+.hiddenFieldList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hiddenFieldRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 28px;
+}
+
+.hiddenFieldName {
+  overflow: hidden;
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// One-click filter on a filterable field header (TableHeaderFilter): a funnel
+// revealed on hover or focus like the sort toggle, kept shown and filled while
+// the column filters the view, with a × beside it that clears the column.
+.headerFilter {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  margin-left: auto;
+}
+
+.sortToggle + .headerFilter {
+  margin-left: 0;
+}
+
+.filterToggle,
+.filterClear {
+  @include layout-button-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  padding: 0 3px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    opacity var(--transition-fast),
+    color var(--transition-fast);
+
+  &:hover:not([aria-disabled='true']) {
+    color: var(--color-primary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+
+  &[aria-disabled='true'] {
+    cursor: default;
+  }
+}
+
+.filterToggle {
+  opacity: 0;
+
+  &[data-active='true'],
+  &[aria-expanded='true'] {
+    color: var(--color-primary);
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    opacity: 1;
+  }
+}
+
+.column:hover .filterToggle,
+.column:focus-within .filterToggle {
+  opacity: 1;
+}
+
+.filterClear {
+  padding: 0 2px;
+  color: var(--color-primary);
+}
+
+.headerFilterPanel {
+  min-width: min(240px, calc(100vw - 16px));
+  max-width: 360px;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+// A picked choice shows as its Button's own pressed state (the Selected fill
+// with on-Selected text).
+.headerFilterPicks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+
+  & + & {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border-subtle);
+  }
+}
+
+.headerFilterForm {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+
+  & + .headerFilterPicks {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border-subtle);
+  }
+}
+
+// Room for the trash handle beside the collapse toggle on custom columns.
+.headerContentsRemovable {
+  padding-right: 44px;
+}
+
+// Hover-revealed trash handle: click asks archive-or-delete, drag it to the
+// sidebar trash to archive. Sits left of the collapse toggle.
+.fieldRemove {
+  @include layout-button-reset;
+  display: grid;
+  place-items: center;
+  position: absolute;
+  top: 50%;
+  right: 22px;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 28px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+
+  &:hover:not([aria-disabled='true']) {
+    color: var(--color-error);
+  }
+
+  &[draggable='true'] {
+    cursor: grab;
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-focus-ring);
+  }
+
+  &[aria-disabled='true'] {
+    cursor: default;
+  }
+
+  @media (hover: none) {
+    opacity: 1;
+  }
+}
+
+.column:hover .fieldRemove,
+.column:focus-within .fieldRemove {
+  opacity: 1;
+
+  &[aria-disabled='true'] {
+    opacity: 0.4;
+  }
+}
+
+.collapsedColumn {
+  box-sizing: border-box;
+  width: 34px;
+  min-width: 34px;
+  max-width: 34px;
+  padding: 8.5px 5px;
+
+  .headerContents {
+    justify-content: center;
+    padding-right: 0;
+  }
+}
+
+.selectionColumn {
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  padding: 8.5px 6px;
+  text-align: center;
+}
+
+// Matches the rows' reference gutter, keeping select-all over their checkboxes.
+.selectionColumn.selectionColumnWide {
+  box-sizing: border-box;
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+  padding-inline: 0 24px;
+}
+
+.gridCollapsed {
+  width: auto;
+}
+
+.fieldInsert {
+  @include insertButton.button;
+
+  // On the top corner where two headers meet, like the row + on a row's corner.
+  top: 0;
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -13px;
+    bottom: -13px;
+    left: 50%;
+    z-index: -1;
+    border-left: 1px solid var(--color-primary);
+  }
+
+  svg {
+    background: var(--color-foreground);
+  }
+
+  &[data-visible='true'] {
+    opacity: 1;
+    pointer-events: auto;
+    color: var(--color-primary);
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @media (hover: none) {
+    opacity: 0.6;
+    pointer-events: auto;
+
+    &:disabled,
+    &[aria-disabled='true'] {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+}
+
+.fieldInsertBefore {
+  left: 0;
+}
+
+.fieldInsertAfter {
+  left: 100%;
+}
+
+// Server-managed columns (a custom table's id / created_at) read as
+// infrastructure, not fields the user will fill in.
+.columnManaged {
+  color: var(--color-text-muted);
+
+  .columnName {
+    color: var(--color-text-muted);
+    font-weight: 500;
+  }
+}
+
+.columnContent {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.columnName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+  font-weight: 550;
+}
+
+.typeIcon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  color: var(--color-text-muted);
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// Headers drag sideways to reorder fields (see columnDrag.ts).
+.columnReorderable {
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+// A field header's right edge sizes its column (see columnResize.ts): a thin
+// line in the border color on hover or focus, primary while it drags.
+.columnResize {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  bottom: 0;
+  z-index: 2;
+  width: 8px;
+  cursor: col-resize;
+  touch-action: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    left: 50%;
+    border-left: 1px solid var(--color-border);
+    opacity: 0;
+    transform: translateX(-50%);
+    transition: opacity var(--transition-fast);
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-focus-ring);
+  }
+
+  &[data-active='true']::after {
+    border-left-color: var(--color-primary);
+    opacity: 1;
+  }
+
+  &[aria-disabled='true'] {
+    cursor: default;
+
+    &::after {
+      opacity: 0;
+    }
+  }
+}
+
+// While a column edge drags, its cells take the live width set on the table;
+// this outranks their own (inline) width until the release renders the new one.
+// The width is the whole column: the header is border-box like a sized one,
+// and body cells have no side padding.
+.grid [data-column-resizing] {
+  width: var(--table-resize-width) !important;
+  min-width: var(--table-resize-width) !important;
+  max-width: var(--table-resize-width) !important;
+}
+
+.grid th[data-column-resizing] {
+  box-sizing: border-box !important;
+}
+
+// The document canvas stays open at the bottom of the grid.
+.grid tbody tr:last-child > td {
+  border-bottom: 0;
+}
+
+.columnPlaceholder {
+  color: var(--color-text-disabled);
+  font-weight: 500;
+}
+
+.emptyBody {
+  padding: 28px 16px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.emptyTitle {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.emptyNote {
+  margin: 4px 0 0;
+  font-size: var(--text-sm);
+}
+
+// Scale to this table's pane, including two unequal panes in a wide window.
+// Name retains a wider measure; controls keep their hit areas as spacing yields.
+@container table-view (inline-size < 600px) {
+  .header {
+    padding: 16px 16px 12px;
+  }
+  .body {
+    --table-column-min: 128px;
+    --table-name-min: 164px;
+    --table-id-width: 100px;
+    --table-created-width: 156px;
+    --table-cell-pad-x: 10px;
+    padding: 12px 16px 24px;
+  }
+  .titleRow {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+@container table-view (inline-size < 460px) {
+  .header {
+    padding: 12px 12px 10px;
+  }
+  .body {
+    --table-column-min: 112px;
+    --table-name-min: 148px;
+    --table-id-width: 88px;
+    --table-created-width: 144px;
+    --table-cell-pad-x: 8px;
+    --table-cell-pad-y: 8px;
+    padding: 10px 12px 20px;
+  }
+}
+
+@container table-view (inline-size < 340px) {
+  .header {
+    padding-inline: 8px;
+  }
+  .body {
+    --table-column-min: 100px;
+    --table-name-min: 136px;
+    --table-id-width: 80px;
+    --table-created-width: 132px;
+    --table-cell-pad-x: 6px;
+    padding-inline: 8px;
+  }
+}
+
+// Project home control (custom tables)
+// Sits on the heading line after the title: the current project's name or
+// "Workspace", opening a picker anchored under it.
+.projectControl {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.projectAnchor {
+  position: relative;
+}
+
+.projectTrigger {
+  max-width: 280px;
+  color: var(--color-text-muted);
+
+  &:hover:not(:disabled) {
+    color: var(--color-text);
+  }
+}
+
+.projectCaret {
+  @include theme-disclosure-leaf(11px);
+}
+
+// The shared floating Popover positions nothing itself; anchor it under the
+// trigger. Two classes outrank the kit's single `.floating` placement rule.
+.projectAnchor .projectPicker {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 220px;
+  max-width: 320px;
+  max-height: 320px;
+  padding: 4px;
+}
+
+.projectOption {
+  @include layout-button-reset;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    outline: none;
+  }
+}
+
+.projectOptionCheck {
+  display: grid;
+  place-items: center;
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.projectOptionLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectPickerNote {
+  margin: 0;
+  padding: 7px 10px;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.projectError {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+// Search by meaning (custom tables)
+// After the project control: "Search by meaning: On" opening a small panel
+// with the switch, one status line and, for a table over the row cap, the
+// in-line "Turn on anyway" step. Shares the project control's trigger look.
+.semanticControl {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.semanticAnchor {
+  position: relative;
+}
+
+.semanticTrigger {
+  color: var(--color-text-muted);
+
+  &:hover:not(:disabled) {
+    color: var(--color-text);
+  }
+}
+
+.semanticCaret {
+  @include theme-disclosure-leaf(11px);
+}
+
+.semanticAnchor .semanticPanel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 300px;
+  max-width: 80vw;
+  padding: 12px;
+}
+
+.semanticRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.semanticLabel {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.semanticStatus,
+.semanticNote {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.semanticError {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}

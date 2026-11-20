@@ -1,0 +1,57 @@
+@use '../../../../styles/abstracts' as *;
+
+// The square + that inserts a field (on a header boundary) or a row (on a row
+// border). Both controls include this so they look and behave the same; each
+// supplies its own position and when it appears. The ::after is an invisible,
+// wider hit area around the square, so the control is easy to land on.
+@mixin button {
+  @include layout-button-reset;
+
+  --table-insert-size: 20px;
+
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: var(--table-insert-size);
+  height: var(--table-insert-size);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: var(--color-foreground);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  touch-action: manipulation;
+  transform: translate(-50%, -50%);
+  transition:
+    opacity var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+
+  &::after {
+    content: '';
+    position: absolute;
+    // Wider only, never taller: the row + is centered on a row border and is
+    // invisible until hovered, so extra height would cover the selection
+    // checkboxes of the rows above and below it.
+    inset: 0 -8px;
+  }
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  &:hover:not(:disabled):not([aria-disabled='true']),
+  &:focus-visible {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    --table-insert-size: 24px;
+  }
+}

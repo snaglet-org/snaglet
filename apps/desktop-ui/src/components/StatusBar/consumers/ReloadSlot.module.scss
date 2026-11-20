@@ -1,0 +1,25 @@
+@use '../../../styles/abstracts' as *;
+
+// Icon-only reload button. Matches the bar's quiet trigger chrome (same
+// height / hover treatment as the toggle + menu triggers in
+// StatusBar.module.scss) minus the label and caret.
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  width: 22px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+}

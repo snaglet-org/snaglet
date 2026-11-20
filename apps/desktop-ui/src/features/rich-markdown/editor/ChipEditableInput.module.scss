@@ -1,0 +1,434 @@
+@use '../../../styles/abstracts' as *;
+
+// Styles around TipTap's contenteditable. The caller's className lands on the
+// editable itself, so border, padding, font and focus ring come from the host.
+
+.editable {
+  // TipTap's wrapper or a flex host can drop ProseMirror's default cursor.
+  cursor: text;
+
+  // Use the host className's focus ring instead of ProseMirror's outline.
+  &:focus,
+  &:focus-visible,
+  &:focus-within {
+    outline: none;
+  }
+
+  // Drop-target highlight while a chip is dragged over the editor (set by
+  // the dragover handler).
+  &[data-chip-drag-over='true'] {
+    outline: 2px dashed var(--color-primary);
+    outline-offset: -2px;
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  }
+
+  // No paragraph margins, so a single-line field reads like an `<input>`.
+  > p {
+    margin: 0;
+  }
+
+  // TipTap's placeholder extension marks the empty first paragraph with
+  // `.is-editor-empty` and `data-placeholder`. The class is TipTap's, so it
+  // stays `:global`.
+  p:global(.is-editor-empty):first-child::before {
+    content: attr(data-placeholder);
+    color: var(--color-text-muted);
+    pointer-events: none;
+    float: left;
+    height: 0;
+  }
+}
+
+// Rich block mode
+// The editable carries MarkdownRenderer's `.markdown` class so blocks look
+// like rendered markdown; this adds only what exists in the editor alone.
+
+.richEditable {
+  // Same side padding as the preview pane.
+  padding: 8px 10px;
+
+  // TipTap task lists: `<ul data-type="taskList"><li><label><input…>`
+  ul[data-type='taskList'] {
+    list-style: none;
+    padding-left: 2px;
+
+    li {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+
+      > label {
+        flex: 0 0 auto;
+        margin-top: 3px;
+        user-select: none;
+      }
+
+      > div {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+    }
+
+    // Painted to match the shared <Checkbox>; it lives in ProseMirror's DOM,
+    // so it can't be the React component.
+    input[type='checkbox'] {
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xs);
+      background: transparent;
+      vertical-align: middle;
+      position: relative;
+      cursor: pointer;
+      transition:
+        background var(--transition-fast),
+        border-color var(--transition-fast);
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 1px;
+        width: 4px;
+        height: 8px;
+        border: solid var(--color-primary);
+        border-width: 0 1.5px 1.5px 0;
+        transform: rotate(45deg) scale(0.6);
+        opacity: 0;
+        transition:
+          opacity var(--transition-fast),
+          transform var(--transition-fast);
+      }
+
+      &:checked {
+        border-color: var(--color-primary);
+        background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+
+        &::after {
+          opacity: 1;
+          transform: rotate(45deg) scale(1);
+        }
+      }
+
+      &:hover {
+        border-color: var(--color-primary);
+      }
+    }
+
+    li[data-checked='true'] > div {
+      color: var(--color-text-muted);
+      text-decoration: line-through;
+    }
+  }
+
+  // The `.markdown` class zeroes margins on its own `> p`; nested block
+  // content (list-item paragraphs) needs the same reset in the editor.
+  li > p {
+    margin: 0;
+  }
+
+  // Each table is a `div.tableFrame` (DeletableTableView) holding
+  // prosemirror-tables' `div.tableWrapper`, the table's delete × and its
+  // Expand. The frame sizes to the table and doesn't scroll, so the controls
+  // stay on the table's corner while a wide table scrolls.
+  :global(.tableFrame) {
+    position: relative;
+    width: fit-content;
+    max-width: 100%;
+    margin: 12px 0;
+  }
+
+  // The wrapper is framed like the reader's MarkdownTable. It owns horizontal
+  // overflow, so a wide table scrolls inside its frame instead of widening
+  // the doc.
+  :global(.tableWrapper) {
+    width: fit-content;
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+
+    // Thin scrollbar matching the reader's table frame / code-block treatment.
+    @include layout-scrollbar-thin($axis: x, $size: 4px, $native: false);
+  }
+
+  // The controls sit inside the table's top-right corner, over the right end
+  // of its header row, out of the flow: showing them moves nothing, and they
+  // never cover the blocks around the table or get clipped above a doc's
+  // first table. Hidden, they let the pointer through to the header.
+  :global(.tableDelete),
+  :global(.tableBar) {
+    position: absolute;
+    top: 3px;
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-fast);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  // Shown while the table is hovered or holds the caret of a focused editor.
+  :global(.tableFrame):hover > :global(.tableDelete),
+  :global(.tableFrame):hover > :global(.tableBar),
+  &:global(.ProseMirror-focused) :global(.tableFrame)[data-table-active] > :global(.tableDelete),
+  &:global(.ProseMirror-focused) :global(.tableFrame)[data-table-active] > :global(.tableBar) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  // The delete ×: a small square button in the corner. Always shown to a
+  // keyboard focus and on touch screens. Read-only editors hide it.
+  :global(.tableDelete) {
+    right: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 0;
+    background: var(--color-surface-raised);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition:
+      opacity var(--transition-fast),
+      color var(--transition-fast),
+      border-color var(--transition-fast);
+
+    &[hidden] {
+      display: none;
+    }
+
+    &:hover {
+      color: var(--color-error);
+      border-color: currentColor;
+    }
+
+    &:focus-visible {
+      opacity: 1;
+      pointer-events: auto;
+      outline: 2px solid var(--color-primary);
+      outline-offset: 1px;
+    }
+
+    @media (pointer: coarse) {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  // Expand, left of the ×, or in the corner when the × is hidden. Shown to
+  // a keyboard focus too.
+  :global(.tableBar) {
+    right: 25px;
+    display: flex;
+    white-space: nowrap;
+    user-select: none;
+
+    &:focus-within {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  :global(.tableDelete)[hidden] + :global(.tableBar) {
+    right: 3px;
+  }
+
+  // Tables. `.markdown` sizes the cells, but ProseMirror puts header `th`
+  // cells inside the single `tbody`, so header and stripe styles are restated
+  // on the cells here, plus editing aids: cell borders, a minimum cell width
+  // and the selection highlight.
+  table {
+    // Column resizing is off, so fixed layout would force equal columns and
+    // crush a wide table. `auto` keeps the `.markdown` sizing and scrolls.
+    table-layout: auto;
+    width: max-content;
+
+    th,
+    td {
+      // Borders show cell edges while editing; the minimum width keeps an
+      // empty cell easy to click into.
+      min-width: 4em;
+      border: 1px solid var(--color-border);
+      vertical-align: top;
+      position: relative;
+
+      // Repeated on the paragraph: not every engine honors min/max-width on
+      // a table cell, but all honor it on a block inside one.
+      > p {
+        margin: 0;
+        min-width: 4em;
+        max-width: 26em;
+      }
+
+      // A task list in a cell (a checkbox column) sits as tight as the
+      // cell's text, so its row is no taller than a text row.
+      > ul[data-type='taskList'] {
+        margin: 0;
+
+        > li:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+
+    // The frame draws the outer edge; outer cell borders would double it.
+    tr:first-child > * {
+      border-top: none;
+    }
+    tr:last-child > * {
+      border-bottom: none;
+    }
+    tr > :first-child {
+      border-left: none;
+    }
+    tr > :last-child {
+      border-right: none;
+    }
+
+    th {
+      background: var(--color-foreground);
+      white-space: normal;
+    }
+
+    // The reader's stripes on every second body row. The header row is the
+    // first `tr` here, so the second body row is the third.
+    tr:nth-child(odd) > td {
+      background: color-mix(in srgb, var(--color-foreground) 30%, transparent);
+    }
+
+    // Multi-cell selection. Same specificity as the stripe rule and placed
+    // after it, so a selected striped cell still shows as selected.
+    tr > th:global(.selectedCell),
+    tr > td:global(.selectedCell) {
+      background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+    }
+  }
+}
+
+// Edit / preview toggle (when `allowMarkdownPreview` is set)
+
+.previewHost {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  // Fill the host's flex slot without exceeding it: the toggle row stays on
+  // top and the content below scrolls.
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.modeRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+
+  // Right-align the toolbar while it fits, but let overflow start from
+  // the left edge so every pill remains reachable by horizontal scroll.
+  > :first-child {
+    margin-left: auto;
+  }
+
+  > * {
+    flex: 0 0 auto;
+  }
+
+  @include layout-scrollbar-thin($axis: x, $size: 4px, $native: false);
+}
+
+// The preview pane fills the remaining space and scrolls.
+.previewHost > .preview {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+// TipTap's `EditorContent` adds an unclassed wrapper `<div>` around the
+// editor element. The wrapper becomes a flex column and the editor (TipTap's
+// global `.tiptap` class) fills and scrolls it, so the mode row stays on top.
+// `.tiptap` must be `:global`: a hashed module class would never match.
+.previewHost > div:not(.modeRow):not(.preview) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.previewHost > div:not(.modeRow):not(.preview) > :global(.tiptap) {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+// Edit/preview toggle, styled as a button.
+.modeToggle {
+  appearance: none;
+  background: var(--color-popover);
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  padding: 4px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+    border-color: var(--color-border, var(--color-border));
+    color: var(--color-text);
+  }
+
+  @include focus-ring;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+// The label of the current mode.
+.modeActive {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.modeSlash {
+  opacity: 0.4;
+  user-select: none;
+}
+
+.preview {
+  // The caller's className applies here too, so the preview matches the
+  // editable's border, padding and font.
+  cursor: default;
+  user-select: text;
+  // Default side padding; a caller's className padding overrides it.
+  padding: 8px 10px;
+}

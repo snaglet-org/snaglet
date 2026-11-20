@@ -1,0 +1,474 @@
+@use '../../../../styles/abstracts' as *;
+
+// ToolView — card grammar.
+// Compact identity-first header; body = parameter form (left) + output
+// console (right) that stacks by container width so split panes behave.
+// Sections are a small label + content separated by whitespace — borders
+// belong to editable controls and the output well, not section wrappers.
+
+.root {
+  container-type: inline-size;
+  container-name: tool-view;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: transparent;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--density-pane-pad-y) var(--density-pane-pad-x);
+  gap: 14px;
+  box-sizing: border-box;
+
+  @include layout-scrollbar-thin($size: 8px, $inset: true);
+}
+
+// Header — identity first, hairline seam, no crate
+
+.header {
+  padding: 2px 2px 12px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  flex-shrink: 0;
+}
+
+.headerLayout {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+// Compact enable/disable pill, pinned to the top-right corner of the header.
+// `order: 1` moves it past .headerContent (which has flex: 1 and so eats the
+// remaining width, shoving this against the right edge).
+.enableSwitch {
+  order: 1;
+  flex-shrink: 0;
+}
+
+// Edit trigger — same `order: 1` pins it into the
+// top-right cluster alongside .enableSwitch; source order (this button comes
+// first in the JSX) puts it just to the left of the switch.
+.editButton {
+  order: 1;
+  flex-shrink: 0;
+}
+
+.headerContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.kindBadge,
+.exposureBadge {
+  @include theme-mono-label;
+  font-size: var(--text-3xs);
+  padding: 1px 6px;
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-muted);
+  background: transparent;
+  border-radius: 0;
+  flex-shrink: 0;
+}
+
+.exposureCore {
+  color: var(--color-primary);
+  border-color: var(--color-primary-border);
+}
+
+.description {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  max-width: 72ch;
+}
+
+.availabilityNotice {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+// One quiet meta line: mono key/value pairs + keyword chips, no boxes.
+.meta {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.metaItem {
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  min-width: 0;
+}
+
+.metaKey {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: var(--text-3xs);
+  color: var(--color-text-disabled);
+  flex-shrink: 0;
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-primary);
+  background: transparent;
+  border: none;
+  padding: 0;
+  overflow-wrap: anywhere;
+}
+
+.tags {
+  display: inline-flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+// Muted pane state (tool admin-disabled)
+
+.rootDisabled {
+  .title {
+    color: var(--color-text-muted);
+  }
+  .description,
+  .meta,
+  .titleRow {
+    opacity: 0.72;
+  }
+  .exposureBadge,
+  .exposureCore {
+    color: var(--color-text-muted);
+    border-color: var(--color-border-subtle);
+  }
+  .body {
+    opacity: 0.78;
+  }
+}
+
+// Body: form column + output console
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px 22px;
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+
+  @container tool-view (max-width: 680px) {
+    grid-template-columns: 1fr;
+    flex: 0 0 auto;
+    min-height: auto;
+  }
+}
+
+.paramsCol,
+.outputCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.groupLabelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.groupLabel {
+  @include theme-mono-label;
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.groupHint {
+  @include theme-mono-label;
+  font-size: var(--text-3xs);
+  color: var(--color-text-disabled);
+}
+
+.empty {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.params {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  overflow-y: auto;
+
+  @container tool-view (max-width: 680px) {
+    overflow-y: visible;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fieldLabel {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.fieldName {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.required {
+  color: var(--color-error);
+  margin-left: 1px;
+}
+
+.fieldType {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--color-text-disabled);
+  margin-left: auto;
+}
+
+.input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+
+  &:focus {
+    border-color: var(--color-primary);
+    background: var(--color-popover);
+  }
+
+  &::placeholder {
+    color: var(--color-text-disabled);
+  }
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 64px;
+  white-space: pre;
+}
+
+.fieldHelp {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+// Destructive confirm gate — replaces the action strip while armed. Error
+// tint keylines match the statusFail chip family so "dangerous" reads the
+// same everywhere in the pane.
+.confirmStrip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-error-border);
+  background: var(--color-error-bg);
+  flex-shrink: 0;
+}
+
+.confirmText {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  line-height: 1.45;
+}
+
+.confirmActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// Dispatch-only tools have no Run affordance at all — quiet mono note in the
+// same voice as .empty.
+.dispatchOnlyNote {
+  margin: 0;
+  padding-top: 2px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+  flex-shrink: 0;
+}
+
+.duration {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  letter-spacing: var(--letter-spacing-widest);
+}
+
+.statusChip {
+  @include theme-mono-label;
+  font-size: var(--text-3xs);
+  padding: 2px 7px;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  color: var(--color-text-muted);
+}
+
+.statusOk {
+  color: var(--color-success);
+  border-color: var(--color-success-border);
+  background: var(--color-success-bg);
+}
+
+.statusFail {
+  color: var(--color-error);
+  border-color: var(--color-error-border);
+  background: var(--color-error-bg);
+}
+
+// The output console is a well — a recessed display surface, so it keeps a
+// border (it's content, like an editor body) and fills the remaining height.
+.output {
+  flex: 1;
+  min-height: 0;
+  padding: 12px 14px;
+  overflow: auto;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+
+  @container tool-view (max-width: 680px) {
+    min-height: 200px;
+  }
+}
+
+.outputEmpty {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-disabled);
+  white-space: pre-wrap;
+}
+
+.outputOk,
+.outputError {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.outputOk {
+  color: var(--color-text);
+}
+
+.outputError {
+  color: var(--color-error);
+}
+
+// Raw schema — quiet collapsible under the form, no crate.
+.schemaDetails {
+  flex-shrink: 0;
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: 8px;
+}
+
+.schemaSummary {
+  @include theme-mono-label;
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::before {
+    content: '▸ ';
+  }
+
+  &:hover {
+    color: var(--color-primary);
+  }
+}
+
+.schemaDetails[open] .schemaSummary::before {
+  content: '▾ ';
+}
+
+.schemaPre {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border-subtle);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+  max-height: 240px;
+  overflow-y: auto;
+}

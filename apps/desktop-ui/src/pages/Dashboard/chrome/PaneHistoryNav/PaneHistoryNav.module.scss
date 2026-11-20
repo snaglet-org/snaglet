@@ -1,0 +1,245 @@
+@use '../../../../styles/abstracts' as *;
+
+// PaneHistoryNav — browser-style back/forward + dropdown history list.
+// Lives inside the Pane chrome strip; sized to match other chip-style
+// buttons there (PathHeader's copy chips, the close ×, etc.).
+
+.wrap {
+  --button-bevel-edge: var(--color-border-strong);
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+
+  // Visually fuse the three buttons into a single segmented control.
+  // Outer border on the wrap; the buttons themselves drop their borders
+  // except for inner dividers between them.
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+  border-radius: 0;
+  box-shadow: 1px 1px 0 color-mix(in srgb, var(--button-bevel-edge) 28%, transparent);
+  transition: border-color var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-border);
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: var(--color-surface-raised);
+  border: 0;
+  border-right: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  @include button-outset;
+
+  &:last-child {
+    border-right: 0;
+  }
+
+  &:hover:not(:disabled) {
+    color: var(--color-primary);
+    background: var(--color-hover);
+    @include button-outset;
+  }
+
+  &:active:not(:disabled) {
+    @include button-inset;
+  }
+
+  &:disabled {
+    color: var(--color-text-disabled, var(--color-text-muted));
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  svg {
+    display: block;
+  }
+}
+
+// Leaf nav glyphs — the sidebar tree's expand/collapse leaf (LeafToggle),
+// reused here and rotated per direction so back/forward/history speak the
+// same visual vocabulary as the workspace tree. Source artwork points
+// tip-up; each direction rotates from there. Fill inherits `currentColor`
+// from `.btn`, so the leaf themes + tints on hover with the button.
+.navLeaf {
+  display: block;
+  transform-origin: 50% 50%;
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.navLeafBack {
+  transform: rotate(-90deg); // tip points left → back (‹)
+}
+
+.navLeafForward {
+  transform: rotate(90deg); // tip points right → forward (›)
+}
+
+.navLeafDown {
+  // Always points down — the history caret does not flip up when the menu
+  // opens (open state is conveyed by aria-expanded + the trigger's active style).
+  transform: rotate(180deg); // tip points down → history / collapse (˅)
+}
+
+.menuTrigger {
+  // Smaller chevron icon — the trigger reads as ancillary to the two
+  // primary arrows, not a third equal-weight action.
+  color: var(--color-text-muted);
+
+  &.menuOpen,
+  &.menuOpen:hover {
+    color: var(--color-primary-on-selected);
+    background: var(--color-primary-bg);
+    @include button-inset;
+  }
+}
+
+// Recently visited menu. Placed by useAnchoredPosition (HistoryMenu.tsx),
+// which writes left, top, max-width and max-height.
+
+.menu {
+  position: fixed;
+  z-index: 2000;
+  box-sizing: border-box;
+  min-width: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  background: color-mix(in srgb, var(--color-popover) 96%, var(--color-background));
+  border: 1px solid var(--color-border-strong, var(--color-border));
+  border-radius: 0;
+  box-shadow:
+    0 18px 42px color-mix(in srgb, var(--disabled) 32%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--text) 8%, transparent);
+
+  @include layout-scrollbar-thin;
+}
+
+.menuHeader {
+  padding: 6px 8px 4px;
+  font-family: var(--font-sans);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+}
+
+// Three row states that must read apart at a glance:
+// - hover: a neutral wash, nothing else;
+// - keyboard focus: a focus-ring outline drawn inside the row;
+// - current (the place on screen): accent text, a left accent bar and a dot,
+//   with no fill, so it never looks like the hovered or focused row.
+.entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  text-align: left;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: -2px;
+  }
+}
+
+.entryCurrent {
+  color: var(--color-primary);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.entryIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--color-primary);
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.entryLabel {
+  flex: 1;
+  min-width: 0;
+  @include layout-truncate;
+}
+
+.entryCurrentDot {
+  color: var(--color-primary);
+  font-size: var(--text-md);
+  line-height: 1;
+}
+
+// The row's number key (1–9), in a key-cap outline.
+.entryNumber {
+  flex-shrink: 0;
+  min-width: 16px;
+  padding: 0 4px;
+  border: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 400;
+  line-height: 16px;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+// Per-kind icon tints, mirrored from Pane.module.scss so the dropdown
+// reads like the same vocabulary used in the sidebar + chrome.
+.iconContainer {
+  color: var(--color-primary);
+}
+.iconDoc {
+  color: var(--color-node-doc);
+}
+.iconOther {
+  color: var(--color-primary);
+}
+.iconThread {
+  color: var(--color-primary);
+}
+.iconProject {
+  color: var(--color-primary);
+}
+.iconAgent {
+  color: var(--color-primary);
+}

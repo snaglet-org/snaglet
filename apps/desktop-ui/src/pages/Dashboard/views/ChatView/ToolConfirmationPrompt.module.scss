@@ -1,0 +1,46 @@
+.preamble {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.toolName {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.policyNote {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-warning);
+}
+
+.inputLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.inputSummary {
+  margin: 0;
+  padding: 8px;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-text);
+  font: 11px/1.45 var(--font-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}

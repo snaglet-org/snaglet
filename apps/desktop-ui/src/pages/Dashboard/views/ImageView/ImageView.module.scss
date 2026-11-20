@@ -1,0 +1,174 @@
+.imageView {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+}
+
+.meta {
+  // Pane-specific rhythm only; PropertiesPanel owns the surface and scroll.
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.headerMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+}
+
+.propertiesSize,
+.previewButton {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.propertiesSize {
+  text-align: right;
+}
+
+// Keep the MIME label as the fullscreen-preview affordance after removing the
+// redundant filename header.
+.previewButton {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    color: var(--color-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.descriptionField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.descriptionEditor {
+  min-height: 34px;
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--color-popover);
+  border: 1px solid var(--color-border-subtle, var(--color-border));
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-inset);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.tagList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.addTag input {
+  width: 140px;
+  padding: 4px 6px;
+  font: inherit;
+  font-size: 11px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+}
+
+// The pan/zoom viewer fills the canvas edge to edge; its fit padding keeps
+// the same 24px of air around a fitted image.
+.canvas {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+  background: var(--color-background);
+}
+
+.image {
+  // Flat Warm Desktop surface: a 1px warm edge on the panel background,
+  // matching the sibling dashboard panes (e.g. FileView). Drawn as a ring,
+  // not a border, so the image's pixels stay 1:1 at 100%. No drop shadow —
+  // a halo reads as a foreign gray glow next to the flat cream panes.
+  box-shadow: 0 0 0 1px var(--color-border);
+  background: var(--color-foreground);
+}
+
+// Fullscreen preview modal
+// `unstyled` is passed to the Modal so we don't get the default panel
+// chrome — just a dim full-window overlay. The dialog fills it with the
+// viewer, so a zoomed image can use the whole window; a click on the dim
+// area around the fitted image still closes (the viewer's backdrop click).
+.previewOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  background: color-mix(in srgb, var(--disabled) 88%, transparent);
+  cursor: zoom-out;
+  box-sizing: border-box;
+
+  > [role='dialog'] {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    outline: none;
+  }
+}
+
+// Top-right, above the viewer: the one close a mouse user can always reach,
+// zoomed in or not. Same chrome as the file preview's close.
+.previewClose {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--color-text);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.previewImage {
+  box-shadow: 0 16px 64px color-mix(in srgb, var(--disabled) 60%, transparent);
+}

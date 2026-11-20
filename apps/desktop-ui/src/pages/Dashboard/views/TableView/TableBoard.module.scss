@@ -1,0 +1,457 @@
+@use '../../../../styles/abstracts' as *;
+
+// Board view of a custom table: columns per select option, cards per row.
+// Shares the grid's toolbar rhythm (TableEntries.module.scss) and tokens.
+
+.board {
+  --board-column-width: 264px;
+  --board-gap: 12px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  // Fills the pane under the toolbar (TableView's .body gives it the height).
+  min-height: 0;
+  color: var(--color-text);
+}
+
+.toolbar,
+.toolbarGroup {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.toolbar {
+  justify-content: space-between;
+  min-height: 38px;
+}
+
+.toolbarGroup {
+  gap: 6px;
+}
+
+.groupedBy {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+
+  strong {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+}
+
+.quietButton {
+  @include layout-button-reset;
+  @include focus-ring;
+
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--color-text);
+    background: var(--color-hover);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+}
+
+.error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.pageNote {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+// Columns scroll sideways inside the pane; the pane itself never widens.
+// Every column stretches to the board's full height, and each column's card
+// list scrolls on its own (`.cards`), so one long column never moves the rest.
+.columns {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+  gap: var(--board-gap);
+  min-width: 0;
+  // A very short pane still shows a usable strip; the pane scrolls past it.
+  min-height: 200px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 2px 12px;
+  scroll-padding-inline: 12px;
+  @include layout-scroll-edge-fade;
+
+  &[data-board-dragging],
+  &[data-board-dragging] * {
+    cursor: grabbing;
+  }
+}
+
+.column {
+  display: flex;
+  flex: 0 0 var(--board-column-width);
+  flex-direction: column;
+  gap: 8px;
+  width: var(--board-column-width);
+  min-width: 0;
+  min-height: 0;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-foreground) 70%, transparent);
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+
+  &[data-board-drop-target] {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 8%, var(--color-foreground));
+  }
+}
+
+.columnHeader {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  min-height: 24px;
+  padding: 0 2px;
+  font-size: var(--text-sm);
+}
+
+.columnLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+  font-weight: 550;
+}
+
+.columnCount {
+  flex-shrink: 0;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+}
+
+// The column's own scroller: the header above and "+ New" below stay put.
+// The inset padding keeps card shadows and focus rings inside the clip.
+.cards {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  gap: 6px;
+  margin: -2px;
+  padding: 2px;
+  list-style: none;
+  min-height: 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 8px 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: var(--radius-card, var(--radius-md));
+  background: var(--color-background);
+  box-shadow: var(--shadow-sm);
+  cursor: grab;
+  touch-action: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    opacity var(--transition-fast);
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-border));
+  }
+
+  &[data-board-pending] {
+    opacity: 0.6;
+    cursor: progress;
+  }
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cardOpen {
+  @include layout-button-reset;
+
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: inherit;
+
+  &:hover:not(:disabled) {
+    color: var(--color-primary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-focus-ring);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.cardMenuAnchor {
+  position: relative;
+  flex-shrink: 0;
+}
+
+// Move and Copy ID keep their space while hidden, so hovering never reflows the card.
+.cardMove,
+.cardCopy,
+.cardDelete {
+  @include layout-button-reset;
+
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity var(--transition-fast),
+    color var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    color: var(--color-text);
+    background: var(--color-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
+    opacity: 1;
+    box-shadow: var(--shadow-focus-ring);
+  }
+
+  &[aria-expanded='true'] {
+    opacity: 1;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  @media (hover: none) {
+    opacity: 1;
+  }
+}
+
+.cardCopy,
+.cardDelete {
+  flex-shrink: 0;
+}
+
+.cardDelete:hover:not(:disabled) {
+  color: var(--color-error);
+}
+
+.card:hover .cardMove,
+.card:focus-within .cardMove,
+.card:hover .cardCopy,
+.card:focus-within .cardCopy,
+.card:hover .cardDelete,
+.card:focus-within .cardDelete {
+  opacity: 1;
+}
+
+// The column scroller clips anything positioned inside it, so the menu's
+// wrapper is fixed to the viewport (top/right or bottom/right measured from
+// the trigger when it opens). The shared floating Popover positions nothing
+// itself; two classes outrank the kit's single `.floating` placement rule.
+.cardMenuFixed {
+  position: fixed;
+  z-index: 50;
+  // Does not block the trigger while closed (the Popover renders nothing).
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
+}
+
+.cardMenuAnchor .cardMenu {
+  position: static;
+  min-width: 180px;
+  max-width: 260px;
+  max-height: 320px;
+  padding: 4px;
+}
+
+.cardMenuItem {
+  @include layout-button-reset;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--color-hover);
+    outline: none;
+  }
+}
+
+.cardMenuCheck {
+  display: grid;
+  place-items: center;
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.cardMenuLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.cardFields {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  font-size: var(--text-xs);
+}
+
+.cardField {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cardFieldName {
+  flex: 0 0 auto;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.cardFieldValue {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  max-height: 60px;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+
+  // Chips and tags wrap inside the card instead of stretching it.
+  > * {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    max-width: 100%;
+  }
+}
+
+// Pinned under the column's scrolling cards, so it is always reachable.
+.newCard {
+  @include layout-button-reset;
+
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+// Narrow panes get narrower columns so two still fit side by side.
+@container table-view (inline-size < 600px) {
+  .board {
+    --board-column-width: 232px;
+    --board-gap: 10px;
+  }
+}
+
+@container table-view (inline-size < 460px) {
+  .board {
+    --board-column-width: 208px;
+    --board-gap: 8px;
+  }
+}

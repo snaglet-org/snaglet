@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Hardened-runtime entitlements for the bundled PostgreSQL executables
+  (Contents/Resources/pg/bin/*).
+
+  Library validation pins every library a hardened process loads to the same
+  Team ID (or Apple). The PostgreSQL binaries load the bundled libpq and dlopen
+  extension dylibs (pgvector's vector.dylib, the encoding conversions) from
+  Resources/pg/lib at runtime. Measured during release-signing rehearsal:
+  initdb SIGABRTs on libpq.5.dylib under library validation, which kills
+  first-run database creation — the app opens but no cluster is ever promoted.
+  Disabling library validation for these local database processes keeps that
+  failure class impossible regardless of how the dylibs are (re)signed.
+-->
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+</dict>
+</plist>

@@ -1,0 +1,277 @@
+@use '../../../../styles/abstracts' as *;
+@use '../../styles/dashboard' as dash;
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  overflow: hidden;
+}
+
+.body {
+  flex: 1;
+  overflow: auto;
+  padding: 28px 32px 40px;
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  box-sizing: border-box;
+}
+
+.header {
+  @include dash.theme-card;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.glyph {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-bg);
+  border: 1px solid var(--color-primary-border);
+  color: var(--color-primary-on-selected);
+  font-size: var(--text-xl);
+  flex-shrink: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  @include dash.theme-uppercase-label;
+}
+
+.fieldHint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.readonly {
+  padding: 10px 12px;
+  background: var(--color-hover);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.errorBanner {
+  @include dash.theme-error-banner;
+}
+
+.restartNotice {
+  padding: 8px 12px;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  color: var(--color-warning);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  margin-bottom: 8px;
+
+  code {
+    font-family: inherit;
+    word-break: break-all;
+  }
+}
+
+.savedPaths {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.savedPathRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--color-hover);
+  border: 1px solid var(--color-border);
+}
+
+.savedPathText {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-muted);
+  word-break: break-all;
+}
+
+.savedPathActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.addPathRow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+
+  // The full-width input would otherwise squeeze the button until its label
+  // clips ("Register" rendered as "egister" at pane widths around 740px).
+  > :last-child {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+}
+
+.homeActions,
+.storageHeader,
+.storageRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.homeActions {
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.storageSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-foreground);
+}
+
+.storageHeader {
+  justify-content: space-between;
+
+  strong {
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+}
+
+.storageList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.storageRow {
+  min-height: 30px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+
+  &:first-child {
+    border-top: 0;
+  }
+}
+
+.storageName {
+  flex: 1;
+  color: var(--color-text);
+  text-transform: capitalize;
+}
+
+// The Clear tooltips are a few sentences: a lighter weight than the bubble's
+// one-liners (it wraps on its own). Doubled to beat the bubble's own rule.
+.clearTip.clearTip {
+  font-weight: 480;
+}
+
+// The voice chooser: one row per catalog voice, its pill (or name, once
+// installed) and details on the left, its state and actions on the right.
+.voiceChooser {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.voiceList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.voiceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--color-border);
+
+  &:first-child {
+    border-top: 0;
+  }
+}
+
+.voiceName {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+
+  strong {
+    color: var(--color-text);
+    font-size: 12px;
+  }
+}
+
+.voiceActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.voiceFailed {
+  color: var(--color-error);
+  font-size: 11px;
+}
+
+.voiceInstallBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}

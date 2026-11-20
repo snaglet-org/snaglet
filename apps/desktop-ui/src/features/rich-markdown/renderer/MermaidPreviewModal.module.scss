@@ -1,0 +1,122 @@
+@use '../../../styles/abstracts' as *;
+
+// The image preview modal's frame (WikiLinkPreviewModal, image kind): a dim
+// overlay, a fixed wide panel capped to the window, a header strip and a body
+// the pan/zoom viewer fills. Zooming moves the diagram inside a frame that
+// never changes size.
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  --overlay-pad: clamp(#{unzoomed(8px)}, #{window-vw(4)}, #{unzoomed(32px)});
+  padding: var(--overlay-pad);
+  background: color-mix(in srgb, var(--disabled) 60%, transparent);
+  animation: mermaidOverlayIn 140ms ease-out;
+}
+
+@keyframes mermaidOverlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: min(#{unzoomed(1040px)}, calc(#{window-vw(100)} - 2 * var(--overlay-pad)));
+  height: min(window-vh(80), calc(#{window-dvh(100)} - 2 * var(--overlay-pad)));
+  background: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-overlay);
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 1px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  overflow: hidden;
+  isolation: isolate;
+  font-family: var(--font-sans);
+  animation: mermaidPanelIn 160ms cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes mermaidPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-popover);
+  flex-shrink: 0;
+}
+
+.title {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: var(--letter-spacing-tight);
+  @include layout-truncate;
+}
+
+.closeBtn {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: var(--text-xl);
+  line-height: 1;
+  flex-shrink: 0;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.canvas {
+  flex: 1;
+  background: var(--color-background);
+}
+
+.image {
+  box-shadow: 0 0 0 1px var(--color-border);
+}

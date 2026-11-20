@@ -1,0 +1,10 @@
+# Store text as LF and check it out as LF on every OS so Windows clones match
+# Prettier (endOfLine: lf), lint-staged, and the shell/CLI templates.
+* text=auto eol=lf
+
+# Binary assets
+*.png binary
+*.ico binary
+*.icns binary
+*.woff binary
+*.woff2 binary

@@ -1,0 +1,278 @@
+@use '../../../../styles/abstracts' as *;
+
+// Retro-terminal settings surface — sharp 1px borders, mono uppercase
+// headers, no border-radius. Matches the shared settings-pane chrome.
+
+.root {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  font-family: var(--font-mono);
+  color: var(--color-text);
+  overflow: hidden;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+.error {
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+}
+
+.jobBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  font-size: 11.5px;
+  color: var(--color-text);
+  background: var(--color-foreground);
+  border: 1px solid var(--color-primary);
+}
+
+.spinner {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--color-border-strong, var(--color-border));
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: db-spin 0.7s linear infinite;
+}
+
+@keyframes db-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.restartNote {
+  padding: 9px 12px;
+  font-size: 11.5px;
+  color: var(--color-text);
+  background: var(--color-hover);
+  border: 1px dashed var(--color-primary);
+}
+
+// Cards
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--color-foreground);
+  border: 1px solid var(--color-border);
+}
+
+.cardTitle {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.cardHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.createRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.labelInput {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  padding: 4px 8px;
+  min-width: 160px;
+  color: var(--color-text);
+  background: var(--color-background);
+  border: 1px solid var(--color-border-strong, var(--color-border));
+  border-radius: 0;
+
+  &::placeholder {
+    color: var(--color-text-disabled);
+  }
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+}
+
+.metaLabel {
+  min-width: 56px;
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-widest);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.metaValue {
+  color: var(--color-text);
+}
+
+.placeholder {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-style: italic;
+  color: var(--color-text-disabled);
+  padding: 4px 0;
+}
+
+// Snapshot list
+
+.snapList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.snapRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px dashed var(--color-border);
+
+  &:first-child {
+    border-top: none;
+  }
+}
+
+.snapInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 200px;
+}
+
+.snapLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.snapTag {
+  font-family: var(--font-sans);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  padding: 0 5px;
+  white-space: nowrap;
+}
+
+.snapMeta {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+}
+
+.snapActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.retentionNote {
+  margin: 4px 0 0;
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+// Danger card
+
+.dangerCard {
+  border-color: var(--color-error-border, var(--color-error));
+}
+
+.dangerText {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+// Modal content
+
+.modalText {
+  margin: 0 0 12px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.modalOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  strong {
+    color: var(--color-text);
+  }
+
+  input {
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+}
+
+.modalCheck {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-text);
+  cursor: pointer;
+}

@@ -1,0 +1,87 @@
+@use '../../styles/abstracts' as *;
+
+// ParamsSchemaEditor — stacked param-row cards (not a spreadsheet grid),
+// matching ToolView's field-label + control vocabulary so a schema builder
+// feels like a sibling of the pane it feeds, not a bolted-on widget.
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  container-type: inline-size;
+  container-name: params-editor;
+}
+
+.empty {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-sunken);
+  border-radius: 0;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.rowMain {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+
+  @container params-editor (max-width: 360px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wider);
+  color: var(--color-text-disabled);
+}
+
+.removeBtn {
+  align-self: end;
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+  line-height: 1;
+
+  &:hover:not(:disabled) {
+    color: var(--color-error);
+  }
+}
+
+.requiredRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.addBtn {
+  align-self: flex-start;
+}

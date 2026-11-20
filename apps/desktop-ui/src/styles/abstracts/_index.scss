@@ -1,0 +1,22 @@
+// Abstracts Barrel
+// All SCSS abstracts forwarded from a single entry point.
+//
+// Convention:
+//   Folders  → forwarded with prefix:  @forward 'layout' as layout-*;
+//   Files    → forwarded without prefix: @forward 'buttons';
+//
+// Usage in module files, with a relative path to src/styles:
+//   @use '../../styles/abstracts' as *;
+// (src/styles/index.scss uses it the same way for the global styles)
+
+// Folder modules (prefixed)
+@forward 'layout' as layout-*;
+
+// Flat modules (no prefix)
+@forward 'breakpoints';
+@forward 'spacing';
+@forward 'chips';
+@forward 'controls';
+@forward 'theme';
+@forward 'tree';
+@forward 'zoom';

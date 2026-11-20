@@ -1,0 +1,118 @@
+// Trim message history — hosted in Settings → Maintenance. The thread pane is
+// the viewer, so this is a short control strip; it scrolls on its own rather
+// than clipping when the settings drawer is dragged short.
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 10px;
+  overflow-y: auto;
+  background: var(--color-foreground);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 0 0 auto;
+}
+
+.heading {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text);
+}
+
+.muted {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.busy {
+  margin: 0;
+  padding: 6px 8px;
+  border-left: 2px solid var(--color-warning);
+  background: var(--color-surface-sunken);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--color-text);
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+
+// Take-me-to-the-cut controls, directly under the scrubber they navigate.
+.jumps {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.foot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.checkboxDetail {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+// The one place figures live.
+.tally {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  transition: opacity 140ms ease;
+}
+
+// Stale, not blank: the last settled figures stay legible and simply recede
+// while their replacement is calculated.
+.tallyStale {
+  opacity: 0.5;
+}
+
+.sub {
+  color: var(--color-text-muted);
+}
+
+.warn {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-warning);
+  line-height: 1.4;
+}
+
+.error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tally {
+    transition: none;
+  }
+}

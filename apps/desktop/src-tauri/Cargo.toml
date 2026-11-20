@@ -1,0 +1,73 @@
+[package]
+name = "desktop"
+version = "1.0.0"
+description = "Snaglet Desktop App"
+license = "MIT"
+authors = ["Snaglet contributors"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-fs = "2"
+tauri-plugin-single-instance = "2"
+# In-place app updates. Dormant until releases ship updater artifacts
+# (createUpdaterArtifacts in tauri.production.conf.json) and the updater
+# pubkey in tauri.conf.json is set.
+tauri-plugin-updater = "2"
+uuid = { version = "1", features = ["v4"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rfd = "0.14"
+# Hashes candidate files to disambiguate same-name/same-size Spotlight hits
+# (see src/drop_path_recovery.rs).
+sha2 = "0.10"
+# Opens external links in the system browser (ShellExecute on Windows, so a
+# URL never passes through cmd.exe).
+open = "5"
+# `std::fs::canonicalize` returns extended-length `\\?\` paths on Windows.
+# The bundled Node/PostgreSQL tools use Win32 command lines, so simplify only
+# paths that Windows can safely express in its broadly supported form.
+dunce = "1"
+
+# Parses the ISO instants reminders carry (`fireAt`) to schedule and order
+# native notifications.
+time = { version = "0.3", features = ["parsing"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+# Native calendar-reminder notifications (src/notifications/macos.rs) go
+# through Apple's UserNotifications framework. objc2, objc2-foundation and
+# block2 versions match the ones tauri/wry pull in.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = "0.3"
+objc2-user-notifications = { version = "0.3", default-features = false, features = [
+  "std",
+  "block2",
+  "bitflags",
+  "UNError",
+  "UNNotification",
+  "UNNotificationContent",
+  "UNNotificationRequest",
+  "UNNotificationResponse",
+  "UNNotificationSettings",
+  "UNNotificationSound",
+  "UNNotificationTrigger",
+  "UNUserNotificationCenter",
+] }
+block2 = "0.6"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = [
+  "Win32_Foundation",
+  "Win32_System_Threading",
+  "Win32_System_IO",
+  "Win32_System_Memory",
+  "Win32_Security",
+  "Win32_Security_Authorization",
+  "Win32_Storage_FileSystem",
+] }

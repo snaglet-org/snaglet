@@ -1,0 +1,572 @@
+@use '../../../../styles/abstracts' as *;
+@use '../../styles/dashboard' as dash;
+
+// ContainerBrowser — Finder-style folder body.
+// The pane chrome (Pane.tsx) owns navigation + title; this surface
+// renders only the icon grid / list; its view-mode toggle sits at the
+// top of the Properties panel (in the chrome only without a panel).
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  position: relative;
+}
+
+.dragOver {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+// "View" row at the top of the Properties panel: the label (same mono label
+// as the panel's other fields) and the icon/list toggle beside it.
+.viewRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.viewRowLabel {
+  @include theme-mono-label(wide);
+  font-size: var(--text-3xs);
+  color: var(--color-text-muted);
+}
+
+// Grid/list view-mode toggle, sized to the 24px icon-button family so the
+// segmented control stays compact in the panel (and in the pane chrome when a
+// container view has no panel). The joined border + active fill (from
+// <Segmented>) signals the selected mode.
+.viewToggle {
+  flex-shrink: 0;
+  height: 24px;
+
+  // Each mode is a 24px square icon button, matching the +/× square controls.
+  button[role='radio'] {
+    width: 24px;
+    min-width: 24px;
+    height: 100%;
+    padding: 0;
+  }
+}
+
+// Details dropdown (atop the grid)
+// The project DetailsPanel carries its own 20px side + 20px bottom margins;
+// this wrapper only supplies the top gap above it.
+// Body
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--color-background);
+
+  @include layout-scrollbar-thin($size: 8px, $inset: true, $hover: true);
+}
+
+// Kind tints (same vocab as LibraryTree + DetailPanel)
+
+.kind-container {
+  --kind-color: var(--color-container-default);
+  --kind-border: var(--color-container-default);
+}
+
+.kind-container-project {
+  --kind-color: var(--color-container-project);
+  --kind-border: var(--color-container-project);
+}
+
+.kind-doc {
+  --kind-color: var(--color-node-doc);
+  --kind-border: var(--color-node-doc);
+}
+
+.kind-thread {
+  --kind-color: var(--color-node-thread);
+  --kind-border: var(--color-node-thread);
+}
+
+.kind-image {
+  --kind-color: var(--color-node-image);
+  --kind-border: var(--color-node-image);
+}
+
+.kind-project {
+  --kind-color: var(--color-node-project);
+  --kind-border: var(--color-node-project);
+}
+
+// Icon grid
+
+.iconGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 2px;
+  padding: 12px;
+}
+
+.iconCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 5px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  color: var(--color-text);
+  font-family: inherit;
+  text-align: center;
+  outline: none;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform 100ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &:hover {
+    background: var(--color-foreground);
+    border-color: var(--kind-border, var(--color-border));
+    // Soft jelly glow blooms in the tile's kind hue on hover.
+    box-shadow: 0 0 14px
+      color-mix(in srgb, var(--kind-color, var(--color-primary)) 16%, transparent);
+  }
+
+  &:active {
+    transform: scale(0.96);
+    background: var(--color-selected);
+    @include theme-on-selected;
+    border-color: var(--kind-border, var(--color-primary-border));
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--kind-border, var(--color-primary-border));
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+.iconBig {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--kind-color, var(--color-primary));
+  filter: drop-shadow(0 1px 0 var(--color-border));
+
+  svg {
+    display: block;
+    width: 34px;
+    height: 34px;
+  }
+
+  font-size: 28px;
+  line-height: 1;
+}
+
+.iconLabel {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  max-width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.iconMeta {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+// List view
+
+.list {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 0;
+}
+
+.listRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  color: var(--color-text);
+  font-family: inherit;
+  text-align: left;
+  outline: none;
+  transition:
+    background var(--transition-fast),
+    padding-left 140ms ease-out;
+
+  &:hover {
+    background: var(--color-foreground);
+    padding-left: 16px;
+  }
+
+  &:active {
+    background: var(--color-selected);
+    @include theme-on-selected;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: inset 3px 0 0 var(--kind-color, var(--color-primary));
+  }
+}
+
+.rowIcon {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  color: var(--kind-color, var(--color-primary));
+  flex-shrink: 0;
+
+  svg {
+    display: block;
+    width: 17px;
+    height: 17px;
+  }
+}
+
+.rowLabel {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  @include layout-truncate;
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.rowMeta {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  letter-spacing: var(--letter-spacing-normal);
+  flex-shrink: 0;
+}
+
+.rowChevron {
+  color: var(--color-text-muted);
+  font-size: 15px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition:
+    transform 140ms ease-out,
+    color 140ms ease-out;
+
+  .listRow:hover & {
+    color: var(--kind-color, var(--color-primary));
+    transform: translateX(3px);
+  }
+}
+
+// Context menu (portaled to <body>)
+
+.contextMenu {
+  position: fixed;
+  z-index: 9999;
+  min-width: 180px;
+  background: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md, var(--shadow-sm));
+  padding: 4px 0;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  animation: menuPop 120ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: top left;
+}
+
+@keyframes menuPop {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.contextMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--text-md);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    padding-left 120ms ease-out;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    padding-left: 18px;
+  }
+}
+
+// Inline rename inputs
+
+.renameInputIcon {
+  width: 100%;
+  padding: 3px 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--color-text);
+  background: var(--color-foreground);
+  border: 1px solid var(--color-primary-border);
+  border-radius: 0;
+  outline: none;
+  letter-spacing: var(--letter-spacing-tight);
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 1px var(--color-primary);
+  }
+}
+
+.renameInputRow {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: var(--text-md);
+  font-weight: 500;
+  color: var(--color-text);
+  background: var(--color-foreground);
+  border: 1px solid var(--color-primary-border);
+  border-radius: 0;
+  outline: none;
+  letter-spacing: var(--letter-spacing-tight);
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 1px var(--color-primary);
+  }
+}
+
+// Both IconCell and ListRow use this when in rename mode — strips the
+// hover transforms so the input doesn't jitter on focus.
+.cellRenaming {
+  cursor: text;
+  background: var(--color-foreground);
+  border-color: var(--color-primary-border);
+
+  &:hover {
+    transform: none;
+    background: var(--color-foreground);
+    padding-left: 18px; // applies only to list rows; icon cell ignores via flex-column
+  }
+}
+
+// Highlight when a shift-drag is hovering this container cell — signals
+// "release to move into me". Brand-soft tint + accented border match the
+// container body's pane-level drop affordance.
+.cellDropTarget {
+  background: var(--color-primary-bg);
+  @include theme-on-selected;
+  outline: 2px dashed var(--color-primary);
+  outline-offset: -2px;
+}
+
+// Error toast
+
+.errorToast {
+  @include dash.theme-error-banner;
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 18px;
+  font-size: var(--text-md);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-tight);
+  z-index: 100;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  animation: errorSlideUp 200ms cubic-bezier(0.32, 0.72, 0, 1);
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+@keyframes errorSlideUp {
+  from {
+    transform: translateX(-50%) translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@container pane (inline-size < 520px) {
+  .iconGrid {
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    padding: 8px;
+  }
+
+  .iconBig {
+    width: 34px;
+    height: 34px;
+    filter: none;
+
+    svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    font-size: 24px;
+  }
+
+  .iconLabel {
+    font-size: 11px;
+  }
+
+  .iconMeta {
+    display: none;
+  }
+
+  .listRow {
+    gap: 7px;
+    padding: 7px 9px;
+
+    &:hover {
+      padding-left: 12px;
+    }
+  }
+
+  .rowMeta,
+  .rowChevron {
+    display: none;
+  }
+}
+
+// Project pane sections (Contents · Threads · Tables)
+// A project pane stacks three labeled lists in the one scroll body. Plain
+// containers keep the bare grid with no section chrome.
+
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+// Threads and Tables stack in a narrow pane and sit side by side in a wide one.
+// Each column keeps its own rows, so a short list leaves space instead of
+// stretching to match the longer one.
+// The host carries the container query so it measures the pane's width without
+// making the whole scroll body a containing block for fixed descendants.
+.sectionPairHost {
+  container: section-pair / inline-size;
+}
+
+.sectionPair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+
+  @container section-pair (min-width: 760px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 16px;
+  }
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 14px 12px 4px;
+}
+
+.sectionTitle {
+  @include theme-mono-label(wide);
+  margin: 0;
+  font-size: var(--text-3xs);
+  color: var(--color-text-muted);
+}
+
+.sectionCount {
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  color: var(--color-text-disabled);
+}
+
+.sectionEmpty {
+  margin: 0;
+  padding: 6px 12px 10px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+// "Show all N" / "Show less" under a section longer than its preview; the
+// text lines up with the rows' labels at 12px.
+.sectionMore {
+  align-self: flex-start;
+  margin: 2px 8px 8px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+}
+
+// Tables are catalog entries, not workspace nodes — tinted with the primary
+// accent since there is no node-kind token for them.
+.kind-table {
+  --kind-color: var(--color-primary);
+  --kind-border: var(--color-primary-border);
+}

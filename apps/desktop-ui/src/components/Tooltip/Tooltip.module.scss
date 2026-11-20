@@ -1,0 +1,172 @@
+@use '../../styles/abstracts' as *;
+
+// Tooltip — a small "chat-bubble" tooltip that opens to the side
+// of its trigger. Portaled to <body> with position:fixed, so it
+// floats above every pane and is never clipped.
+//
+// The component anchors the bubble at the trigger's mid-point on the
+// cross-axis; each side variant translates the bubble to center it and
+// draws a little pointer tail toward the trigger.
+
+$tail: 6px; // half-width of the pointer tail
+$bubble-bg: var(--detail); // coral detail accent
+
+.bubble {
+  // Sits above panes, popovers stay above still (EditorPopover z 2000).
+  z-index: 1900;
+  pointer-events: none; // never intercept clicks / the trigger's hover
+  // The box grows to its content up to a cap, then the text wraps inside
+  // it: padding counts toward the cap, long words / ids / URLs break
+  // anywhere, and the cap never exceeds the window (less the edge inset).
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(280px, calc(#{window-vw(100)} - 16px));
+  padding: 5px 9px;
+  border-radius: var(--radius-md);
+  background: $bubble-bg;
+  color: var(--color-on-primary); // legible on the coral detail fill
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  box-shadow: var(--shadow-sm);
+  // A gentle pop-in rather than an abrupt appearance.
+  animation: tooltip-in var(--transition-fast) ease-out;
+
+  // The pointer tail — a small rotated square straddling the bubble edge,
+  // inheriting the same fill so it reads as one speech bubble.
+  &::after {
+    content: '';
+    position: absolute;
+    width: $tail * 2;
+    height: $tail * 2;
+    background: $bubble-bg;
+    transform: rotate(45deg);
+  }
+}
+
+.helpTrigger {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin-left: 4px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  line-height: 1;
+  cursor: help;
+  vertical-align: middle;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--color-text);
+    border-color: var(--color-text-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+}
+
+// Flex and grid items inside the bubble (a label with its own layout)
+// default to min-width:auto, which lets a long word push past the box.
+// Zero specificity (:where) so a label's own classes still win.
+:where(.bubble) * {
+  min-width: 0;
+}
+
+.helpBubble {
+  max-width: min(320px, calc(#{window-vw(100)} - 24px));
+}
+
+// side: right
+// Bubble is to the right of the trigger; tail points left.
+.side-right {
+  transform: translateY(-50%);
+
+  &::after {
+    left: -$tail;
+    top: 50%;
+    margin-top: -$tail;
+  }
+}
+
+// side: left
+.side-left {
+  transform: translateY(-50%);
+
+  &::after {
+    right: -$tail;
+    top: 50%;
+    margin-top: -$tail;
+  }
+}
+
+// side: bottom
+.side-bottom {
+  transform: translateX(-50%);
+
+  &::after {
+    top: -$tail;
+    left: 50%;
+    margin-left: -$tail;
+  }
+}
+
+// side: top
+.side-top {
+  transform: translateX(-50%);
+
+  &::after {
+    bottom: -$tail;
+    left: 50%;
+    margin-left: -$tail;
+  }
+}
+
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.94);
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// The translateX side-variants need their own keyframe origin so the
+// pop-in doesn't fight the centering transform.
+.side-top,
+.side-bottom {
+  animation-name: tooltip-in-x;
+}
+
+@keyframes tooltip-in-x {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.94);
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble {
+    animation: none;
+  }
+}

@@ -1,0 +1,197 @@
+@use '../../../styles/abstracts' as *;
+
+// Input — rounded native <input> wrapper
+//
+// Y2K/terminal-flavored chrome that matches the rest of the
+// primitive vocabulary (Button, Chip, Tabs, Segmented,
+// Checkbox, Select). Stays a native <input> so platform
+// conventions (autocomplete, form submission, IME) work for
+// free. Supports label + hint + error stacked layout,
+// leading/trailing icons, and three sizes.
+
+@use '../../../styles/abstracts/controls' as controls;
+
+.wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+// Label / hint / error
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  @include theme-mono-label(wide);
+  font-size: var(--text-2xs); // override: form labels read better slightly smaller
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.required {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.errorText {
+  margin: 0;
+  @include theme-mono-label;
+  font-size: var(--text-2xs);
+  color: var(--color-error);
+  line-height: 1.4;
+}
+
+// Input container
+
+.inputContainer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  @include controls.field-shell;
+}
+
+// Input element
+
+.input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  outline: none;
+
+  // Suppress the global rounded `:focus-visible` outline — the
+  // container's `:focus-within` border + box-shadow is the focus
+  // indicator. Shared with Textarea/Select via the mixin.
+  @include controls.field-focus-reset;
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+
+  // Strip the native number-input spinners — they don't fit the
+  // field aesthetic and consumers control increments via
+  // step/min/max instead.
+  &[type='number'] {
+    appearance: textfield;
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      appearance: none;
+      margin: 0;
+    }
+  }
+
+  // Strip native search-input clear button — same reason.
+  &[type='search'] {
+    &::-webkit-search-cancel-button {
+      appearance: none;
+    }
+  }
+}
+
+// Sizes
+
+.sizeSm {
+  min-height: 22px;
+  padding: 0 8px;
+
+  .input {
+    font-size: 11px;
+  }
+}
+
+.sizeMd {
+  min-height: 28px;
+  padding: 0 10px;
+
+  .input {
+    font-size: 12px;
+  }
+}
+
+.sizeLg {
+  min-height: 34px;
+  padding: 0 12px;
+
+  .input {
+    font-size: 13px;
+  }
+}
+
+// Icons
+
+.hasLeftIcon .input {
+  padding-left: 24px;
+}
+
+.hasRightIcon .input {
+  padding-right: 24px;
+}
+
+.leftIcon,
+.rightIcon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  transition: color var(--transition-fast);
+}
+
+.leftIcon {
+  left: 8px;
+}
+
+.rightIcon {
+  right: 8px;
+}
+
+.inputContainer:focus-within .leftIcon,
+.inputContainer:focus-within .rightIcon {
+  color: var(--color-primary);
+}
+
+// Error + disabled
+
+.error {
+  border-color: var(--color-error);
+
+  &:focus-within {
+    border-color: var(--color-error);
+    box-shadow:
+      0 0 0 1px var(--color-error),
+      0 0 11px color-mix(in srgb, var(--color-error) 28%, transparent);
+  }
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

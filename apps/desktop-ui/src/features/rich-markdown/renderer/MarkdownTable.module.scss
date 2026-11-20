@@ -1,0 +1,228 @@
+@use '../../../styles/abstracts' as *;
+
+// The hover bar's height (a small Button) plus the gap to the table.
+$bar-room: 26px;
+
+// Inline table
+// The cell look (padding, stripes, column ceiling) lives with the rest of the
+// markdown typography in MarkdownRenderer.module.scss, shared with the doc
+// editor. This file holds what only the rendered table has: its frame, the
+// hover bar, sorting and numeric columns, and the expanded view.
+
+// As wide as its table, up to the pane, so a small table doesn't stretch
+// and the bar sits on the table's own corner.
+.frame {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin: 12px 0;
+}
+
+// Rounded border that owns the horizontal overflow, so a wide table scrolls
+// inside it instead of widening the doc or pane. `data-wheel-scroll-x` marks
+// it for the wheel handling in `utils/horizontalWheelScroll.ts`: a sideways
+// gesture or Shift+wheel scrolls it, a vertical one scrolls the page.
+.scroll {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+
+  // Thin scrollbar matching the code-block treatment.
+  @include layout-scrollbar-thin($axis: x, $size: 4px, $native: false);
+}
+
+// Above the table's top-right corner, out of the flow so showing it moves
+// nothing. The strip spans the frame but lets the pointer through; only the
+// controls take it. `safe` keeps the controls inside the frame's left edge
+// when the table is narrower than they are.
+.bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  display: flex;
+  // Plain `flex-end` first for a webview that doesn't know `safe`.
+  justify-content: flex-end;
+  justify-content: safe flex-end;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+// Its padding bridges the gap to the table, so the pointer can travel from
+// the table to a button without the bar fading out on the way. It takes the
+// pointer only while shown: hidden, it must not catch clicks meant for the
+// text it sits over.
+.barInner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 0 4px 6px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+// Shown while the table is hovered or focus is inside it.
+.frame:hover > .bar,
+.frame:focus-within > .bar {
+  opacity: 1;
+
+  > .barInner {
+    pointer-events: auto;
+  }
+}
+
+// Below the table's bottom-right corner instead, for a table with nothing
+// above it in the markdown (MarkdownTable picks the placement). The bar never
+// covers the table's own headers.
+.barBelow > .bar {
+  top: 100%;
+  bottom: auto;
+
+  > .barInner {
+    padding: 4px 0 0 6px;
+  }
+}
+
+// The table is the whole of the markdown: below a chat body's bottom edge the
+// bar would be clipped and make the body scroll, so the frame keeps its room.
+.barRoom {
+  padding-bottom: $bar-room;
+
+  > .bar {
+    top: auto;
+    bottom: 0;
+  }
+}
+
+.count {
+  margin-right: 4px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+// Sorting + numeric columns
+// The header text stays selectable, so a selected table copies with it.
+th.sortable {
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-primary);
+  }
+}
+
+// The arrow is the header's sort button: faint while the header is hovered,
+// solid on the sorted column and when focused. Left out of text selection.
+.sortButton {
+  display: inline-block;
+  width: 1.2em;
+  margin-left: 2px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.85em;
+  line-height: 1;
+  text-align: center;
+  color: var(--color-primary);
+  cursor: pointer;
+  user-select: none;
+  opacity: 0;
+
+  th:hover > & {
+    opacity: 0.45;
+  }
+
+  th[aria-sort] > &,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  @include focus-ring;
+}
+
+// Every non-empty body cell is a number: right-aligned, digits in even
+// columns. `table` outranks the left alignment on `.markdown th`; a GFM
+// alignment from the source is an inline style and still wins over both.
+table th.numeric,
+table td.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+// Expanded view
+// Framed like the Mermaid and image previews: a dim overlay, a wide panel
+// capped to the window, a toolbar strip and a body that scrolls.
+
+// The markdown a TableDialog renders from. Its table is the dialog, portaled
+// out of this box, so the box itself stays empty and takes no room.
+.dialogSource {
+  display: none;
+}
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  --overlay-pad: clamp(#{unzoomed(8px)}, #{window-vw(4)}, #{unzoomed(32px)});
+  padding: var(--overlay-pad);
+  background: color-mix(in srgb, var(--disabled) 60%, transparent);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: min(#{unzoomed(1100px)}, calc(#{window-vw(100)} - 2 * var(--overlay-pad)));
+  max-height: min(#{window-vh(86)}, calc(#{window-dvh(100)} - 2 * var(--overlay-pad)));
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-overlay);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  font-family: var(--font-sans);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-popover);
+  flex-shrink: 0;
+}
+
+.filter {
+  flex: 1;
+  min-width: 0;
+}
+
+.filterCount {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+// Scrolls both ways; the header row stays pinned at its top. A sticky cell
+// leaves its collapsed border behind, so the divider is a shadow here.
+.expandedBody {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 16px 16px;
+
+  @include layout-scrollbar-thin($size: 5px, $native: false);
+
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    box-shadow: inset 0 -1px 0 var(--color-border);
+  }
+}

@@ -1,0 +1,146 @@
+@use './cellSurface';
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+}
+
+.control {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+  min-width: 0;
+
+  // TipTap's EditorContent wrapper must fill the same cell as its editor.
+  > div {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.checkboxControl {
+  @include cellSurface.content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.chipInput {
+  @include cellSurface.editor;
+  flex: 1;
+  max-height: 100px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  &[contenteditable='false'] {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+.scalarInput {
+  @include cellSurface.editor;
+  // Percentage widths fall back to the input's native 20-character intrinsic
+  // width during auto-table sizing. Start at zero and let the flex row stretch
+  // it after the column is sized, so opening the editor cannot widen the grid.
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+}
+
+.dateInput.dateInput.dateInput {
+  @include cellSurface.editor;
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+
+  input {
+    font: inherit;
+  }
+}
+
+.rangeControl {
+  align-items: center;
+}
+
+// Two inputs share the cell: the start keeps the cell's text origin, the
+// arrow sits between them on narrower padding.
+.rangeInput.rangeInput.rangeInput {
+  @include cellSurface.editor;
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  padding-right: 4px;
+
+  input {
+    font: inherit;
+  }
+}
+
+.rangeEnd.rangeEnd.rangeEnd {
+  padding-left: 4px;
+}
+
+.rangeSummary {
+  @include cellSurface.content;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text-muted);
+}
+
+// The panel under a narrow cell: Start and End stacked, labeled.
+.rangePanel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 8px;
+  padding: 6px;
+}
+
+.rangePanelLabel {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.rangePanelInput {
+  min-width: 0;
+}
+
+.rangePanelHint {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+
+  &[role='alert'] {
+    color: var(--color-error);
+  }
+}
+
+.rangeArrow {
+  flex: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.error {
+  margin: 0;
+  padding: 0 12px 9px;
+  font-size: var(--text-xs);
+  color: var(--color-error);
+}
+
+.readOnly {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}

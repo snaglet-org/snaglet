@@ -1,0 +1,64 @@
+@use '../../../styles/abstracts' as *;
+
+// SkillsView — flat read-only list of ~/.snaglet/skills. Same tree
+// chrome as AutomationsView/ToolsView.
+
+.note,
+.error {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.error {
+  color: var(--color-error, var(--color-text-muted));
+  font-style: normal;
+}
+
+.group {
+  display: contents;
+}
+
+.slugLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.slug {
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.warn {
+  color: var(--color-warning);
+  flex: none;
+}
+
+.errorText {
+  color: var(--color-error, var(--color-text-muted));
+}
+
+// Row actions appear on hover/focus so the description keeps the space.
+.actions {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.row:hover .actions,
+.row:focus-within .actions {
+  display: inline-flex;
+}
+
+.rowBtn {
+  color: var(--color-text-disabled);
+
+  &:hover:not(:disabled) {
+    color: var(--color-primary);
+  }
+}
