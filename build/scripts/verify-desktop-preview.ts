@@ -5,6 +5,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -260,7 +261,9 @@ try {
     readFileSync(sentinel, 'utf8') !== 'production storage sentinel\n' ||
     statSync(productionHome).mtimeMs > statSync(sentinel).mtimeMs + 1_000
   ) {
-    throw new Error('Packaged preview touched production storage');
+    throw new Error(
+      `Packaged preview touched production storage: ${readdirSync(productionHome, { recursive: true }).join(', ')}`
+    );
   }
   const processCheck = spawnSync('ps', ['-p', String(child.pid), '-o', 'command='], {
     encoding: 'utf8',

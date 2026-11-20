@@ -49,7 +49,8 @@ jobs:
       - name: Tool registry audit (strict)
         run: pnpm test:tool-registry
       - name: Server and shared unit tests
-        run: pnpm test:unit --runInBand
+        # Two workers that restart when they grow: one process for the whole suite runs out of memory.
+        run: pnpm test:unit --maxWorkers=2 --workerIdleMemoryLimit=1500MB
         timeout-minutes: 15
       - name: Managed PostgreSQL integration tests
         run: pnpm test:integration
@@ -91,7 +92,7 @@ jobs:
           name: browser-preview-diagnostics
           path: |
             dist/browser-preview/manifest.json
-            dist/browser-preview/browser-preview.png
+            test-results/browser-preview.png
           if-no-files-found: warn
 
   desktop-preview:

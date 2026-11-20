@@ -273,8 +273,18 @@ try {
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    page.on('console', (message) => {
+      if (message.type() === 'error') console.log(`[preview] page error: ${message.text()}`);
+    });
+    page.on('pageerror', (error) => console.log(`[preview] page crash: ${error.message}`));
     await page.goto(baseUrl, { waitUntil: 'networkidle' });
-    await page.getByTestId('build-profile-banner').waitFor();
+    try {
+      await page.getByTestId('build-profile-banner').waitFor();
+    } catch (error: unknown) {
+      // Keep what the page looked like: without it a missing banner is a guess.
+      await page.screenshot({ path: screenshot, fullPage: true }).catch(() => undefined);
+      throw error;
+    }
     await page
       .getByRole('button', { name: /skip|continue|next|get started/i })
       .first()
