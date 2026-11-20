@@ -1,11 +1,11 @@
 import { execFile } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { mkdir, readFile, readdir, rm, stat, unlink, writeFile } from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { getErrorMessage, safeJsonParse } from '@snaglet/shared/utils';
 import { logger } from '@server/config/logger';
+import { SNAGLET_HOME } from '@server/services/snagletHome';
 import { sniffImageMime } from '@server/services/ToolService/lib/sniffImageMime';
 import { VisionCaptureError, describeVisionCaptureFailure } from './visionCaptureErrors';
 
@@ -155,9 +155,7 @@ export class VisionSnapshotService {
     private readonly now: () => Date = () => new Date()
   ) {
     this.runtime = runtime;
-    this.spoolRoot = path.resolve(
-      options.spoolRoot ?? path.join(os.homedir(), '.snaglet', 'vision')
-    );
+    this.spoolRoot = path.resolve(options.spoolRoot ?? path.join(SNAGLET_HOME, 'vision'));
     this.maxFrameWidth = positiveInteger(
       options.maxFrameWidth,
       DEFAULT_MAX_FRAME_WIDTH,

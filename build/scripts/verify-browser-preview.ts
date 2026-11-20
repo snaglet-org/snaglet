@@ -282,7 +282,9 @@ try {
       await page.getByTestId('build-profile-banner').waitFor();
     } catch (error: unknown) {
       // Keep what the page looked like: without it a missing banner is a guess.
-      await page.screenshot({ path: screenshot, fullPage: true }).catch(() => undefined);
+      await page.screenshot({ path: screenshot, fullPage: true }).catch((shot: unknown) => {
+        console.log(`[preview] could not save a screenshot: ${String(shot)}`);
+      });
       throw error;
     }
     await page
