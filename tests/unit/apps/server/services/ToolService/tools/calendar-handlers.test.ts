@@ -362,7 +362,8 @@ describe('create_calendar', () => {
 
 describe('query: views', () => {
   it('shows times in the zone with an offset, all-day ends as the last day, row source ids', async () => {
-    const result = await query({});
+    // Name the zone: the default is the machine's, which differs between laptops and CI.
+    const result = await query({ tz: 'America/Los_Angeles' });
     expect(result.tz).toBe('America/Los_Angeles');
     const [event, row] = result.occurrences;
     expect(event).toEqual({
