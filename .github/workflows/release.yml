@@ -42,7 +42,7 @@ jobs:
   production-candidate:
     name: Production candidate (macOS arm64)
     needs: verify-source
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -75,7 +75,7 @@ jobs:
     name: Publish signed and notarized release
     needs: production-candidate
     if: ${{ inputs.publish }}
-    runs-on: macos-14
+    runs-on: macos-15
     environment: production
     steps:
       - name: Block until credentialed signing workflow exists
