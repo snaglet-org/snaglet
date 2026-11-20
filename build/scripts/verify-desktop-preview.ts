@@ -294,17 +294,30 @@ try {
   );
   console.log(`[desktop-preview] screenshot ${screenshot}`);
 
+  // The database runtime reports to the console, which the shell captures per boot in
+  // sidecar.console.log. The first boot creates the cluster; a restart must reuse it.
+  const initializedThisBoot = (): number => {
+    const consoleLog = readFileSync(path.join(previewHome, 'logs/sidecar.console.log'), 'utf8');
+    return (consoleLog.match(/\[DB\] initialized PostgreSQL 17 cluster/g) ?? []).length;
+  };
+  const expectInitialized = (boot: string, expected: number): void => {
+    const initialized = initializedThisBoot();
+    if (initialized !== expected) {
+      const logs = readdirSync(path.join(previewHome, 'logs')).join(', ');
+      throw new Error(
+        `Packaged preview initialized its cluster ${initialized} times on ${boot}, expected ${expected} (logs: ${logs})`
+      );
+    }
+  };
+  expectInitialized('the first boot', 1);
   await stopPackagedApp(child, false);
   child = spawnPreview();
   await waitForReady(child);
+  expectInitialized('a restart after a clean stop', 0);
   await stopPackagedApp(child, true);
   child = spawnPreview();
   await waitForReady(child);
-  const log = readFileSync(path.join(previewHome, 'logs/server.log'), 'utf8');
-  const initialized = (log.match(/\[DB\] initialized PostgreSQL 17 cluster/g) ?? []).length;
-  if (initialized !== 1) {
-    throw new Error(`Packaged preview unexpectedly initialized its cluster ${initialized} times`);
-  }
+  expectInitialized('a restart after a forced stop', 0);
   await stopPackagedApp(child, false);
   child = undefined;
   console.log(
