@@ -189,8 +189,9 @@ describe('calendar focus', () => {
     await expect(focusOp({ limit: 0 }, person, NOW)).rejects.toThrow(/limit must be/);
   });
 
-  it('reads 30 days back to tomorrow, once, in the user’s zone', async () => {
-    await run([]);
+  it('reads 30 days back to tomorrow, once, in the zone asked for', async () => {
+    // Name the zone: the default is the machine's, which differs between laptops and CI.
+    await run([], { tz: 'America/Los_Angeles' });
     expect(listOccurrences).toHaveBeenCalledTimes(1);
     expect(listOccurrences.mock.calls[0]![0]).toMatchObject({
       from: '2026-09-21',

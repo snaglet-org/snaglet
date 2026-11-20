@@ -58,44 +58,51 @@ describe('tool-local integration coverage', () => {
     expect(result).toContain('slow');
   });
 
-  it('pdf-generate writes a PDF that pdf-extract can read back', async () => {
-    const pdfPath = path.join(tmpDir, 'report.pdf');
+  // pdf-generate converts through cupsfilter, which only macOS ships.
+  const onMac = process.platform === 'darwin' ? it : it.skip;
 
-    const generateResult = await pdfGenerateTool(
-      {
-        content: 'Quarterly report\nLine item 1',
-        outputPath: pdfPath,
-        contentType: 'markdown',
-      },
-      { root_dir: tmpDir }
-    );
+  onMac(
+    'pdf-generate writes a PDF that pdf-extract can read back',
+    async () => {
+      const pdfPath = path.join(tmpDir, 'report.pdf');
 
-    expect(generateResult).toContain('PDF saved');
+      const generateResult = await pdfGenerateTool(
+        {
+          content: 'Quarterly report\nLine item 1',
+          outputPath: pdfPath,
+          contentType: 'markdown',
+        },
+        { root_dir: tmpDir }
+      );
 
-    const pdfStat = await stat(pdfPath);
-    expect(pdfStat.size).toBeGreaterThan(0);
+      expect(generateResult).toContain('PDF saved');
 
-    const extracted = await pdfExtractTool(
-      {
-        source: pdfPath,
-        includeMetadata: false,
-      },
-      { root_dir: tmpDir }
-    );
+      const pdfStat = await stat(pdfPath);
+      expect(pdfStat.size).toBeGreaterThan(0);
 
-    const parsed = JSON.parse(extracted) as {
-      pageCount: number;
-      selectedPages: number[];
-      text: string;
-    };
+      const extracted = await pdfExtractTool(
+        {
+          source: pdfPath,
+          includeMetadata: false,
+        },
+        { root_dir: tmpDir }
+      );
 
-    expect(parsed.pageCount).toBeGreaterThanOrEqual(1);
-    expect(parsed.selectedPages).toContain(1);
-    expect(parsed.text).toContain('Quarterly report');
-    expect(parsed.text).toContain('Line item 1');
-    // Generous per-test timeout: PDF generate+extract (font/layout work) can
-    // intermittently exceed the default 5s under parallel test load.
-  }, 30000);
+      const parsed = JSON.parse(extracted) as {
+        pageCount: number;
+        selectedPages: number[];
+        text: string;
+      };
+
+      expect(parsed.pageCount).toBeGreaterThanOrEqual(1);
+      expect(parsed.selectedPages).toContain(1);
+      expect(parsed.text).toContain('Quarterly report');
+      expect(parsed.text).toContain('Line item 1');
+      // Generous per-test timeout: PDF generate+extract (font/layout work) can
+      // intermittently exceed the default 5s under parallel test load.
+    },
+    30000
+  );
 
   it('git-commit creates a real commit in a temporary repository', async () => {
     await execFileAsync('git', ['init', '-q'], { cwd: tmpDir });

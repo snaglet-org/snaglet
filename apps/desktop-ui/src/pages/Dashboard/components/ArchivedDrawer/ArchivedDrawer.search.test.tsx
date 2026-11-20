@@ -444,5 +444,6 @@ describe('ArchivedDrawer search over a large archive', () => {
     await user.type(search(), 'table 2');
     await waitFor(() => expect(screen.getByText('Showing 200 of 1542')).toBeInTheDocument());
     expect(screen.getAllByRole('listitem')).toHaveLength(200);
-  });
+    // 3,000 rows and typed input: slow machines need more than the 5-second default.
+  }, 30_000);
 });
