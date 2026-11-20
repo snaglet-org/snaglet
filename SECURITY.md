@@ -18,12 +18,17 @@ reasonably possible, but there is **no formal SLA, triage team, or bug-bounty pr
 - Fixes prioritized by real-world impact.
 - Credit in the changelog if you want it (optional).
 
-## Things you should know before running Snaglet
+## How Snaglet handles security
 
 - **Agents act as you.** With the tools you allow, an agent can run shell commands, edit files,
   and use your browser or desktop. Give tool access only to agents and prompts you trust.
 - **New agents ask first.** They confirm before running shell commands, writing files, running
   SQL, using git or calling a destructive tool.
+- **Only you can turn the questions off.** An agent runs those tools without asking only after
+  you choose it yourself: **Agents** → select the agent → **Capabilities** → **Tools** →
+  **Trusted mode** → **Confirm**. Trusted mode never gives an agent more tools, and **Guarded
+  mode** turns the questions back on. You can also stop the question for a single tool, in the
+  same **Tools** section or in a thread's settings.
 - **Your data stays on your machine.** Your workspace, database and files live in your Snaglet
   home (`~/.snaglet`) and your linked folders, unless you send them somewhere.
 - **What you send to a model goes to that provider.** It is covered by that provider's terms.
