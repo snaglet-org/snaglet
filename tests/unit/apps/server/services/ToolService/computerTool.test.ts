@@ -752,6 +752,10 @@ describe('computer tool error emotion', () => {
 });
 
 describe('visual emote emission', () => {
+  const orig = process.platform;
+  beforeAll(() => Object.defineProperty(process, 'platform', { value: 'darwin' }));
+  afterAll(() => Object.defineProperty(process, 'platform', { value: orig }));
+
   it('emits at last position without taking cursor or sending native input', async () => {
     const { emitAvatarEmote } =
       await import('@server/services/ToolService/tools/system/computer/tool');

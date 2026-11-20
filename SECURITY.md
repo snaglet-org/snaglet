@@ -18,56 +18,52 @@ reasonably possible, but there is **no formal SLA, triage team, or bug-bounty pr
 - Fixes prioritized by real-world impact.
 - Credit in the changelog if you want it (optional).
 
-## Things you should know before running Snaglet
+## How Snaglet handles security
 
-Agents act with your user account's permissions. With the tools you allow, they
-can run shell commands, edit files, and use your browser or desktop, so only
-grant tool access to agents and prompts you trust. New agents ask before they
-run shell commands, write files, run SQL, use git or call a destructive tool. Your
-workspace, database and files stay on your machine, in your Snaglet home and your
-linked folders, unless you send them somewhere. The Snaglet home is `~/.snaglet` for the
-app and `~/.snaglet-dev` for a source checkout. Content you send to an LLM provider
-you configure is subject to that provider's terms. API keys are encrypted at
-rest with AES-256-GCM using your `CREDENTIAL_ENCRYPTION_KEY`; keep that key and
-your `.env` file private (both are gitignored by default).
+- **Agents act as you.** With the tools you allow, an agent can run shell commands, edit files,
+  and use your browser or desktop. Give tool access only to agents and prompts you trust.
+- **New agents ask first.** They confirm before running shell commands, writing files, running
+  SQL, using git or calling a destructive tool.
+- **Only you can turn the questions off.** An agent runs those tools without asking only after
+  you choose it yourself: **Agents** → select the agent → **Capabilities** → **Tools** →
+  **Trusted mode** → **Confirm**. Trusted mode never gives an agent more tools, and **Guarded
+  mode** turns the questions back on. You can also stop the question for a single tool, in the
+  same **Tools** section or in a thread's settings.
+- **Your data stays on your machine.** Your workspace, database and files live in your Snaglet
+  home (`~/.snaglet`) and your linked folders, unless you send them somewhere.
+- **What you send to a model goes to that provider.** It is covered by that provider's terms.
+  See [Network access](#network-access).
+- **API keys are encrypted on disk.**
+- **Agents cannot read your keys or change Snaglet's own data with SQL.** The database refuses
+  it. Agents can read and change the tables you create.
+- **Deleting has no undo.** A `DELETE` or `DROP` on one of your tables is permanent, so agents
+  ask before running one.
+- **The `shell` tool is full shell access.** Treat it that way.
+- **The app only listens on your own machine.** Other devices on your network cannot reach it.
 
-Agent-written SQL never runs as the app's database superuser. The read tools
-(`database_query`, and the `table` tool's SQL read mode) run as dedicated
-read-only PostgreSQL roles: PostgreSQL itself refuses those queries any write,
-any read of stored credentials (provider keys and OAuth tokens, MCP API key
-hashes, MCP server headers/env), and server-side file or program access such as
-`pg_read_file` or `COPY … TO PROGRAM`; they time out after 5 seconds. The raw
-write tools (`database_execute` and `create_view`) run as `snaglet_workspace_writer`,
-a role that can do anything to custom Database tables (the `user_tables` schema)
-and nothing to Snaglet's own tables: agents, messages, memories, credentials, hooks,
-the table catalog and the migrations ledger are all denied by PostgreSQL, as is
-`CREATE` in `public`; statements time out after 30 seconds. The structured
-`table` tool and the UI stay on the app role. See
-[Agent SQL roles](docs/architecture.md#agent-sql-roles). A committed
-`DELETE` or `DROP` on a custom table still has no undo, so `database_execute`
-asks for confirmation by default.
+### If you run from source or change the defaults
 
-The server listens on `127.0.0.1` unless you set `SNAGLET_BIND_HOST`. The packaged
-app passes the server a per-session token (`SNAGLET_AUTH_TOKEN`) that `/api` requests
-and the WebSocket must present. A source checkout sets no `SNAGLET_AUTH_TOKEN`, so any
-process on your machine can call its API with full access. If you expose the
-server beyond your own machine, set `SNAGLET_AUTH_TOKEN`.
+- **A source checkout has no session token.** Any program on your machine can call its API with
+  full access. The downloaded app sets a token for each session.
+- **Exposing the server beyond your machine is your responsibility.** Set `SNAGLET_AUTH_TOKEN`
+  first. Setting `SNAGLET_BIND_HOST` is what makes the server reachable from elsewhere.
+- **Behind a reverse proxy, name its host.** The server only answers requests addressed to this
+  machine and returns `421` to anything else. Add the proxy's hostname to `SNAGLET_ALLOWED_HOSTS`.
+- **Keep `.env` and `CREDENTIAL_ENCRYPTION_KEY` private.** That key encrypts your API keys
+  (AES-256-GCM). Both are gitignored by default. A source checkout's Snaglet home is
+  `~/.snaglet-dev`.
 
-The local server only answers requests whose `Host` header names this machine
-(`localhost`, `*.localhost`, an IP address, `SNAGLET_BIND_HOST`, the hosts in
-`API_BASE_URL` / `SNAGLET_ALLOWED_ORIGINS`, or `SNAGLET_ALLOWED_HOSTS`); anything else
-gets `421`, which stops DNS-rebinding pages from reading the API when no
-session token is set. Routes that return or mint secrets (credential export,
-MCP key minting, the raw database routes) also refuse cross-site browser
-requests. Put a reverse proxy's hostname in `SNAGLET_ALLOWED_HOSTS`
-(`apps/server/src/middleware/requestOriginGuard.ts`,
-`apps/server/src/config/corsOrigins.ts`).
+### How the protections work
 
-Built-in tools that start other programs (`screenshot`, the `git` and
-`imessage` integrations, the `search` tool's code lane) pass arguments directly
-to the program, never through a shell, and refuse git remotes, branches and
-refs that start with `-`. `shell` is the exception by design: it runs a shell
-command, so treat it as full shell access.
+- **SQL.** Each agent SQL tool runs as its own locked-down PostgreSQL role, never as the app's
+  database user. Reads time out after 5 seconds and writes after 30. See
+  [Agent SQL roles](docs/architecture.md#agent-sql-roles).
+- **Web pages cannot call the API.** Requests not addressed to this machine are refused, which
+  stops DNS-rebinding attacks. Routes that return or create secrets also refuse cross-site
+  browser requests.
+- **Tools that start other programs do not go through a shell.** `screenshot`, `git`, `imessage`
+  and code search pass arguments directly, and git remotes, branches and refs that start with
+  `-` are refused. `shell` is the exception by design.
 
 ## Network access
 

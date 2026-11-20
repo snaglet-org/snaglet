@@ -18,7 +18,7 @@
     "build": "tsx build/scripts/orchestrate.ts browser-preview packages",
     "build:web": "tsx build/scripts/orchestrate.ts browser-preview web",
     "build:server": "tsx build/scripts/orchestrate.ts browser-preview server",
-    "build:browser-preview": "cross-env VITE_SNAGLET_BUILD_PROFILE=browser-preview tsx build/scripts/orchestrate.ts browser-preview browser-preview",
+    "build:browser-preview": "cross-env VITE_SNAGLET_BUILD_PROFILE=browser-preview VITE_SNAGLET_SHOW_BUILD_PROFILE_BANNER=true tsx build/scripts/orchestrate.ts browser-preview browser-preview",
     "build:desktop-preview": "tsx build/scripts/orchestrate.ts desktop-preview package-desktop",
     "build:desktop": "tsx build/scripts/orchestrate.ts desktop-production package-desktop",
     "stage:desktop": "tsx build/scripts/orchestrate.ts desktop-preview stage-desktop",

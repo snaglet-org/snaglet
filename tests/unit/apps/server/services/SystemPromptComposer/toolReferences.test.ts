@@ -94,8 +94,9 @@ function loadTierById(): Map<string, 'core' | 'standard'> {
  */
 function extractToolTokens(prose: string): Set<string> {
   const tokens = new Set<string>();
-  // call form: identifier immediately followed by `(` (no space)
-  for (const m of prose.matchAll(/([a-z][a-z0-9_]+)\(/g)) tokens.add(m[1]);
+  // call form: identifier immediately followed by `(` (no space). The lookbehind keeps the
+  // tail of a capitalized word out, such as `ntel(` from a CPU named "Intel(R)".
+  for (const m of prose.matchAll(/(?<![A-Za-z0-9_])([a-z][a-z0-9_]+)\(/g)) tokens.add(m[1]);
   // standalone backticked identifier, only if it contains an underscore
   for (const m of prose.matchAll(/`([a-z][a-z0-9]*(?:_[a-z0-9]+)+)`/g)) tokens.add(m[1]);
   return tokens;

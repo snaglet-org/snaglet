@@ -80,11 +80,11 @@ export default defineConfig(({ command, mode, isPreview }) => {
     // VITE_APP_NAME at runtime. In dev inject the relative base `/api` so the
     // browser hits the Vite origin and the proxy below forwards to the server.
     // An explicit VITE_API_BASE_URL wins.
+    // Always defined from the resolved values: the hermetic browser-preview build reads no
+    // .env file, so leaving a value to Vite's own env loading would ship it undefined.
     define: {
-      ...(env.VITE_API_BASE_URL
-        ? {}
-        : { 'import.meta.env.VITE_API_BASE_URL': JSON.stringify('/api') }),
-      ...(env.VITE_APP_NAME ? {} : { 'import.meta.env.VITE_APP_NAME': JSON.stringify('Snaglet') }),
+      'import.meta.env.VITE_API_BASE_URL': JSON.stringify(env.VITE_API_BASE_URL || '/api'),
+      'import.meta.env.VITE_APP_NAME': JSON.stringify(env.VITE_APP_NAME || 'Snaglet'),
     },
     // Treat linked workspace packages as source so HMR picks up edits
     // (don't pre-bundle into node_modules-style optimized deps).

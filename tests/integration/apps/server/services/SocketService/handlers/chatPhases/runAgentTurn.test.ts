@@ -64,6 +64,10 @@ jest.mock('@server/services/ContextWindowService', () => ({
   // Stub: these suites assert turn mechanics, never the boundary. The real
   // walk is covered by ContextWindowService.test.ts (findCurrentRunBoundary).
   findCurrentRunBoundary: jest.fn((messages: unknown[]) => messages.length),
+  // The real rule (pure): the request asks for the model's own limit, or none when unknown.
+  requestMaxOutputTokens: jest.requireActual<
+    typeof import('@server/services/contextWindow/budget')
+  >('@server/services/contextWindow/budget').requestMaxOutputTokens,
 }));
 
 jest.mock('@server/services/SummaryService', () => ({
@@ -842,7 +846,7 @@ describe('createRunAgentTurn', () => {
     beforeEach(() => {
       (resolveContextBudget as jest.Mock).mockReturnValue({
         ...defaultContextBudget,
-        maxOutputTokens: MODEL_MAX_OUTPUT,
+        modelMaxOutputTokens: MODEL_MAX_OUTPUT,
       });
     });
 
