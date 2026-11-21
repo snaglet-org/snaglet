@@ -78,6 +78,10 @@ Snaglet has no account, no Snaglet server and no telemetry. These are the connec
   some of these open your browser. Snaglet refreshes a Codex login at auth.openai.com.
 - **Release check.** Once a day the server asks GitHub's releases API whether a newer Snaglet release
   exists. The request is unauthenticated and carries no stored credential.
+- **App updates.** Only after you choose **Install**, the desktop app reads the latest release's
+  `latest.json` and downloads the update it names from GitHub releases (about 120 MB). Neither
+  request carries a credential. Snaglet installs the download only if its signature matches the
+  update public key built into the app and it is signed as the version offered, then restarts.
 - **Model downloads from Hugging Face.** The embedding model (about 137 MB) downloads on its own
   in the packaged app and in a source checkout with `SNAGLET_LOCAL_INTELLIGENCE=true`, or when you run
   `pnpm embedder:fetch`. Voice models (from Hugging Face and GitHub) download when you choose

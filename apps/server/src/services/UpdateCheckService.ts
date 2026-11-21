@@ -3,13 +3,15 @@
  * non-prerelease, compared semver-style against `SNAGLET_APP_VERSION` or the npm
  * package version), surfaced as an `app_update` notification. Ticked hourly so
  * a sleeping laptop catches up; the watermark and last-notified version persist
- * in `settings`. A manual check (POST /api/server/update-check) skips the
- * cadence but not the per-version dedupe. The request is unauthenticated and
- * never carries a stored credential. Failures log at debug.
+ * in `settings`. A manual check (POST /api/server/update-check, Settings →
+ * Updates) skips the cadence but not the per-version dedupe, and runs at most
+ * once a minute. The request is unauthenticated and never carries a stored
+ * credential. Failures log at debug; the last one's reason is kept in memory
+ * for the status.
  */
 
 import { getErrorMessage } from '@snaglet/shared/utils';
-import { SNAGLET_REPOSITORY } from '@snaglet/shared/constants';
+import { SNAGLET_REPOSITORY, appUpdateOfferTitle } from '@snaglet/shared/constants';
 import { logger } from '@server/config/logger';
 import { notificationService } from '@server/services/NotificationService';
 import { Settings } from '@snaglet/db/tables/settings';
@@ -30,6 +32,12 @@ const INITIAL_DELAY_MS = 90_000;
 
 /** GitHub answers a rate-limited request with 403 or 429. */
 const RATE_LIMITED_STATUSES = new Set([403, 429]);
+
+/**
+ * Least time between checks a person asks for. GitHub allows an address 60
+ * unauthenticated API requests an hour, so repeated clicks reuse the result.
+ */
+const USER_CHECK_SPACING_MS = 60_000;
 
 /** settings-table coordinates for persisted check state. The category must
  * match the settings table's lowercase_underscore format constraint. */
@@ -55,6 +63,8 @@ interface UpdateStatus {
   lastCheckedAt: string | null;
   latest: LatestRelease | null;
   updateAvailable: boolean;
+  /** Why the most recent check failed, or null when it succeeded or none ran yet. */
+  lastError: string | null;
 }
 
 function appVersion(): string {
@@ -92,6 +102,8 @@ class UpdateCheckServiceClass {
   private timer: ReturnType<typeof setInterval> | null = null;
   private initialTimer: ReturnType<typeof setTimeout> | null = null;
   private checking = false;
+  private lastError: string | null = null;
+  private lastUserCheckAt = 0;
 
   start(): void {
     if (this.timer) return;
@@ -121,7 +133,19 @@ class UpdateCheckServiceClass {
       lastCheckedAt: state.lastCheckedAt,
       latest,
       updateAvailable: latest !== null && compareVersions(latest.version, current) > 0,
+      lastError: this.lastError,
     };
+  }
+
+  /**
+   * A check a person asked for (Settings → Updates, the REST route). Within a
+   * minute of the previous one it returns that result instead of asking
+   * GitHub again.
+   */
+  async checkFromUser(): Promise<UpdateStatus> {
+    if (Date.now() - this.lastUserCheckAt < USER_CHECK_SPACING_MS) return this.status();
+    this.lastUserCheckAt = Date.now();
+    return this.checkNow();
   }
 
   /** Cadence-gated tick. */
@@ -166,7 +190,7 @@ class UpdateCheckServiceClass {
       if (newer && state.lastNotifiedVersion !== release.version) {
         await notificationService.create({
           type: 'app_update',
-          title: `Snaglet ${release.version} is available`,
+          title: appUpdateOfferTitle(release.version),
           body: `You are on ${current}. Click to update.`,
         });
         nextState.lastNotifiedVersion = release.version;
@@ -193,16 +217,20 @@ class UpdateCheckServiceClass {
       if (res.status === 404) {
         // No release published yet, a normal state: stay quiet.
         logger.debug(`${LOG_PREFIX} no release found (404) for ${REPO}`);
+        this.lastError = null;
         return null;
       }
       if (RATE_LIMITED_STATUSES.has(res.status)) {
         logger.debug(`${LOG_PREFIX} GitHub API ${res.status} for ${REPO}; retrying next tick`);
+        this.lastError = 'GitHub is limiting requests right now. Try again later.';
         return 'rate-limited';
       }
       if (!res.ok) {
         logger.debug(`${LOG_PREFIX} GitHub API ${res.status} for ${REPO}`);
+        this.lastError = `GitHub answered with status ${res.status}.`;
         return null;
       }
+      this.lastError = null;
       const body = (await res.json()) as {
         tag_name?: string;
         name?: string | null;
@@ -221,6 +249,7 @@ class UpdateCheckServiceClass {
     } catch (err) {
       // Network down is an everyday laptop condition, not an error.
       logger.debug(`${LOG_PREFIX} fetch failed: ${getErrorMessage(err)}`);
+      this.lastError = 'Snaglet couldn’t reach GitHub.';
       return null;
     }
   }

@@ -351,6 +351,13 @@ export const HubView: FC<HubViewProps> = ({ onReplaceSelection }) => {
         onOpen: () => open({ kind: 'browser' }),
       },
       {
+        id: 'updates',
+        label: 'Updates',
+        description: 'Your version and new releases',
+        icon: '⇡',
+        onOpen: () => open({ kind: 'updates' }),
+      },
+      {
         id: 'embeddings',
         label: 'Embeddings',
         description: 'Coverage, backfill, and indexed content',

@@ -2,6 +2,7 @@ import { type FC, useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ToastHost, WsStatusIndicator } from '@desktop/components';
 import { AgentPopups } from '@desktop/components/AgentPopups';
+import { AppUpdatePrompt } from '@desktop/components/AppUpdatePrompt';
 import { AgentCursorApproval } from '@desktop/components/AgentCursorApproval';
 import { AgentCursorOverlay } from '@desktop/components/AgentCursorOverlay';
 import { setActiveUserId } from '@desktop/config';
@@ -76,6 +77,7 @@ export const App: FC<BaseComponentProps> = () => {
           </Routes>
         </BrowserRouter>
         <ToastHost />
+        <AppUpdatePrompt />
         <WsStatusIndicator />
         <AgentCursorOverlay />
         <AgentCursorApproval />

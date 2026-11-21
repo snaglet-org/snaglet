@@ -128,17 +128,75 @@ verifier expects the unsigned candidate. Then ship:
 ```bash
 export SNAGLET_SIGNING_IDENTITY="Developer ID Application: <Name> (<TEAMID>)"
 node scripts/release/sign-and-notarize.mjs --notary-profile snaglet-notary
+export TAURI_SIGNING_PRIVATE_KEY_PATH=<updater-key-file>
+read -rs TAURI_SIGNING_PRIVATE_KEY_PASSWORD && export TAURI_SIGNING_PRIVATE_KEY_PASSWORD
 node scripts/ship-desktop.mjs --version vX.Y.Z
 ```
 
 `sign-and-notarize.mjs` signs every binary with the hardened runtime and the
 entitlements in `scripts/release/entitlements/`, notarizes, staples, and
 rewrites the manifest and checksums for the signed files. `ship-desktop.mjs`
-publishes a DMG, a zip and checksums as a GitHub release on the repository named
-in `packages/shared/constants/release.json`. It refuses an unsigned build unless
-you pass `--allow-unsigned`. To rehearse signing without a certificate, pass
-`--identity - --skip-notarize`; the build then stays blocked from shipping. Keep
-signing keys outside the repository.
+publishes a DMG, a zip, the in-app update files (see below) and checksums as a
+GitHub release on the repository named in
+`packages/shared/constants/release.json`. It refuses an unsigned build unless
+you pass `--allow-unsigned`, and an un-notarized build ships only with
+`--no-updater`: it is never offered as an in-app update. To rehearse signing
+without a certificate, pass `--identity - --skip-notarize`; the build then stays
+blocked from shipping. A tag with a pre-release suffix, such as `v1.2.0-rc.1`, is
+published as a GitHub pre-release, so installed apps never see it as the latest
+release.
+
+`--dry-run` does everything except publish. It does not build unless you also
+pass `--build`, and it signs the update with the real key unless you pass
+`--no-updater`. Keep signing keys outside the repository.
+
+### In-app updates
+
+The desktop app reads `latest.json` from the latest release (the endpoint in
+`plugins.updater.endpoints` in `apps/desktop/src-tauri/tauri.conf.json`). The
+user starts an update from the update notification or **Settings → Updates**
+and confirms with **Install**. The app then downloads the archive that file
+names (about 120 MB) and installs it only if the archive's signature matches
+`plugins.updater.pubkey`, the update public key in the same file, and the
+signature names the archive for the version offered. It keeps a copy of the
+previous version beside the app until the new one passes a launch check, and
+puts it back if that check fails. Only the production build updates itself:
+preview builds carry no key or endpoint, and development runs refuse.
+
+`ship-desktop.mjs` adds three files to every release:
+
+- `Snaglet-vX.Y.Z-macos-arm64.app.tar.gz`: the signed, notarized and stapled
+  `Snaglet.app`. The script makes it after signing, because Tauri's own updater
+  archive (`createUpdaterArtifacts`, off in `tauri.production.conf.json`) would
+  hold the unsigned build.
+- `Snaglet-vX.Y.Z-macos-arm64.app.tar.gz.sig`: its signature, made with
+  `tauri signer sign`.
+- `latest.json`: the version, the archive's download URL and its signature.
+
+The update key is a minisign key pair made with `tauri signer generate`. The
+script takes the private key only from the environment, never as an argument:
+`TAURI_SIGNING_PRIVATE_KEY_PATH` (or `TAURI_SIGNING_PRIVATE_KEY` holding the key
+itself) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (empty for a key without a
+password). It never prints or writes the key. Without them it refuses to ship.
+
+Before it publishes, the script checks that the archive holds only what the
+updater can unpack (no AppleDouble, sparse or hard-link entries), that it
+unpacks to a `Snaglet.app` that passes `codesign --verify --deep --strict`,
+`xcrun stapler validate` and Gatekeeper, that the shipped app embeds the public
+key, and that the signature names the archive and verifies against the public
+key in `tauri.conf.json`. A wrong key fails here instead of on users' Macs.
+
+`--no-updater` ships a release without the three files. Installed copies cannot
+update to it: the update notification tells users to download it from the
+release page. Use it only when the private key is not available.
+
+If the private key is lost, no installed copy will accept another update signed
+by it. Make a new key pair with
+`pnpm --filter @snaglet/desktop-shell exec tauri signer generate -w <new-key-file>`,
+put the new public key in `tauri.conf.json`, and ship the next release with
+`--no-updater`: users install that release by hand once, and it trusts the new
+key. Say so in its release notes. Later releases ship normally and install
+from inside the app.
 
 ## Documentation gate
 

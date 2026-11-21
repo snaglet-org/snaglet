@@ -60,7 +60,7 @@
     "test:e2e:app": "tsx build/scripts/smoke-packaged-app.ts",
     "test:package-exports": "pnpm --filter @snaglet/shared build && pnpm --filter @snaglet/db build && pnpm --filter @snaglet/sdk build && node scripts/verify-package-exports.mjs",
     "test:tool-registry": "pnpm --filter @snaglet/server audit:tool-registry",
-    "test:build-profiles": "tsx --test tests/build/build-profiles.test.ts tests/build/native-helpers.test.ts tests/build/packaged-app-smoke.test.ts tests/build/desktop-build-sdk.test.ts tests/build/rust-toolchain.test.ts tests/build/desktop-bundle-no-console.test.ts tests/build/no-colocated-jest-tests.test.ts tests/build/preview-scratch.test.ts tests/build/ensure-dev-env.test.ts tests/build/release-contracts.test.ts tests/build/docs-gate.test.ts tests/build/db-chain.test.ts tests/build/install-app.test.ts",
+    "test:build-profiles": "tsx --test tests/build/build-profiles.test.ts tests/build/native-helpers.test.ts tests/build/packaged-app-smoke.test.ts tests/build/desktop-build-sdk.test.ts tests/build/rust-toolchain.test.ts tests/build/desktop-bundle-no-console.test.ts tests/build/no-colocated-jest-tests.test.ts tests/build/preview-scratch.test.ts tests/build/ensure-dev-env.test.ts tests/build/release-contracts.test.ts tests/build/release-updater.test.ts tests/build/docs-gate.test.ts tests/build/db-chain.test.ts tests/build/install-app.test.ts",
     "test:desktop-stage": "pnpm stage:desktop && tsx build/scripts/verify-desktop-stage-determinism.ts && tsx build/scripts/verify-desktop-stage.ts",
     "verify:changed": "tsx scripts/verify-changed.ts",
     "verify": "pnpm build && pnpm typecheck:all && pnpm test:package-exports && pnpm test:tool-registry && pnpm test:ui && pnpm test",

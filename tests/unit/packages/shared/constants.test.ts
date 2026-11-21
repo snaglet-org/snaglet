@@ -1,8 +1,24 @@
 import { API_ROUTES } from '@snaglet/shared/types/api';
 import { PALETTE_SEARCH_MODES } from '@snaglet/shared/constants/paletteSearch';
 import { DEFAULT_USER_NAME, isDefaultUserName } from '@snaglet/shared/constants/userProfile';
+import { appUpdateOfferTitle, appUpdateOfferVersion } from '@snaglet/shared/constants/release';
 
 describe('Shared Constants', () => {
+  describe('appUpdateOfferVersion', () => {
+    it('reads the version from the release offer only, among app_update notices', () => {
+      expect(
+        appUpdateOfferVersion({ type: 'app_update', title: appUpdateOfferTitle('v1.0.1') })
+      ).toBe('v1.0.1');
+      // Project folder notices share the type; clicking them must not offer an install.
+      for (const title of ['Snaglet folder missing', 'Snaglet v1.0.1 is available folder moved']) {
+        expect(appUpdateOfferVersion({ type: 'app_update', title })).toBeNull();
+      }
+      expect(
+        appUpdateOfferVersion({ type: 'mention', title: appUpdateOfferTitle('v1.0.1') })
+      ).toBeNull();
+    });
+  });
+
   describe('PALETTE_SEARCH_MODES', () => {
     it('contains every palette search mode', () => {
       expect(PALETTE_SEARCH_MODES).toEqual(['keyword', 'hybrid', 'semantic']);

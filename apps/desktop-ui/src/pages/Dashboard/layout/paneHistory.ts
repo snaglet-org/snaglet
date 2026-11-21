@@ -79,6 +79,7 @@ function selectionsEqual(a: DetailSelection, b: DetailSelection): boolean {
     case 'agent-instructions':
     case 'storage':
     case 'browser':
+    case 'updates':
     case 'tool-create':
     case 'hook-create':
     case 'automation-create':

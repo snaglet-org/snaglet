@@ -7,10 +7,10 @@ export const desktopProduction = {
   storageNamespace: 'snaglet-desktop',
   serverPort: 4000,
   clientPort: 3000,
-  // The updater plugin and signed updater artifacts are not shipped yet.
-  // Keep release metadata honest until that complete path exists.
-  updateChannel: 'disabled',
-  updatesEnabled: false,
+  // In-place updates from the GitHub release's latest.json, signed with the
+  // updater key whose public half is in tauri.conf.json.
+  updateChannel: 'stable',
+  updatesEnabled: true,
   diagnostics: 'production',
   minimumMacOSVersion: '14.0',
   sourceMaps: 'none',

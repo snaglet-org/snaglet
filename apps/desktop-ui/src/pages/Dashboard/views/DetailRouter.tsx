@@ -13,6 +13,7 @@ import { ProfileView } from './ProfileView';
 import { HubView } from './HubView';
 import { GetStartedView } from './GetStartedView';
 import { StorageView } from './StorageView';
+import { UpdatesView } from './UpdatesView';
 import { BrowserSettingsView } from './BrowserSettingsView';
 import { ProvidersView } from './ProvidersView';
 import { McpClientConnectionView, McpServerConnectionView } from './McpConnections';
@@ -120,6 +121,10 @@ const DetailRouter: FC<DetailRouterProps> = ({ selection, onReplaceSelection, on
 
   if (selection.kind === 'storage') {
     return <StorageView />;
+  }
+
+  if (selection.kind === 'updates') {
+    return <UpdatesView />;
   }
 
   if (selection.kind === 'providers') {

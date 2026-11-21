@@ -8,6 +8,11 @@ What works today, what is in progress and what Snaglet does not do yet.
 - One person and one running copy per Snaglet home.
 - Agents on a model provider you connect: a hosted one with your own key or subscription, or a
   local model server.
+- **Updates from inside the app.** Snaglet tells you when a newer release is out. Click the
+  notification, or open **Settings → Updates**, and choose **Install**: Snaglet downloads the
+  release, checks its signature, installs it and restarts. **Settings → Updates** also shows your
+  version and can check now. Snaglet has to be in a folder your account can change, such as
+  Applications, on your startup disk.
 
 ## In progress
 
@@ -19,8 +24,6 @@ What works today, what is in progress and what Snaglet does not do yet.
 
 - **Linux.** It does not work yet. See [Linux development](./linux-development.md).
 - **Intel Macs.**
-- **Automatic updates.** Snaglet tells you when a newer release is out; you download it and
-  replace the app.
 - **Sync between machines.**
 - **Google Calendar sync.**
 - **Calendar events in search.**

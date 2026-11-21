@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod app_update;
 mod cli_install;
 mod downloads;
 mod drop_path_recovery;
@@ -212,36 +213,174 @@ async fn restart_app(app: tauri::AppHandle) -> Result<(), String> {
         })
 }
 
-/// Check for + install an app update via the Tauri updater, then restart.
-///
-/// Dormant until the signing workflow publishes releases carrying updater
-/// artifacts (`latest.json` + signed bundles) and tauri.conf.json gets a real
-/// `pubkey`: until then `check()` fails fast and the UI falls back to opening
-/// the GitHub release page. Kept async and error-stringed so the UI can show
-/// the failure reason inline.
+/// Why this build must not install a release over itself (development and
+/// preview builds), from what it was compiled as and its bundle identifier.
+fn self_update_refusal(app: &tauri::AppHandle) -> Option<app_update::UpdateError> {
+    app_update::refusal(
+        cfg!(debug_assertions),
+        option_env!("SNAGLET_BUILD_PROFILE"),
+        &app.config().identifier,
+    )
+}
+
+/// Whether this copy can install updates itself: the checks
+/// `install_app_update` runs before it downloads anything. Settings → Updates
+/// shows the reason in place of its Install button.
 #[tauri::command]
-async fn install_app_update(app: tauri::AppHandle) -> Result<String, String> {
+fn app_update_support(app: tauri::AppHandle) -> Result<(), app_update::UpdateError> {
+    if let Some(refusal) = self_update_refusal(&app) {
+        return Err(refusal);
+    }
+    app_update::installed_bundle().map(|_| ())
+}
+
+/// Check for, download and install the latest release, then relaunch.
+///
+/// The user asked for this from the update prompt. The download and its
+/// signature check run while Snaglet stays usable, and a failure there stops
+/// nothing. Only a verified update claims the lifecycle and stops the server
+/// and its database; from then on every outcome ends in a relaunch, onto the
+/// new version or back onto the old one, like `move_snaglet_home`.
+#[tauri::command]
+async fn install_app_update(
+    app: tauri::AppHandle,
+    on_progress: tauri::ipc::Channel<app_update::UpdateProgress>,
+) -> Result<String, app_update::UpdateError> {
+    use app_update::{UpdateError, UpdateProgress};
     use tauri_plugin_updater::UpdaterExt;
 
+    if let Some(refusal) = self_update_refusal(&app) {
+        return Err(refusal);
+    }
+    let _claim = app_update::UpdateClaim::take()?;
+    if LIFECYCLE_BUSY.load(Ordering::SeqCst) {
+        return Err(UpdateError::busy("Snaglet is already restarting."));
+    }
+    let bundle = app_update::installed_bundle()?;
+
+    let _ = on_progress.send(UpdateProgress::Checking);
+    // A stalled connection fails after STALL_TIMEOUT instead of holding the
+    // update (and its claim) forever.
     let updater = app
-        .updater()
-        .map_err(|e| format!("updater unavailable: {e}"))?;
+        .updater_builder()
+        .timeout(app_update::CHECK_TIMEOUT)
+        .configure_client(|client| {
+            client
+                .connect_timeout(app_update::CONNECT_TIMEOUT)
+                .read_timeout(app_update::STALL_TIMEOUT)
+        })
+        .build()
+        .map_err(|e| app_update::describe(&e))?;
     let update = updater
         .check()
         .await
-        .map_err(|e| format!("update check failed: {e}"))?;
+        .map_err(|e| app_update::describe(&e))?
+        .ok_or_else(UpdateError::up_to_date)?;
 
-    match update {
-        Some(update) => {
-            update
-                .download_and_install(|_chunk, _total| {}, || {})
-                .await
-                .map_err(|e| format!("download/install failed: {e}"))?;
-            // restart() never returns; the Ok is for the type checker only.
-            app.restart();
-        }
-        None => Err("already up to date".into()),
+    let version = update.version.clone();
+    let mut throttle = app_update::ProgressThrottle::default();
+    let mut downloaded: u64 = 0;
+    // `download` verifies the minisign signature before returning the bytes.
+    let bytes = update
+        .download(
+            |chunk, total| {
+                downloaded += chunk as u64;
+                if throttle.should_send(downloaded, total) {
+                    let _ = on_progress.send(UpdateProgress::Downloading {
+                        version: version.clone(),
+                        downloaded,
+                        total,
+                    });
+                }
+            },
+            || {},
+        )
+        .await
+        .map_err(|e| app_update::describe(&e))?;
+    app_update::check_signed_version(&update.signature, &version)?;
+
+    claim_lifecycle().map_err(UpdateError::busy)?;
+    let _ = on_progress.send(UpdateProgress::Installing {
+        version: version.clone(),
+    });
+    let state = SIDECAR.get().copied();
+    let (relaunch, installed) = (app.clone(), bundle.clone());
+    app_update::set_installing(true);
+    tauri::async_runtime::spawn_blocking(move || {
+        install_update_blocking(&app, state, &update, &bytes, &bundle)
+    })
+    .await
+    .unwrap_or_else(|e| {
+        // The server may already be stopped, so this outcome relaunches too.
+        app_update::set_installing(false);
+        let failure = app_update::InstallFailure {
+            error: UpdateError::failed(format!("The update could not be installed: {e}")),
+            previous: app_update::previous_app(&installed),
+        };
+        report_update_failure(&relaunch, &failure);
+        relaunch.request_restart();
+        Err(failure.error)
+    })
+}
+
+/// Stop the server and its database, swap the bundle, check the new version
+/// can launch, and relaunch. Runs off the main thread because the stop blocks.
+/// `app_update::installing()` stays set until the swap is settled, so a quit
+/// meanwhile waits instead of leaving a half-replaced app.
+fn install_update_blocking(
+    app: &tauri::AppHandle,
+    state: Option<&'static sidecar::SidecarState>,
+    update: &tauri_plugin_updater::Update,
+    bytes: &[u8],
+    bundle: &Path,
+) -> Result<String, app_update::UpdateError> {
+    let stopped =
+        state.is_none_or(|state| sidecar::shutdown(state) && sidecar::postgres_is_stopped(state));
+    let outcome = if stopped {
+        app_update::install_guarded(
+            bundle,
+            app_update::SafetyCopy::take(bundle),
+            || update.install(bytes).map_err(|e| app_update::describe(&e)),
+            |bundle| app_update::launch_problem(bundle, true),
+        )
+        .map(|()| update.version.clone())
+    } else {
+        Err(app_update::InstallFailure {
+            error: app_update::UpdateError::failed(
+                "Snaglet's server did not stop cleanly, so the update was not installed.",
+            ),
+            previous: app_update::previous_app(bundle),
+        })
+    };
+    app_update::set_installing(false);
+    if let Err(failure) = &outcome {
+        report_update_failure(app, failure);
     }
+    app.request_restart();
+    outcome.map_err(|failure| failure.error)
+}
+
+fn report_update_failure(app: &tauri::AppHandle, failure: &app_update::InstallFailure) {
+    let next = match &failure.previous {
+        app_update::PreviousApp::InPlace => format!(
+            "Snaglet will restart on version {}, which was not changed.",
+            app.package_info().version
+        ),
+        app_update::PreviousApp::KeptAt(path) => format!(
+            "Snaglet could not put its previous version back. It is kept at {}. Rename it to \
+             Snaglet.app to use it, or download Snaglet again from its GitHub releases page.",
+            path.display()
+        ),
+        app_update::PreviousApp::Lost => "Snaglet could not put its previous version back. \
+             Download Snaglet again from its GitHub releases page."
+            .to_string(),
+    };
+    MessageDialog::new()
+        .set_level(MessageLevel::Error)
+        .set_title("Updating Snaglet failed")
+        .set_description(format!("{}\n\n{next}", failure.error.message))
+        .set_buttons(MessageButtons::Ok)
+        .show();
 }
 
 /// Move the Snaglet home, then relaunch on it.
@@ -618,9 +757,7 @@ fn main() {
     };
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
-        // Updater is dormant until a signed release with updater artifacts
-        // exists: with no endpoint reachable / no signature, check() simply
-        // errors and the UI falls back to opening the release page.
+        // Used only by install_app_update, which refuses dev and preview builds.
         .plugin(tauri_plugin_updater::Builder::new().build())
         // One desktop app per Snaglet home is a product choice even though external
         // PostgreSQL mode permits deliberate multi-process server sharing.
@@ -647,6 +784,7 @@ fn main() {
             pick_save_file,
             restart_app,
             install_app_update,
+            app_update_support,
             move_snaglet_home,
             resolve_dropped_file_path,
             save_download,
@@ -715,8 +853,17 @@ fn main() {
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(|_app, event| {
-            if let tauri::RunEvent::Exit = event {
+        .run(|_app, event| match event {
+            // Closing the window or a programmatic exit while an update swaps
+            // the app is refused; the install relaunches when it is done
+            // (Tauri ignores this for that restart).
+            tauri::RunEvent::ExitRequested { api, .. } if app_update::installing() => {
+                api.prevent_exit();
+            }
+            tauri::RunEvent::Exit => {
+                // Quit from the app menu cannot be refused, so let a running
+                // swap settle before the process ends.
+                app_update::wait_while_installing(std::time::Duration::from_secs(180));
                 if let Some(state) = SIDECAR.get() {
                     // Graceful: server drains, closes its pool, and stops owned
                     // PostgreSQL before the Rust fallback escalates. Releasing
@@ -727,5 +874,6 @@ fn main() {
                     }
                 }
             }
+            _ => {}
         });
 }

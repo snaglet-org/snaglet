@@ -27,9 +27,34 @@ const desktopSidecar = readFileSync(
   path.join(repoRoot, 'apps/desktop/src-tauri/src/sidecar.rs'),
   'utf8'
 );
-const desktopTauriConfig = JSON.parse(
-  readFileSync(path.join(repoRoot, 'apps/desktop/src-tauri/tauri.conf.json'), 'utf8')
-) as { bundle: { macOS: { minimumSystemVersion: string } } };
+interface TauriConfigOverlay {
+  identifier?: string;
+  plugins?: { updater?: { endpoints: string[]; pubkey: string } };
+  bundle: { createUpdaterArtifacts?: boolean; macOS: { minimumSystemVersion: string } };
+}
+const readTauriConfig = (name: string) =>
+  JSON.parse(
+    readFileSync(path.join(repoRoot, 'apps/desktop/src-tauri', name), 'utf8')
+  ) as TauriConfigOverlay;
+const desktopTauriConfig = readTauriConfig('tauri.conf.json');
+
+/** RFC 7396 JSON merge patch, which `tauri build --config <file>` applies. */
+function mergePatch(target: unknown, patch: unknown): unknown {
+  if (patch === null || typeof patch !== 'object' || Array.isArray(patch)) return patch;
+  const base =
+    target !== null && typeof target === 'object' && !Array.isArray(target)
+      ? { ...(target as Record<string, unknown>) }
+      : {};
+  for (const [key, value] of Object.entries(patch)) {
+    if (value === null) delete base[key];
+    else base[key] = mergePatch(base[key], value);
+  }
+  return base;
+}
+
+/** The config a desktop profile is built with: the base plus its overlay. */
+const builtConfig = (overlay: string) =>
+  mergePatch(desktopTauriConfig, readTauriConfig(overlay)) as TauriConfigOverlay;
 const appleSidecarBuildScripts = ['apple-chat', 'apple-stt', 'apple-tts'].map((name) =>
   readFileSync(path.join(repoRoot, 'apps/server/native', name, 'build.sh'), 'utf8')
 );
@@ -269,10 +294,63 @@ test('desktop profiles require a compiled web UI in the server bundle', () => {
   assert.match(serverBundler, /desktop build requires compiled UI assets/);
 });
 
-test('production metadata does not claim an updater that is not shipped', () => {
+test('only the production desktop build updates itself', () => {
   const production = resolveBuildProfile('desktop-production');
-  assert.equal(production.updatesEnabled, false);
-  assert.equal(production.updateChannel, 'disabled');
+  assert.equal(production.updatesEnabled, true);
+  assert.equal(production.updateChannel, 'stable');
+  for (const name of ['browser-preview', 'desktop-preview'] as const) {
+    const profile = resolveBuildProfile(name);
+    assert.equal(profile.updatesEnabled, false, name);
+    assert.equal(profile.updateChannel, 'disabled', name);
+    assert.throws(
+      () =>
+        buildProfileSchema.parse({ ...profile, updatesEnabled: true, updateChannel: 'preview' }),
+      /only desktop production may update itself/
+    );
+  }
+  assert.throws(
+    () => buildProfileSchema.parse({ ...production, updateChannel: 'disabled' }),
+    /enabled updates require an update channel/
+  );
+  assert.throws(
+    () => buildProfileSchema.parse({ ...production, updatesEnabled: false }),
+    /disabled updates require the disabled channel/
+  );
+});
+
+test('the production build trusts the release key and reads latest.json from the release repo', () => {
+  const release = JSON.parse(
+    readFileSync(path.join(repoRoot, 'packages/shared/constants/release.json'), 'utf8')
+  ) as { repository: string };
+  const production = builtConfig('tauri.production.conf.json');
+  const updater = production.plugins?.updater;
+  assert.equal(production.identifier, 'com.snaglet.app');
+  assert.deepEqual(updater?.endpoints, [
+    `https://github.com/${release.repository}/releases/latest/download/latest.json`,
+  ]);
+  // A minisign public key, base64-encoded as tauri-plugin-updater expects.
+  assert.match(
+    Buffer.from(updater?.pubkey ?? '', 'base64').toString('utf8'),
+    /^untrusted comment: minisign public key: [0-9A-F]{16}\nRW[A-Za-z0-9+/]{54}\n$/
+  );
+  // ship-desktop.mjs builds the update archive from the signed, stapled app;
+  // Tauri's own updater artifacts would hold the unsigned build.
+  assert.equal(production.bundle.createUpdaterArtifacts, false);
+});
+
+test('the preview build has no updater key or endpoint and a non-production identifier', () => {
+  // The shell refuses this identifier (and the desktop-preview profile) before
+  // updating; app_update.rs tests that refusal. Here the built config itself
+  // leaves nothing to install a production release with.
+  const preview = builtConfig('tauri.preview.conf.json');
+  assert.deepEqual(preview.plugins?.updater, { endpoints: [], pubkey: '' });
+  assert.equal(preview.identifier, 'com.snaglet.app.preview');
+  assert.equal(preview.bundle.createUpdaterArtifacts, false);
+  // The command passes the compiled profile and identifier to that refusal.
+  assert.match(
+    desktopShell,
+    /app_update::refusal\(\s*cfg!\(debug_assertions\),\s*option_env!\("SNAGLET_BUILD_PROFILE"\),\s*&app\.config\(\)\.identifier,?\s*\)/
+  );
 });
 
 test('desktop shell has no plaintext provider-token filesystem commands', () => {

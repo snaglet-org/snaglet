@@ -17,7 +17,7 @@
   "plugins": {
     "updater": {
       "endpoints": ["https://github.com/snaglet-org/snaglet/releases/latest/download/latest.json"],
-      "pubkey": ""
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ4NUUxOEU2OENCNTQ1MjMKUldRalJiV001aGhlU0syY0N5UFdkRk5iWk9XKzlzdkdrZWNjZEJldmhFeUxGNEljR0toMWxaL1cK"
     }
   },
   "bundle": {

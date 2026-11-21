@@ -27,20 +27,36 @@ interface ActiveToast {
  * it, and restarts (full duration) on leave/blur — so an Undo button never
  * vanishes under the cursor. The action button is a normal Tab stop; Escape
  * dismisses the focused toast; an action runs at most once and closes it.
+ *
+ * Showing a toast with the `id` of one still on screen replaces that toast in
+ * place (message, action and duration), which is how progress is reported.
  */
 export const ToastHost: FC = () => {
   const [toasts, setToasts] = useState<ActiveToast[]>([]);
   const timers = useRef(new Map<number, number>());
+  /** Caller id → shown toast, for replacing in place. */
+  const keyed = useRef(new Map<string, number>());
+  const paused = useRef(new Set<number>());
 
-  const dismiss = useCallback((id: number) => {
+  const forget = useCallback((id: number) => {
     const timer = timers.current.get(id);
     if (timer !== undefined) window.clearTimeout(timer);
     timers.current.delete(id);
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    paused.current.delete(id);
+    for (const [key, shown] of keyed.current) if (shown === id) keyed.current.delete(key);
   }, []);
+
+  const dismiss = useCallback(
+    (id: number) => {
+      forget(id);
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    },
+    [forget]
+  );
 
   const start = useCallback(
     (id: number, durationMs: number) => {
+      paused.current.delete(id);
       const previous = timers.current.get(id);
       if (previous !== undefined) window.clearTimeout(previous);
       timers.current.set(
@@ -55,24 +71,26 @@ export const ToastHost: FC = () => {
     const timer = timers.current.get(id);
     if (timer !== undefined) window.clearTimeout(timer);
     timers.current.delete(id);
+    paused.current.add(id);
   }, []);
 
   useEffect(() => {
     const handler = (event: Event) => {
       const detail = (event as CustomEvent<ToastDetail>).detail;
       if (!detail || !detail.message) return;
-      const id = Date.now() + Math.random();
-      setToasts((prev) => [
-        ...prev,
-        {
-          id,
-          key: detail.id,
-          message: detail.message,
-          durationMs: detail.durationMs,
-          action: detail.action,
-        },
-      ]);
-      start(id, detail.durationMs);
+      const id = (detail.id && keyed.current.get(detail.id)) || Date.now() + Math.random();
+      if (detail.id) keyed.current.set(detail.id, id);
+      const next: ActiveToast = {
+        id,
+        key: detail.id,
+        message: detail.message,
+        durationMs: detail.durationMs,
+        action: detail.action,
+      };
+      setToasts((prev) =>
+        prev.some((t) => t.id === id) ? prev.map((t) => (t.id === id ? next : t)) : [...prev, next]
+      );
+      if (!paused.current.has(id)) start(id, detail.durationMs);
     };
     window.addEventListener(TOAST_EVENT_NAME, handler);
     return () => window.removeEventListener(TOAST_EVENT_NAME, handler);
@@ -82,19 +100,13 @@ export const ToastHost: FC = () => {
     const handler = (event: Event) => {
       const key = (event as CustomEvent<{ id?: string }>).detail?.id;
       if (!key) return;
-      setToasts((prev) => {
-        for (const t of prev) {
-          if (t.key !== key) continue;
-          const timer = timers.current.get(t.id);
-          if (timer !== undefined) window.clearTimeout(timer);
-          timers.current.delete(t.id);
-        }
-        return prev.filter((t) => t.key !== key);
-      });
+      const id = keyed.current.get(key);
+      if (id !== undefined) forget(id);
+      setToasts((prev) => prev.filter((t) => t.key !== key));
     };
     window.addEventListener(TOAST_DISMISS_EVENT_NAME, handler);
     return () => window.removeEventListener(TOAST_DISMISS_EVENT_NAME, handler);
-  }, []);
+  }, [forget]);
 
   useEffect(() => {
     const active = timers.current;

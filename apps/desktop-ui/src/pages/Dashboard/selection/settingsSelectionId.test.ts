@@ -6,6 +6,10 @@ describe('settingsSelectionId', () => {
     expect(settingsSelectionId({ kind: 'agent-instructions' })).toBe('agent-instructions');
   });
 
+  it('maps the Updates row to its pane', () => {
+    expect(settingsSelectionId({ kind: 'updates' })).toBe('updates');
+  });
+
   it('distinguishes the Data rows', () => {
     expect(settingsSelectionId({ kind: 'embeddings', tab: 'embeddings' })).toBe('embeddings');
     expect(settingsSelectionId({ kind: 'embeddings', tab: 'backups' })).toBe('backups');

@@ -61,6 +61,20 @@ export const buildProfileSchema = z
         message: 'disabled updates require the disabled channel',
       });
     }
+    if (profile.updatesEnabled && profile.updateChannel === 'disabled') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'enabled updates require an update channel',
+      });
+    }
+    // Only the released app updates itself: a preview build installing a
+    // production release would replace itself with a different app.
+    if (!production && profile.updatesEnabled) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'only desktop production may update itself',
+      });
+    }
   });
 
 export type BuildProfile = z.infer<typeof buildProfileSchema>;

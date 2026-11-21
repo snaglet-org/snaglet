@@ -21,7 +21,7 @@ Snaglet keeps your workspace on your computer, but your agents talk to AI models
 - Your messages, and whatever an agent reads for its turn, go to the model provider that agent uses. Local providers keep them on your Mac.
 - Web searches, web pages and the browser, when agents use them.
 - MCP servers you add, which may talk to outside services.
-- Model downloads (the embedding model, and voices when you ask) and a daily check for a newer version of Snaglet.
+- Model downloads (the embedding model, and voices when you ask), a daily check for a newer version of Snaglet, and the update itself when you install one.
 
 ## Good things to keep in Snaglet
 
@@ -122,7 +122,7 @@ Snaglet is open source. Bug reports, ideas and code are all welcome.
 
 Open an issue on [the issue tracker](https://github.com/snaglet-org/snaglet/issues). It helps to include:
 
-- your macOS version and your Snaglet version
+- your macOS version and your Snaglet version (**Settings → Updates** shows it)
 - the steps that cause the problem
 - what you expected, and what happened instead
 - the relevant lines of \`logs/server.log\` in your Snaglet home (\`~/.snaglet\` for the app)

@@ -33,6 +33,7 @@ const KIND_TO_ICON_CLASS: Record<SelectionKind, string> = {
   'agent-instructions': styles.iconAgent, // settings-adjacent — reuse the agent tint
   storage: styles.iconAgent, // settings-adjacent — reuse the agent tint
   browser: styles.iconAgent,
+  updates: styles.iconAgent, // settings-adjacent — reuse the agent tint
   'mcp-client-connection': styles.iconAgent,
   'mcp-server-connection': styles.iconAgent,
   embeddings: styles.iconAgent, // settings-adjacent — reuse the agent tint

@@ -25,6 +25,7 @@ jest.mock('@server/services/NotificationService', () => ({
 }));
 
 import { SNAGLET_REPOSITORY } from '@snaglet/shared/constants';
+import { appUpdateOfferVersion } from '@snaglet/shared/constants/release';
 import { logger } from '@server/config/logger';
 import { compareVersions, updateCheckService } from '@server/services/UpdateCheckService';
 
@@ -74,6 +75,9 @@ describe('packaged release checks', () => {
       expect(status.currentVersion).toBe('2.3.4');
       expect(status.updateAvailable).toBe(newer);
       expect(mockNotify).toHaveBeenCalledTimes(newer ? 1 : 0);
+      // The UI offers an install only from a notification it recognizes as the offer.
+      if (newer) expect(appUpdateOfferVersion(mockNotify.mock.calls[0][0])).toBe(version);
+      expect(status.lastError).toBeNull();
     }
   );
 
@@ -100,6 +104,32 @@ describe('packaged release checks', () => {
     jest.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('', { status: 500 }));
     const result = await updateCheckService.checkNow();
     expect(result.lastCheckedAt).not.toBeNull();
+    expect(result.lastError).toBe('GitHub answered with status 500.');
+  });
+
+  it('says why a check failed until one succeeds', async () => {
+    jest.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new TypeError('fetch failed'));
+    expect((await updateCheckService.checkNow()).lastError).toBe('Snaglet couldn’t reach GitHub.');
+
+    jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('', { status: 429 }));
+    expect((await updateCheckService.checkNow()).lastError).toMatch(/limiting requests/);
+
+    jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('', { status: 404 }));
+    expect((await updateCheckService.checkNow()).lastError).toBeNull();
+  });
+
+  it('asks GitHub at most once a minute when a person checks', async () => {
+    let now = 1_900_000_000_000;
+    jest.spyOn(Date, 'now').mockImplementation(() => now);
+    const fetchRelease = jest
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async () => new Response('', { status: 404 }));
+    await updateCheckService.checkFromUser();
+    await updateCheckService.checkFromUser();
+    expect(fetchRelease).toHaveBeenCalledTimes(1);
+    now += 60_000;
+    await updateCheckService.checkFromUser();
+    expect(fetchRelease).toHaveBeenCalledTimes(2);
   });
 
   it('sends the release request without a stored credential', async () => {

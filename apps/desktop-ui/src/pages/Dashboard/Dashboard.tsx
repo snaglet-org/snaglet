@@ -122,6 +122,7 @@ const DashboardContent: FC = () => {
     openAgentInstructions,
     openStorage,
     openBrowser,
+    openUpdates,
     openGetStarted,
     openMcpClientConnection,
     openMcpServerConnection,
@@ -637,6 +638,7 @@ const DashboardContent: FC = () => {
                     onAgentInstructionsClick={openAgentInstructions}
                     onStorageClick={openStorage}
                     onBrowserClick={openBrowser}
+                    onUpdatesClick={openUpdates}
                     onGetStartedClick={openGetStarted}
                     onDataSearchClick={openDataSearch}
                     activeSelectionId={activeSettingsSelectionId}

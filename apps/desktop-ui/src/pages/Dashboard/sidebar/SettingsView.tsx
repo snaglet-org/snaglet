@@ -25,6 +25,8 @@ interface SettingsViewProps {
   onStorageClick: () => void;
   /** Open the browser profiles pane. */
   onBrowserClick?: () => void;
+  /** Open the version and updates pane. */
+  onUpdatesClick?: () => void;
   /** Open the Get started pane (connect a provider, choose models, meet Patty). */
   onGetStartedClick?: () => void;
   /** Open a Data or feature-gated Dev sub-view in the active pane. */
@@ -55,7 +57,8 @@ interface SettingsLeaf {
  * SettingsView — settings surfaces in the shared SidebarTree frame, rendered
  * as a real collapsible tree:
  *
- *   General/         (Get started, Home or Profile and Agents, Command line, Theme, Browser)
+ *   General/         (Get started, Home or Profile and Agents, Command line, Theme, Browser,
+ *                     Updates)
  *   Data/            (Embeddings, Backups, Local storage)
  *
  * Every leaf row opens its own detail view in the active pane (click) and is
@@ -70,6 +73,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
   onAgentInstructionsClick,
   onStorageClick,
   onBrowserClick,
+  onUpdatesClick,
   onGetStartedClick,
   onDataSearchClick,
   activeSelectionId = null,
@@ -155,6 +159,18 @@ export const SettingsView: FC<SettingsViewProps> = ({
             icon: '◎',
             paneSelection: { kind: 'browser' } as DetailSelection,
             onClick: onBrowserClick,
+          },
+        ]
+      : []),
+    ...(onUpdatesClick
+      ? [
+          {
+            id: 'updates',
+            label: LABELS.updates,
+            description: 'Your version and new releases',
+            icon: '⇡',
+            paneSelection: { kind: 'updates' } as DetailSelection,
+            onClick: onUpdatesClick,
           },
         ]
       : []),
