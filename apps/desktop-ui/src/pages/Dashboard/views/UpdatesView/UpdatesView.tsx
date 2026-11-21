@@ -105,6 +105,15 @@ export const UpdatesView: FC = () => {
         ? 'You’re up to date'
         : 'Not checked yet';
 
+  // "Current" is a claim, so make it only after a check has succeeded.
+  const pill = stale
+    ? 'Check failed'
+    : latest
+      ? 'Update available'
+      : status.lastCheckedAt
+        ? 'Current'
+        : 'Not checked';
+
   return (
     <div className={styles.shell}>
       {header}
@@ -127,8 +136,8 @@ export const UpdatesView: FC = () => {
                 Snaglet {status.currentVersion}
               </h2>
             </div>
-            <span className={`${styles.status} ${latest || stale ? '' : styles.statusReady}`}>
-              {stale ? 'Check failed' : latest ? 'Update available' : 'Current'}
+            <span className={`${styles.status} ${pill === 'Current' ? styles.statusReady : ''}`}>
+              {pill}
             </span>
           </div>
 

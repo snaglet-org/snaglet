@@ -70,6 +70,8 @@ describe('UpdatesView', () => {
     });
     render(<UpdatesView />);
     expect(await screen.findByText('Not checked yet')).toBeInTheDocument();
+    expect(screen.queryByText('Current')).not.toBeInTheDocument();
+    expect(screen.getByText('Not checked')).toBeInTheDocument();
     expect(screen.queryByText(/^Last checked /)).not.toBeInTheDocument();
   });
 
