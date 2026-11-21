@@ -12,6 +12,7 @@
 
 import { getErrorMessage } from '@snaglet/shared/utils';
 import { SNAGLET_REPOSITORY, appUpdateOfferTitle } from '@snaglet/shared/constants';
+import { appUpdateOfferVersion } from '@snaglet/shared/constants/release';
 import { logger } from '@server/config/logger';
 import { notificationService } from '@server/services/NotificationService';
 import { Settings } from '@snaglet/db/tables/settings';
@@ -114,6 +115,29 @@ class UpdateCheckServiceClass {
       void this.tick();
     }, TICK_MS);
     logger.info(`${LOG_PREFIX} started (repo ${REPO}, daily cadence, hourly tick)`);
+    void this.dismissSettledOffers();
+  }
+
+  /**
+   * Dismiss "update available" notices for a release this app already runs,
+   * which is what is left behind after an update installs.
+   */
+  async dismissSettledOffers(): Promise<number> {
+    const current = appVersion();
+    let dismissed = 0;
+    try {
+      for (const notice of await notificationService.listRecent()) {
+        const offered = appUpdateOfferVersion(notice);
+        if (offered === null || compareVersions(offered, current) > 0) continue;
+        await notificationService.dismiss(notice.id);
+        dismissed += 1;
+      }
+    } catch (error: unknown) {
+      logger.warn(
+        `${LOG_PREFIX} could not clear settled update notices: ${getErrorMessage(error)}`
+      );
+    }
+    return dismissed;
   }
 
   stop(): void {

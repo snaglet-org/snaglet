@@ -20,8 +20,14 @@ jest.mock('@snaglet/db/tables/settings', () => ({
 jest.mock('@server/services/ProviderCredentialService/credentials', () => ({
   getSecretByProviderId: jest.fn(async () => 'stored-token'),
 }));
+const mockListRecent = jest.fn();
+const mockDismiss = jest.fn();
 jest.mock('@server/services/NotificationService', () => ({
-  notificationService: { create: (...args: unknown[]) => mockNotify(...args) },
+  notificationService: {
+    create: (...args: unknown[]) => mockNotify(...args),
+    listRecent: (...args: unknown[]) => mockListRecent(...args),
+    dismiss: (...args: unknown[]) => mockDismiss(...args),
+  },
 }));
 
 import { SNAGLET_REPOSITORY } from '@snaglet/shared/constants';
@@ -181,5 +187,35 @@ describe('compareVersions', () => {
     // real release", not any particular ordering among junk.
     expect(compareVersions('not-a-version', '0.0.0')).toBeLessThan(0);
     expect(compareVersions('1.x.3', '1.0.3')).toBe(0);
+  });
+});
+
+describe('update notices after an update', () => {
+  const savedVersion = process.env.SNAGLET_APP_VERSION;
+  beforeEach(() => {
+    process.env.SNAGLET_APP_VERSION = '1.0.1';
+    mockDismiss.mockReset();
+  });
+  afterEach(() => {
+    if (savedVersion === undefined) delete process.env.SNAGLET_APP_VERSION;
+    else process.env.SNAGLET_APP_VERSION = savedVersion;
+  });
+
+  it('dismisses offers for the running version or older, and nothing else', async () => {
+    mockListRecent.mockResolvedValue([
+      { id: 'old', type: 'app_update', title: 'Snaglet v1.0.0 is available' },
+      { id: 'same', type: 'app_update', title: 'Snaglet v1.0.1 is available' },
+      { id: 'newer', type: 'app_update', title: 'Snaglet v1.0.2 is available' },
+      { id: 'folder', type: 'app_update', title: 'Notes folder moved' },
+      { id: 'other', type: 'agent_reply', title: 'Snaglet v1.0.0 is available' },
+    ]);
+
+    expect(await updateCheckService.dismissSettledOffers()).toBe(2);
+    expect(mockDismiss.mock.calls.map(([id]) => id)).toEqual(['old', 'same']);
+  });
+
+  it('does not throw when the notices cannot be read', async () => {
+    mockListRecent.mockRejectedValue(new Error('database is down'));
+    await expect(updateCheckService.dismissSettledOffers()).resolves.toBe(0);
   });
 });

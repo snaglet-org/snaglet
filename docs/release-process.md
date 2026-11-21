@@ -101,6 +101,10 @@ The root `package.json` and `apps/desktop/src-tauri/tauri.conf.json` carry the
 version; keep them equal. Tags look like `v1.0.0`, and the ship script refuses
 a tag that does not match the built app.
 
+If you also change `version` in `apps/desktop/src-tauri/Cargo.toml`, change the `desktop`
+entry in `apps/desktop/src-tauri/Cargo.lock` to match. The build runs with `--locked` and stops
+when the two differ.
+
 `pnpm build:desktop` makes an unsigned candidate (`releaseEligible: false` in
 its manifest): ad-hoc signed, not Developer ID signed or notarized. A copy you
 build and open on your own Mac opens normally. A copy downloaded from the
