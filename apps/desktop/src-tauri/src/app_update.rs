@@ -155,7 +155,7 @@ pub fn installing() -> bool {
 }
 
 /// Block (up to `limit`) until the swap is finished. For quit paths that cannot
-/// be cancelled, such as Quit from the app menu.
+/// be canceled, such as Quit from the app menu.
 pub fn wait_while_installing(limit: Duration) {
     let deadline = Instant::now() + limit;
     while installing() && Instant::now() < deadline {
