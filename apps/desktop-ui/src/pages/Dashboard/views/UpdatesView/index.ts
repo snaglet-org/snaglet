@@ -1,0 +1,1 @@
+export { UpdatesView } from './UpdatesView';

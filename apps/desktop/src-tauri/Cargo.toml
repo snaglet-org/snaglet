@@ -13,10 +13,13 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 tauri-plugin-fs = "2"
 tauri-plugin-single-instance = "2"
-# In-place app updates. Dormant until releases ship updater artifacts
-# (createUpdaterArtifacts in tauri.production.conf.json) and the updater
-# pubkey in tauri.conf.json is set.
+# In-place app updates (src/app_update.rs). Releases carry latest.json and a
+# signed archive that scripts/ship-desktop.mjs makes from the notarized app.
 tauri-plugin-updater = "2"
+# Read the update signature's signed file name (same decoding as the plugin)
+# and the new bundle's CFBundleExecutable before keeping an installed update.
+base64 = "0.22"
+plist = "1"
 uuid = { version = "1", features = ["v4"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

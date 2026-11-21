@@ -31,6 +31,42 @@ describe('ToastHost', () => {
     expect(toastText('Task ID copied')).toBeInTheDocument();
   });
 
+  it('replaces a shown toast that has the same id instead of stacking another', () => {
+    render(<ToastHost />);
+    act(() => showToast('Downloading… 10%', { id: 'progress', durationMs: 1000 }));
+    act(() => vi.advanceTimersByTime(900));
+    act(() => showToast('Downloading… 20%', { id: 'progress', durationMs: 1000 }));
+    expect(toastText('Downloading… 10%')).not.toBeInTheDocument();
+    expect(screen.getAllByText(/Downloading…/)).toHaveLength(1);
+    // The replacement restarts the timer with its own duration.
+    act(() => vi.advanceTimersByTime(900));
+    expect(toastText('Downloading… 20%')).toBeInTheDocument();
+
+    const run = vi.fn();
+    act(() =>
+      showToast('Failed', { id: 'progress', durationMs: 1000, action: { label: 'Retry', run } })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(run).toHaveBeenCalledTimes(1);
+    // Once closed, the same id opens a fresh toast.
+    act(() => showToast('Again', { id: 'progress' }));
+    expect(toastText('Again')).toBeInTheDocument();
+    act(() => dismissToast('progress'));
+    expect(toastText('Again')).not.toBeInTheDocument();
+  });
+
+  it('keeps a hovered toast up when its content is replaced', () => {
+    render(<ToastHost />);
+    act(() => showToast('Step 1', { id: 'steps', durationMs: 1000 }));
+    fireEvent.pointerEnter(toastText('Step 1')!.parentElement!);
+    act(() => showToast('Step 2', { id: 'steps', durationMs: 1000 }));
+    act(() => vi.advanceTimersByTime(5000));
+    expect(toastText('Step 2')).toBeInTheDocument();
+    fireEvent.pointerLeave(toastText('Step 2')!.parentElement!);
+    act(() => vi.advanceTimersByTime(1000));
+    expect(toastText('Step 2')).not.toBeInTheDocument();
+  });
+
   it('defaults an action toast to the longer duration', () => {
     render(<ToastHost />);
     act(() => showToast('Moved Pay rent', { action: { label: 'Undo', run: vi.fn() } }));

@@ -29,7 +29,7 @@ pub enum BadLocation {
 }
 
 /// Classify a bundle path. Pure so it can be unit-tested without a real launch.
-fn classify(exe: &Path, read_only: bool) -> Option<BadLocation> {
+pub(crate) fn classify(exe: &Path, read_only: bool) -> Option<BadLocation> {
     if exe
         .components()
         .any(|c| c.as_os_str() == "AppTranslocation")
@@ -46,7 +46,7 @@ fn classify(exe: &Path, read_only: bool) -> Option<BadLocation> {
 /// Returns false on any error: a guard that cannot prove a problem must not
 /// block launch.
 #[cfg(target_os = "macos")]
-fn is_read_only_volume(path: &Path) -> bool {
+pub(crate) fn is_read_only_volume(path: &Path) -> bool {
     use std::ffi::CString;
     use std::os::unix::ffi::OsStrExt;
 
@@ -65,7 +65,7 @@ fn is_read_only_volume(path: &Path) -> bool {
 }
 
 #[cfg(not(target_os = "macos"))]
-fn is_read_only_volume(_path: &Path) -> bool {
+pub(crate) fn is_read_only_volume(_path: &Path) -> bool {
     false
 }
 

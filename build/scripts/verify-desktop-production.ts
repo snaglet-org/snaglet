@@ -259,8 +259,8 @@ if (
 if (manifest.minimumMacOSVersion !== desktopProduction.minimumMacOSVersion)
   throw new Error('Production minimum macOS version is invalid');
 if (
-  manifest.updatesEnabled ||
-  desktopProduction.updateChannel !== 'disabled' ||
+  !manifest.updatesEnabled ||
+  desktopProduction.updateChannel !== 'stable' ||
   !manifest.signingRequired ||
   manifest.sourceMaps !== 'none'
 )
@@ -279,6 +279,28 @@ if (
   statSync(executable).size !== manifest.executableSize
 )
   throw new Error('Production executable does not match its manifest');
+// The shell embeds its Tauri config as string literals. Without the updater
+// key and endpoint, installs of this build could never take the next update.
+const updaterConfig = (
+  JSON.parse(readFileSync(path.resolve('apps/desktop/src-tauri/tauri.conf.json'), 'utf8')) as {
+    plugins: { updater: { endpoints: string[]; pubkey: string } };
+  }
+).plugins.updater;
+const releaseRepository = (
+  JSON.parse(readFileSync(path.resolve('packages/shared/constants/release.json'), 'utf8')) as {
+    repository: string;
+  }
+).repository;
+const shellBytes = readFileSync(executable);
+if (
+  !updaterConfig.pubkey ||
+  updaterConfig.endpoints.length !== 1 ||
+  updaterConfig.endpoints[0] !==
+    `https://github.com/${releaseRepository}/releases/latest/download/latest.json` ||
+  !shellBytes.includes(updaterConfig.pubkey) ||
+  !shellBytes.includes(updaterConfig.endpoints[0])
+)
+  throw new Error('Production shell does not carry the updater public key and release endpoint');
 let totalBytes = 0;
 let machOFiles = 0;
 for (const file of manifest.files) {

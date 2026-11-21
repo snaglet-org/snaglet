@@ -779,6 +779,7 @@ dependencies = [
 name = "desktop"
 version = "1.0.0"
 dependencies = [
+ "base64 0.22.1",
  "block2",
  "dunce",
  "libc",
@@ -786,6 +787,7 @@ dependencies = [
  "objc2-foundation",
  "objc2-user-notifications",
  "open",
+ "plist",
  "rfd",
  "serde",
  "serde_json",

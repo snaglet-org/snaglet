@@ -836,6 +836,16 @@ pub fn launch(
             "SNAGLET_APP_VERSION",
             app.package_info().version.to_string(),
         )
+        // Only a build that can install updates posts "update available"
+        // notices; preview builds still check, without a notice.
+        .env(
+            "SNAGLET_UPDATE_NOTICES",
+            if crate::self_update_refusal(app).is_none() {
+                "1"
+            } else {
+                "0"
+            },
+        )
         // The standalone server keeps automatic local inference opt-in so a
         // developer or test process never downloads models unexpectedly. The
         // packaged desktop is the product opt-in: first launch must seed the

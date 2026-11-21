@@ -4,6 +4,12 @@
   "build": {
     "beforeBuildCommand": ""
   },
+  "plugins": {
+    "updater": {
+      "endpoints": [],
+      "pubkey": ""
+    }
+  },
   "bundle": {
     "active": true,
     "createUpdaterArtifacts": false

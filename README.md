@@ -57,7 +57,8 @@ One page per part of Snaglet. Each covers how to use it and how it is built.
 - 16 GB of memory is recommended if you link large folders. See [Status](docs/status.md).
 - The app is signed and notarized by Apple.
 - Your data lives in `~/.snaglet`.
-- Snaglet tells you when a newer release is out. Download it and replace the app; your data stays.
+- Snaglet tells you when a newer release is out. Click the notification, or open
+  **Settings → Updates**, to install it and restart; your data stays.
 
 ### Run from source
 

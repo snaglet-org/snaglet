@@ -19,12 +19,14 @@ interface UpdateStatus {
   lastCheckedAt: string | null;
   latest: LatestRelease | null;
   updateAvailable: boolean;
+  /** Why the most recent check failed, or null. */
+  lastError: string | null;
 }
 
 export const appUpdateApi = {
   /** Cached snapshot — no network on the server side. */
   status: () => fetchJson<UpdateStatus>(getApiUrl('/server/update-status')),
 
-  /** Force a real GitHub check now. */
+  /** Check GitHub now (the server asks at most once a minute). */
   checkNow: () => fetchJson<UpdateStatus>(getApiUrl('/server/update-check'), { method: 'POST' }),
 };

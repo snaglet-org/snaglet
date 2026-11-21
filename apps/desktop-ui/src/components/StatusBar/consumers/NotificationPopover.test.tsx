@@ -13,12 +13,14 @@ vi.mock('@desktop/utils/api', async (importOriginal) => {
     },
   };
 });
+vi.mock('@desktop/utils/appUpdate', () => ({ offerAppUpdate: vi.fn() }));
 
 import {
   DashboardNavigationProvider,
   type DashboardNavigationValue,
 } from '@desktop/pages/Dashboard/selection/DashboardNavigationContext';
 import { notificationsApi } from '@desktop/utils/api';
+import { offerAppUpdate } from '@desktop/utils/appUpdate';
 import { NotificationPopover } from './NotificationPopover';
 
 const THREAD_ID = 'thread-1111111111111-aaaaaaaaa';
@@ -77,5 +79,31 @@ describe('NotificationPopover', () => {
     expect(notificationsApi.dismiss).toHaveBeenCalledWith(notice.id);
     expect(nav.openThread).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('offers an install only from the update offer, not from other app_update notices', () => {
+    const offer: NotificationRecord = {
+      ...notice,
+      id: 'notification-2222222222222-bbbbbbbbb',
+      type: 'app_update',
+      title: 'Snaglet v1.0.1 is available',
+      body: 'You are on 1.0.0. Click to update.',
+      threadId: null,
+    };
+    const folder: NotificationRecord = {
+      ...offer,
+      id: 'notification-3333333333333-ccccccccc',
+      title: 'Notes folder moved',
+      body: '/old → /new',
+    };
+    const onClose = vi.fn();
+    render(<NotificationPopover notifications={[folder, offer]} onClose={onClose} />);
+
+    fireEvent.click(screen.getByText(folder.title));
+    expect(offerAppUpdate).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText(offer.title));
+    expect(offerAppUpdate).toHaveBeenCalledTimes(1);
+    expect(offerAppUpdate).toHaveBeenCalledWith('v1.0.1');
+    expect(onClose).toHaveBeenCalledTimes(2);
   });
 });

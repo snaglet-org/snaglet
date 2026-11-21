@@ -20,19 +20,28 @@ jest.mock('@snaglet/db/tables/settings', () => ({
 jest.mock('@server/services/ProviderCredentialService/credentials', () => ({
   getSecretByProviderId: jest.fn(async () => 'stored-token'),
 }));
+const mockListVisibleOfType = jest.fn();
+const mockDismiss = jest.fn();
 jest.mock('@server/services/NotificationService', () => ({
-  notificationService: { create: (...args: unknown[]) => mockNotify(...args) },
+  notificationService: {
+    create: (...args: unknown[]) => mockNotify(...args),
+    listVisibleOfType: (...args: unknown[]) => mockListVisibleOfType(...args),
+    dismiss: (...args: unknown[]) => mockDismiss(...args),
+  },
 }));
 
 import { SNAGLET_REPOSITORY } from '@snaglet/shared/constants';
+import { appUpdateOfferVersion, compareVersions } from '@snaglet/shared/constants/release';
 import { logger } from '@server/config/logger';
-import { compareVersions, updateCheckService } from '@server/services/UpdateCheckService';
+import { updateCheckService } from '@server/services/UpdateCheckService';
 
 describe('packaged release checks', () => {
   const savedVersion = process.env.SNAGLET_APP_VERSION;
+  const savedNotices = process.env.SNAGLET_UPDATE_NOTICES;
   let value: unknown;
   beforeEach(() => {
     process.env.SNAGLET_APP_VERSION = '2.3.4';
+    process.env.SNAGLET_UPDATE_NOTICES = '1';
     value = null;
     mockNotify.mockReset();
     mockWriteState.mockClear();
@@ -45,6 +54,8 @@ describe('packaged release checks', () => {
     jest.restoreAllMocks();
     if (savedVersion === undefined) delete process.env.SNAGLET_APP_VERSION;
     else process.env.SNAGLET_APP_VERSION = savedVersion;
+    if (savedNotices === undefined) delete process.env.SNAGLET_UPDATE_NOTICES;
+    else process.env.SNAGLET_UPDATE_NOTICES = savedNotices;
   });
 
   it.each([
@@ -74,6 +85,9 @@ describe('packaged release checks', () => {
       expect(status.currentVersion).toBe('2.3.4');
       expect(status.updateAvailable).toBe(newer);
       expect(mockNotify).toHaveBeenCalledTimes(newer ? 1 : 0);
+      // The UI offers an install only from a notification it recognizes as the offer.
+      if (newer) expect(appUpdateOfferVersion(mockNotify.mock.calls[0][0])).toBe(version);
+      expect(status.lastError).toBeNull();
     }
   );
 
@@ -96,10 +110,57 @@ describe('packaged release checks', () => {
     }
   );
 
-  it('records the check time when GitHub answers with another error', async () => {
+  it("does not count a failed check as the day's check", async () => {
+    value = { lastCheckedAt: '2026-01-01T00:00:00.000Z', lastNotifiedVersion: null, latest: null };
     jest.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('', { status: 500 }));
     const result = await updateCheckService.checkNow();
-    expect(result.lastCheckedAt).not.toBeNull();
+    // Unchanged, so the next hourly tick retries instead of waiting a day.
+    expect(result.lastCheckedAt).toBe('2026-01-01T00:00:00.000Z');
+    expect(mockWriteState).not.toHaveBeenCalled();
+    expect(result.lastError).toBe('GitHub answered with status 500.');
+  });
+
+  it('posts no notice from a build that cannot install updates, but still reports it', async () => {
+    process.env.SNAGLET_UPDATE_NOTICES = '0';
+    jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ tag_name: 'v2.3.5', html_url: 'https://example.com/v2.3.5' }),
+          { status: 200 }
+        )
+      );
+    const status = await updateCheckService.checkNow();
+    expect(status.updateAvailable).toBe(true);
+    expect(mockNotify).not.toHaveBeenCalled();
+    delete process.env.SNAGLET_UPDATE_NOTICES;
+    await updateCheckService.checkNow();
+    expect(mockNotify).not.toHaveBeenCalled();
+  });
+
+  it('says why a check failed until one succeeds', async () => {
+    jest.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new TypeError('fetch failed'));
+    expect((await updateCheckService.checkNow()).lastError).toBe('Snaglet couldn’t reach GitHub.');
+
+    jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('', { status: 429 }));
+    expect((await updateCheckService.checkNow()).lastError).toMatch(/limiting requests/);
+
+    jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('', { status: 404 }));
+    expect((await updateCheckService.checkNow()).lastError).toBeNull();
+  });
+
+  it('asks GitHub at most once a minute when a person checks', async () => {
+    let now = 1_900_000_000_000;
+    jest.spyOn(Date, 'now').mockImplementation(() => now);
+    const fetchRelease = jest
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async () => new Response('', { status: 404 }));
+    await updateCheckService.checkFromUser();
+    await updateCheckService.checkFromUser();
+    expect(fetchRelease).toHaveBeenCalledTimes(1);
+    now += 60_000;
+    await updateCheckService.checkFromUser();
+    expect(fetchRelease).toHaveBeenCalledTimes(2);
   });
 
   it('sends the release request without a stored credential', async () => {
@@ -151,5 +212,37 @@ describe('compareVersions', () => {
     // real release", not any particular ordering among junk.
     expect(compareVersions('not-a-version', '0.0.0')).toBeLessThan(0);
     expect(compareVersions('1.x.3', '1.0.3')).toBe(0);
+  });
+});
+
+describe('update notices after an update', () => {
+  const savedVersion = process.env.SNAGLET_APP_VERSION;
+  beforeEach(() => {
+    process.env.SNAGLET_APP_VERSION = '1.0.1';
+    mockDismiss.mockReset();
+  });
+  afterEach(() => {
+    if (savedVersion === undefined) delete process.env.SNAGLET_APP_VERSION;
+    else process.env.SNAGLET_APP_VERSION = savedVersion;
+  });
+
+  it('dismisses offers for the running version or older, and nothing else', async () => {
+    // Every still-showing app_update notice, not only the most recent page.
+    mockListVisibleOfType.mockResolvedValue([
+      { id: 'old', type: 'app_update', title: 'Snaglet v1.0.0 is available' },
+      { id: 'same', type: 'app_update', title: 'Snaglet v1.0.1 is available' },
+      { id: 'newer', type: 'app_update', title: 'Snaglet v1.0.2 is available' },
+      { id: 'folder', type: 'app_update', title: 'Notes folder moved' },
+      { id: 'other', type: 'agent_reply', title: 'Snaglet v1.0.0 is available' },
+    ]);
+
+    expect(await updateCheckService.dismissSettledOffers()).toBe(2);
+    expect(mockListVisibleOfType).toHaveBeenCalledWith('app_update');
+    expect(mockDismiss.mock.calls.map(([id]) => id)).toEqual(['old', 'same']);
+  });
+
+  it('does not throw when the notices cannot be read', async () => {
+    mockListVisibleOfType.mockRejectedValue(new Error('database is down'));
+    await expect(updateCheckService.dismissSettledOffers()).resolves.toBe(0);
   });
 });

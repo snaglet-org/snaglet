@@ -62,11 +62,12 @@ router.get('/update-status', async (_req: Request, res: Response) => {
 });
 
 /**
- * POST /api/server/update-check — force a check now (bypasses the daily
- * cadence, keeps per-version notification dedupe). Returns fresh status.
+ * POST /api/server/update-check — check now (Settings → Updates). Bypasses
+ * the daily cadence, keeps per-version notification dedupe, and asks GitHub at
+ * most once a minute. Returns the status.
  */
 router.post('/update-check', async (_req: Request, res: Response) => {
-  const status = await updateCheckService.checkNow();
+  const status = await updateCheckService.checkFromUser();
   res.json(status);
 });
 

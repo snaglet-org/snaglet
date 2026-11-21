@@ -188,6 +188,8 @@ export interface UseDashboardLayoutResult {
   /** Open the storage and voice models pane in the active pane. */
   openStorage: () => void;
   openBrowser: () => void;
+  /** Open the version and updates pane in the active pane. */
+  openUpdates: () => void;
   /** Open the Get started pane (connect a provider, meet Patty) in the active pane. */
   openGetStarted: () => void;
   /** Open an external MCP client connection in the active pane. */
@@ -701,6 +703,10 @@ export function useDashboardLayout(): UseDashboardLayoutResult {
     () => setSelectionInActivePane({ kind: 'storage' }),
     [setSelectionInActivePane]
   );
+  const openUpdates = useCallback(
+    () => setSelectionInActivePane({ kind: 'updates' }),
+    [setSelectionInActivePane]
+  );
   const openGetStarted = useCallback(
     () => setSelectionInActivePane({ kind: 'get-started' }),
     [setSelectionInActivePane]
@@ -894,6 +900,7 @@ export function useDashboardLayout(): UseDashboardLayoutResult {
     openAgentInstructions,
     openStorage,
     openBrowser,
+    openUpdates,
     openGetStarted,
     openMcpClientConnection,
     openMcpServerConnection,

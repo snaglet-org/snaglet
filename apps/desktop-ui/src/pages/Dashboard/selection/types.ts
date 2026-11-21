@@ -163,6 +163,8 @@ export type DetailSelection =
   | { kind: 'storage' }
   /** Browser profiles agents use (sign in once by hand). */
   | { kind: 'browser' }
+  /** The installed version and in-app updates. */
+  | { kind: 'updates' }
   | { kind: 'embeddings'; tab?: DataSearchTab }
   /**
    * A single tool, shown in ToolView (description, params, run, output).
@@ -338,6 +340,8 @@ export function settingsSelectionId(selection: DetailSelection): string | null {
       return 'storage';
     case 'browser':
       return 'browser';
+    case 'updates':
+      return 'updates';
     case 'embeddings':
       // Data's Embeddings/Backups rows share one routed surface,
       // distinguished by `tab`.
@@ -420,6 +424,7 @@ export function sidebarRevealTarget(
     case 'agent-instructions':
     case 'storage':
     case 'browser':
+    case 'updates':
     case 'embeddings':
       return { view: 'settings', id: settingsSelectionId(selection) };
     default:

@@ -8,7 +8,7 @@ export {
   type PaletteEntryHit,
   type PaletteSearchMode,
 } from './paletteSearch';
-export { SNAGLET_REPOSITORY } from './release';
+export { SNAGLET_REPOSITORY, appUpdateOfferTitle } from './release';
 export { VECTOR_SEARCH_CANDIDATE_POOL } from './vectorSearch';
 export { DEFAULT_CONVERSATION_OUTPUT_TOKENS } from './conversationBudget';
 export { AGENT_GLOBAL_INSTRUCTIONS_MAX_LENGTH } from './agentInstructions';

@@ -54,6 +54,28 @@ describe('SettingsView — Command line row', () => {
   });
 });
 
+describe('SettingsView — Updates row', () => {
+  it('opens the version and updates pane from the General group', () => {
+    const onUpdatesClick = vi.fn();
+    render(
+      <SettingsView
+        onProfileClick={vi.fn()}
+        onCliClick={vi.fn()}
+        onThemeClick={vi.fn()}
+        onAgentInstructionsClick={vi.fn()}
+        onStorageClick={vi.fn()}
+        onUpdatesClick={onUpdatesClick}
+        onDataSearchClick={vi.fn()}
+        activeSelectionId="updates"
+      />
+    );
+    const row = screen.getByText('Updates').closest('[role="treeitem"]')!;
+    expect(row).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(row);
+    expect(onUpdatesClick).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('SettingsView — Agents row', () => {
   it('lists Agents after Theme and opens the instructions pane while Home is off', () => {
     const onAgentInstructionsClick = vi.fn();
@@ -128,13 +150,14 @@ describe('SettingsView — names', () => {
         onAgentInstructionsClick={vi.fn()}
         onStorageClick={vi.fn()}
         onBrowserClick={vi.fn()}
+        onUpdatesClick={vi.fn()}
         onGetStartedClick={vi.fn()}
         onDataSearchClick={vi.fn()}
       />
     );
 
     const rows = screen.getAllByRole('treeitem');
-    expect(rows).toHaveLength(8);
+    expect(rows).toHaveLength(9);
     for (const row of rows) {
       let payload = '';
       fireEvent.dragStart(row, {

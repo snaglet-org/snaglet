@@ -224,6 +224,21 @@ const executable = path.join(artifacts, manifest.executable);
 if (hash(executable) !== manifest.executableSha256) {
   throw new Error('Packaged preview executable hash does not match its manifest');
 }
+// tauri.preview.conf.json blanks the updater, so the preview shell must not
+// embed the production key or endpoint it could install a release with.
+const productionUpdater = (
+  JSON.parse(readFileSync(path.resolve('apps/desktop/src-tauri/tauri.conf.json'), 'utf8')) as {
+    plugins: { updater: { endpoints: string[]; pubkey: string } };
+  }
+).plugins.updater;
+const previewShell = readFileSync(executable);
+if (
+  [productionUpdater.pubkey, ...productionUpdater.endpoints].some(
+    (value) => value && previewShell.includes(value)
+  )
+) {
+  throw new Error('Desktop preview shell embeds the production updater key or endpoint');
+}
 let machOFiles = 0;
 for (const file of manifest.files) {
   if (

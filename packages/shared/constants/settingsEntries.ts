@@ -11,6 +11,7 @@ export const SETTINGS_ENTRY_LABELS = {
   theme: 'Theme',
   'agent-instructions': 'Agents',
   browser: 'Browser',
+  updates: 'Updates',
   embeddings: 'Embeddings',
   backups: 'Backups',
   storage: 'Local storage',

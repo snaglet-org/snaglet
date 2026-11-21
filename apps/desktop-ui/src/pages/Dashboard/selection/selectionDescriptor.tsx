@@ -50,6 +50,7 @@ export type SelectionKind =
   | 'agent-instructions'
   | 'storage'
   | 'browser'
+  | 'updates'
   | 'mcp-client-connection'
   | 'mcp-server-connection'
   | 'embeddings'
@@ -338,6 +339,10 @@ function selectionDescriptor(
   }
   if (selection.kind === 'browser') {
     return { kind: 'browser', id: 'browser', title: 'Browser', icon: <span aria-hidden>◎</span> };
+  }
+  if (selection.kind === 'updates') {
+    // Matches the General-group row glyph in SettingsView.
+    return { kind: 'updates', id: 'updates', title: 'Updates', icon: <span aria-hidden>⇡</span> };
   }
   if (selection.kind === 'get-started') {
     return {

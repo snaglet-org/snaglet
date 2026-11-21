@@ -1,5 +1,6 @@
 import { type FC, useCallback } from 'react';
 import type { NotificationRecord } from '@snaglet/shared/types';
+import { appUpdateOfferVersion } from '@snaglet/shared/constants/release';
 import { useDashboardNavigation } from '@desktop/pages/Dashboard/selection/DashboardNavigationContext';
 import { notificationsApi } from '@desktop/utils/api';
 import {
@@ -9,7 +10,7 @@ import {
   dismissAllNotifications,
 } from '@desktop/utils/notificationState';
 import { cn } from '@desktop/utils/classNames';
-import { runAppUpdate } from '@desktop/utils/appUpdate';
+import { offerAppUpdate } from '@desktop/utils/appUpdate';
 import styles from './NotificationPopover.module.scss';
 
 /**
@@ -45,10 +46,12 @@ export const NotificationPopover: FC<{
         console.error('NotificationPopover: failed to mark notification read', err);
       });
 
-      // App updates: run the updater (in-place when available, release page
-      // otherwise) instead of thread navigation.
-      if (notif.type === 'app_update') {
-        void runAppUpdate();
+      // The update offer asks before installing (the release page in a
+      // browser). Other app_update notices, such as a moved project folder,
+      // offer nothing.
+      const offeredVersion = appUpdateOfferVersion(notif);
+      if (offeredVersion) {
+        void offerAppUpdate(offeredVersion);
         onClose();
         return;
       }
