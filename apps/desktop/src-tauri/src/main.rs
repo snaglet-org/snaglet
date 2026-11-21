@@ -298,6 +298,14 @@ async fn install_app_update(
         .await
         .map_err(|e| app_update::describe(&e))?;
     app_update::check_signed_version(&update.signature, &version)?;
+    // The fallback copy is made before anything stops; without one the update
+    // does not run at all.
+    let copy = app_update::SafetyCopy::take(&bundle).ok_or_else(|| {
+        UpdateError::failed(
+            "Snaglet couldn't make a copy of the current version to fall back on, so it did not \
+             install the update.",
+        )
+    })?;
 
     claim_lifecycle().map_err(UpdateError::busy)?;
     let _ = on_progress.send(UpdateProgress::Installing {
@@ -307,7 +315,7 @@ async fn install_app_update(
     let (relaunch, installed) = (app.clone(), bundle.clone());
     app_update::set_installing(true);
     tauri::async_runtime::spawn_blocking(move || {
-        install_update_blocking(&app, state, &update, &bytes, &bundle)
+        install_update_blocking(&app, state, &update, &bytes, &bundle, copy)
     })
     .await
     .unwrap_or_else(|e| {
@@ -333,13 +341,14 @@ fn install_update_blocking(
     update: &tauri_plugin_updater::Update,
     bytes: &[u8],
     bundle: &Path,
+    copy: app_update::SafetyCopy,
 ) -> Result<String, app_update::UpdateError> {
     let stopped =
         state.is_none_or(|state| sidecar::shutdown(state) && sidecar::postgres_is_stopped(state));
     let outcome = if stopped {
         app_update::install_guarded(
             bundle,
-            app_update::SafetyCopy::take(bundle),
+            copy,
             || update.install(bytes).map_err(|e| app_update::describe(&e)),
             |bundle| app_update::launch_problem(bundle, true),
         )
@@ -828,6 +837,18 @@ fn main() {
                 std::process::exit(1);
             }
 
+            // A quit or crash in the middle of an update can leave the previous
+            // version's copy beside the app; remove it once this app is known
+            // to launch.
+            std::thread::spawn(|| {
+                if let Some(bundle) = tauri::utils::platform::current_exe()
+                    .ok()
+                    .and_then(|exe| app_update::bundle_of(&exe))
+                {
+                    app_update::remove_leftover_copies(&bundle);
+                }
+            });
+
             // An unavailable saved home is resolved here, before any window,
             // with the same Retry / Locate / Use Default prompt as always. If
             // it is still unavailable, the boot thread reports it.
@@ -853,7 +874,7 @@ fn main() {
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(|_app, event| match event {
+        .run(|app, event| match event {
             // Closing the window or a programmatic exit while an update swaps
             // the app is refused; the install relaunches when it is done
             // (Tauri ignores this for that restart).
@@ -861,9 +882,16 @@ fn main() {
                 api.prevent_exit();
             }
             tauri::RunEvent::Exit => {
-                // Quit from the app menu cannot be refused, so let a running
-                // swap settle before the process ends.
-                app_update::wait_while_installing(std::time::Duration::from_secs(180));
+                // Quit from the app menu cannot be refused. Hide the windows
+                // (this runs on the main thread, so they hide at once) and let
+                // a running swap settle before the process ends.
+                if app_update::installing() {
+                    use tauri::Manager;
+                    for window in app.webview_windows().values() {
+                        let _ = window.hide();
+                    }
+                    app_update::wait_while_installing(std::time::Duration::from_secs(180));
+                }
                 if let Some(state) = SIDECAR.get() {
                     // Graceful: server drains, closes its pool, and stops owned
                     // PostgreSQL before the Rust fallback escalates. Releasing

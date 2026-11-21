@@ -103,6 +103,11 @@ class NotificationServiceClass {
     return Notifications.listRecent(limit);
   }
 
+  /** Every still-showing notification of one type, not only the recent ones. */
+  async listVisibleOfType(type: NotificationType): Promise<NotificationRecord[]> {
+    return Notifications.listVisibleOfType(type);
+  }
+
   /** Count unread, non-dismissed notifications. */
   async countUnread(): Promise<number> {
     return Notifications.countUnread();

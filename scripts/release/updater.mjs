@@ -345,3 +345,30 @@ export async function verifyUpdaterSignature(file, signature, pubkey) {
 function hexKeyId(keyId) {
   return Buffer.from(keyId).reverse().toString('hex').toUpperCase();
 }
+
+/** The id of a minisign public key (tauri.conf.json `pubkey`), as minisign prints it. */
+export function publicKeyId(pubkey) {
+  return hexKeyId(decodePublicKey(pubkey).keyId);
+}
+
+/**
+ * Whether this release's update key differs from the one installed copies
+ * trust. `published` is the latest.json they read now; every signature in it
+ * names the key that made it. Returns null when all of them were made with
+ * `pubkey`'s key, or the reason they were not. Throws on a manifest with no
+ * readable signatures.
+ */
+export function updateKeyChange(published, pubkey) {
+  const trusted = publicKeyId(pubkey);
+  const platforms = Object.values(published?.platforms ?? {});
+  if (platforms.length === 0) throw new Error('it lists no platforms');
+  const used = [
+    ...new Set(platforms.map((platform) => hexKeyId(decodeSignature(platform.signature).keyId))),
+  ];
+  if (used.length === 1 && used[0] === trusted) return null;
+  return (
+    `The published update (Snaglet ${published.version}) is signed with key ${used.join(', ')}, ` +
+    `but tauri.conf.json trusts key ${trusted}. Installed copies of Snaglet trust ` +
+    `${used.join(', ')} and would refuse this release's update.`
+  );
+}

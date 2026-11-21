@@ -33,10 +33,15 @@ export const UpdatesView: FC = () => {
   const [unsupported, setUnsupported] = useState<string | null | undefined>(undefined);
   const update = useAppUpdateState();
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setError(null);
     appUpdateApi.status().then(setStatus, (err: unknown) => setError(getErrorMessage(err)));
-    void appUpdateUnsupportedReason().then(setUnsupported);
   }, []);
+
+  useEffect(() => {
+    load();
+    void appUpdateUnsupportedReason().then(setUnsupported);
+  }, [load]);
 
   const checkNow = useCallback(async () => {
     setChecking(true);
@@ -58,21 +63,51 @@ export const UpdatesView: FC = () => {
     );
   }
 
-  const latest = status?.updateAvailable ? status.latest : null;
-  const stateLine = status?.lastError
+  const header = (
+    <header className={styles.header}>
+      <h1 className={styles.title}>Updates</h1>
+      <p className={styles.subtitle}>Snaglet checks GitHub for a new release once a day.</p>
+    </header>
+  );
+
+  // Nothing known yet: no version, no verdict, just the reason and a retry.
+  if (!status) {
+    return (
+      <div className={styles.shell}>
+        {header}
+        <div className={styles.body}>
+          <section className={styles.card} aria-labelledby="updates-load-title">
+            <h2 id="updates-load-title" className={styles.cardTitle}>
+              Couldn’t load
+            </h2>
+            <p className={styles.state} role="alert">
+              {error}
+            </p>
+            <div className={styles.actions}>
+              <Button variant="ghost" size="sm" onClick={load}>
+                Try again
+              </Button>
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
+  const latest = status.updateAvailable ? status.latest : null;
+  // After a failed check the known release is only the last one seen.
+  const stale = status.lastError !== null;
+  const stateLine = stale
     ? `Couldn’t check: ${status.lastError}`
     : latest
       ? `Snaglet ${latest.version} is available`
-      : status?.lastCheckedAt
+      : status.lastCheckedAt
         ? 'You’re up to date'
         : 'Not checked yet';
 
   return (
     <div className={styles.shell}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Updates</h1>
-        <p className={styles.subtitle}>Snaglet checks GitHub for a new release once a day.</p>
-      </header>
+      {header}
 
       <div className={styles.body}>
         {error && (
@@ -89,24 +124,33 @@ export const UpdatesView: FC = () => {
             <div>
               <div className={styles.eyebrow}>Installed version</div>
               <h2 id="updates-version-title" className={styles.cardTitle}>
-                Snaglet {status?.currentVersion ?? ''}
+                Snaglet {status.currentVersion}
               </h2>
             </div>
-            <span className={`${styles.status} ${latest ? '' : styles.statusReady}`}>
-              {latest ? 'Update available' : status?.lastError ? 'Check failed' : 'Current'}
+            <span className={`${styles.status} ${latest || stale ? '' : styles.statusReady}`}>
+              {stale ? 'Check failed' : latest ? 'Update available' : 'Current'}
             </span>
           </div>
 
           <p className={styles.state} role="status">
             {stateLine}
           </p>
-          {status?.lastCheckedAt && (
-            <p className={styles.note}>Last checked {formatCheckedAt(status.lastCheckedAt)}</p>
+          {stale && latest && (
+            <p className={styles.note}>Last known release: Snaglet {latest.version}</p>
+          )}
+          {status.lastCheckedAt && (
+            <p className={styles.note}>
+              {stale ? 'Last successful check' : 'Last checked'}{' '}
+              {formatCheckedAt(status.lastCheckedAt)}
+            </p>
           )}
 
           {latest && unsupported && <p className={styles.note}>{unsupported}</p>}
-          {latest && update.running && update.message && (
-            <p className={styles.progress}>{update.message}</p>
+          {update.running && update.message && <p className={styles.progress}>{update.message}</p>}
+          {!update.running && update.failure && (
+            <p className={styles.failure} role="alert">
+              Last install attempt failed: {update.failure}
+            </p>
           )}
 
           <div className={styles.actions}>
@@ -115,7 +159,7 @@ export const UpdatesView: FC = () => {
                 variant="primary"
                 size="sm"
                 disabled={update.running}
-                onClick={() => offerAppUpdate(latest.version)}
+                onClick={() => void offerAppUpdate(latest.version)}
               >
                 {update.running ? 'Installing…' : 'Install and restart'}
               </Button>

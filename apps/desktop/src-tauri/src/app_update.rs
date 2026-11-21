@@ -219,12 +219,19 @@ pub fn location_problem(
     None
 }
 
+/// True for a path the updater's administrator fallback could not quote safely
+/// (it builds a shell command from the bundle and temp paths).
+fn has_unsafe_chars(path: &Path) -> bool {
+    path.to_string_lossy().contains(['\'', '"', '\\'])
+}
+
 /// Why this account cannot replace the bundle itself. The updater only asks
 /// for an administrator password (and then runs a shell command as root built
-/// from these paths) when a plain rename is refused, so that case is refused
-/// here instead, before anything is downloaded or stopped.
+/// from the bundle and temp paths) when a plain rename is refused, so that
+/// case is refused here instead, before anything is downloaded or stopped.
 pub fn replace_problem(
     bundle: &Path,
+    temp_dir: &Path,
     exists: bool,
     parent_writable: bool,
     bundle_writable: bool,
@@ -235,9 +242,14 @@ pub fn replace_problem(
             bundle.display()
         )));
     }
-    if bundle.to_string_lossy().contains(['\'', '"', '\\']) {
+    if has_unsafe_chars(bundle) {
         return Some(UpdateError::not_writable(
             "Snaglet can't update itself in a folder whose path contains ', \" or \\.",
+        ));
+    }
+    if has_unsafe_chars(temp_dir) {
+        return Some(UpdateError::failed(
+            "Snaglet can't update itself while your temporary folder's path contains ', \" or \\.",
         ));
     }
     if !parent_writable || !bundle_writable {
@@ -254,9 +266,11 @@ pub fn replace_problem(
     None
 }
 
-/// The running bundle, once it is known to be replaceable in place.
+/// The running bundle, once it is known to be replaceable in place. Uses the
+/// same canonical executable path the updater replaces
+/// (`tauri::utils::platform::current_exe`).
 pub fn installed_bundle() -> Result<PathBuf, UpdateError> {
-    let exe = std::env::current_exe()
+    let exe = tauri::utils::platform::current_exe()
         .map_err(|e| UpdateError::failed(format!("Snaglet could not locate its own app: {e}")))?;
     let Some(bundle) = bundle_of(&exe) else {
         return Err(UpdateError::new(
@@ -264,16 +278,18 @@ pub fn installed_bundle() -> Result<PathBuf, UpdateError> {
             "Snaglet is not running from an installed app, so it cannot update itself.",
         ));
     };
+    let temp_dir = std::env::temp_dir();
     if let Some(problem) = location_problem(
         &exe,
         install_location::is_read_only_volume(&bundle),
-        same_volume(&bundle, &std::env::temp_dir()),
+        same_volume(&bundle, &temp_dir),
     ) {
         return Err(problem);
     }
     let parent = bundle.parent().unwrap_or(&bundle);
     match replace_problem(
         &bundle,
+        &temp_dir,
         bundle.symlink_metadata().is_ok(),
         writable(parent),
         writable(&bundle),
@@ -381,9 +397,9 @@ pub fn signed_file_name(signature: &str) -> Option<String> {
         .decode(signature)
         .ok()?;
     let text = String::from_utf8(bytes).ok()?;
-    let trusted = text
-        .lines()
-        .find_map(|line| line.strip_prefix("trusted comment: "))?;
+    // Only the third line is the signed trusted comment (minisign-verify's
+    // Signature::decode); the first, untrusted line is not authenticated.
+    let trusted = text.lines().nth(2)?.strip_prefix("trusted comment: ")?;
     trusted
         .split('\t')
         .find_map(|part| part.strip_prefix("file:"))
@@ -502,7 +518,8 @@ pub struct SafetyCopy {
 }
 
 impl SafetyCopy {
-    /// Best effort: None when no clone can be made (the update still runs).
+    /// None when no clone can be made; the update is then refused before
+    /// anything is stopped.
     #[cfg(target_os = "macos")]
     pub fn take(bundle: &Path) -> Option<Self> {
         use std::ffi::CString;
@@ -612,26 +629,30 @@ pub struct InstallFailure {
     pub previous: PreviousApp,
 }
 
-/// What is at the bundle path when there is no copy to fall back on.
+/// What is at the bundle path, read from disk with the full launch check, for
+/// outcomes that have no copy in hand (a stop that failed, a panic).
 pub fn previous_app(bundle: &Path) -> PreviousApp {
-    if launch_problem(bundle, false).is_none() {
-        PreviousApp::InPlace
-    } else {
-        PreviousApp::Lost
+    if launch_problem(bundle, true).is_none() {
+        return PreviousApp::InPlace;
+    }
+    match leftover_copies(bundle).into_iter().next() {
+        Some(copy) => PreviousApp::KeptAt(copy),
+        None => PreviousApp::Lost,
     }
 }
 
-/// Run `install`, then keep the result only if `check_new` finds the new
-/// bundle launchable. Otherwise the previous app goes back in place from
-/// `copy`; with no copy, what is in place is read from the filesystem.
+/// Run `install`, then keep the result only if `check` (the full launch check)
+/// passes on the new bundle. Otherwise the previous app goes back in place from
+/// `copy`, unless the install failed and left the previous app passing the
+/// same check.
 pub fn install_guarded(
     bundle: &Path,
-    mut copy: Option<SafetyCopy>,
+    mut copy: SafetyCopy,
     install: impl FnOnce() -> Result<(), UpdateError>,
-    check_new: impl FnOnce(&Path) -> Option<String>,
+    check: impl Fn(&Path) -> Option<String>,
 ) -> Result<(), InstallFailure> {
     let (error, replaced) = match install() {
-        Ok(()) => match check_new(bundle) {
+        Ok(()) => match check(bundle) {
             None => return Ok(()),
             Some(problem) => (
                 UpdateError::failed(format!(
@@ -642,25 +663,89 @@ pub fn install_guarded(
         },
         Err(error) => (error, false),
     };
-    // A failed install usually leaves the previous app untouched; restore only
-    // the rejected new version or a bundle that cannot launch.
-    if !replaced && launch_problem(bundle, false).is_none() {
+    if !replaced && check(bundle).is_none() {
         return Err(InstallFailure {
             error,
             previous: PreviousApp::InPlace,
         });
     }
-    let previous = match copy.as_mut() {
-        Some(copy) => match copy.restore() {
-            Ok(()) => PreviousApp::InPlace,
-            Err(reason) => {
-                eprintln!("[shell] {reason}");
-                PreviousApp::KeptAt(copy.location().to_path_buf())
-            }
-        },
-        None => PreviousApp::Lost,
+    let previous = match copy.restore() {
+        Ok(()) => PreviousApp::InPlace,
+        Err(reason) => {
+            eprintln!("[shell] {reason}");
+            PreviousApp::KeptAt(copy.location().to_path_buf())
+        }
     };
     Err(InstallFailure { error, previous })
+}
+
+/// Whether `name` is a copy `previous_version_path` names for a bundle whose
+/// name without `.app` is `stem`: exactly `<stem> (previous version).app` or
+/// `<stem> (previous version <n>).app`.
+pub fn is_previous_version_name(stem: &str, name: &str) -> bool {
+    let Some(rest) = name
+        .strip_prefix(stem)
+        .and_then(|rest| rest.strip_prefix(" (previous version"))
+        .and_then(|rest| rest.strip_suffix(").app"))
+    else {
+        return false;
+    };
+    rest.is_empty()
+        || rest.strip_prefix(' ').is_some_and(|n| {
+            (1..=3).contains(&n.len()) && n.bytes().all(|byte| byte.is_ascii_digit())
+        })
+}
+
+/// Copies of earlier versions beside `bundle`, left by an update that did not
+/// finish (a quit or crash mid-install): real directories with exactly the
+/// copy names, never a link, never the bundle itself.
+pub fn leftover_copies(bundle: &Path) -> Vec<PathBuf> {
+    let (Some(parent), Some(stem)) = (
+        bundle.parent(),
+        bundle.file_stem().and_then(|stem| stem.to_str()),
+    ) else {
+        return Vec::new();
+    };
+    let Ok(entries) = std::fs::read_dir(parent) else {
+        return Vec::new();
+    };
+    let mut found: Vec<PathBuf> = entries
+        .filter_map(Result::ok)
+        .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_dir()))
+        .filter(|entry| {
+            entry
+                .file_name()
+                .to_str()
+                .is_some_and(|name| is_previous_version_name(stem, name))
+        })
+        .map(|entry| entry.path())
+        .filter(|path| path != bundle)
+        .collect();
+    found.sort();
+    found
+}
+
+/// Remove leftover copies beside the running `bundle`, only when the running
+/// app passes the full launch check, so a copy is never deleted while it may
+/// be the only working Snaglet. Returns how many were removed.
+pub fn remove_leftover_copies(bundle: &Path) -> usize {
+    let leftovers = leftover_copies(bundle);
+    if leftovers.is_empty() || launch_problem(bundle, true).is_some() {
+        return 0;
+    }
+    leftovers
+        .iter()
+        .filter(|copy| match std::fs::remove_dir_all(copy) {
+            Ok(()) => {
+                eprintln!("[shell] removed the leftover copy {}", copy.display());
+                true
+            }
+            Err(error) => {
+                eprintln!("[shell] could not remove {}: {error}", copy.display());
+                false
+            }
+        })
+        .count()
 }
 
 #[cfg(test)]
@@ -739,14 +824,15 @@ mod tests {
     #[test]
     fn a_bundle_this_account_cannot_replace_is_refused_before_anything_runs() {
         let bundle = Path::new("/Applications/Snaglet.app");
-        assert_eq!(replace_problem(bundle, true, true, true), None);
+        let temp = Path::new("/var/folders/ab/cd/T");
+        assert_eq!(replace_problem(bundle, temp, true, true, true), None);
 
-        let missing = replace_problem(bundle, false, true, true).unwrap();
+        let missing = replace_problem(bundle, temp, false, true, true).unwrap();
         assert_eq!(missing.kind, UpdateErrorKind::Failed);
         assert!(missing.message.contains("can't find its app"));
 
         for (parent, own) in [(false, true), (true, false), (false, false)] {
-            let problem = replace_problem(bundle, true, parent, own).unwrap();
+            let problem = replace_problem(bundle, temp, true, parent, own).unwrap();
             assert_eq!(problem.kind, UpdateErrorKind::NotWritable);
             assert!(problem
                 .message
@@ -758,8 +844,12 @@ mod tests {
             "/Volumes/A \"B\"/Snaglet.app",
             "/Applications/back\\slash/Snaglet.app",
         ] {
-            let problem = replace_problem(Path::new(path), true, true, true).unwrap();
+            let problem = replace_problem(Path::new(path), temp, true, true, true).unwrap();
             assert_eq!(problem.kind, UpdateErrorKind::NotWritable, "{path}");
+        }
+        for temp in ["/tmp/o'neil", "/tmp/a\"b", "/tmp/back\\slash"] {
+            let problem = replace_problem(bundle, Path::new(temp), true, true, true).unwrap();
+            assert!(problem.message.contains("temporary folder"), "{temp}");
         }
     }
 
@@ -843,6 +933,29 @@ mod tests {
     }
 
     #[test]
+    fn only_the_signed_third_line_names_the_archive() {
+        use base64::Engine;
+        // minisign-verify authenticates line 3 only, so a forged first line
+        // naming a newer archive must not be read as the signed name.
+        let forged = "trusted comment: timestamp:1\tfile:Snaglet-v1.0.5-macos-arm64.app.tar.gz\n\
+                      RUQ=\ntrusted comment: timestamp:1\tfile:Snaglet-v1.0.1-macos-arm64.app.tar.gz\n\
+                      AA==\n";
+        let forged = base64::engine::general_purpose::STANDARD.encode(forged);
+        assert_eq!(
+            signed_file_name(&forged).as_deref(),
+            Some("Snaglet-v1.0.1-macos-arm64.app.tar.gz")
+        );
+        assert!(check_signed_version(&forged, "1.0.5").is_err());
+        assert!(check_signed_version(&forged, "1.0.1").is_ok());
+
+        // Nothing at line 3 means no signed name, wherever else one appears.
+        let shifted = base64::engine::general_purpose::STANDARD.encode(
+            "untrusted comment: x\nRUQ=\nAA==\ntrusted comment: timestamp:1\tfile:Snaglet-v1.0.5-macos-arm64.app.tar.gz\n",
+        );
+        assert_eq!(signed_file_name(&shifted), None);
+    }
+
+    #[test]
     fn errors_and_progress_serialize_as_the_ui_reads_them() {
         let error = serde_json::to_value(UpdateError::up_to_date()).unwrap();
         assert_eq!(
@@ -919,6 +1032,30 @@ mod tests {
         );
     }
 
+    #[test]
+    fn only_the_exact_copy_names_count_as_leftovers() {
+        for name in [
+            "Snaglet (previous version).app",
+            "Snaglet (previous version 2).app",
+            "Snaglet (previous version 999).app",
+        ] {
+            assert!(is_previous_version_name("Snaglet", name), "{name}");
+        }
+        for name in [
+            "Snaglet.app",
+            "Snaglet (previous version).app.bak",
+            "Snaglet (previous version x).app",
+            "Snaglet (previous version 1000).app",
+            "Snaglet (previous version ).app",
+            "Snaglet (Previous Version).app",
+            "Other (previous version).app",
+            "Snaglet Preview (previous version).app",
+            "Snaglet (previous version)",
+        ] {
+            assert!(!is_previous_version_name("Snaglet", name), "{name}");
+        }
+    }
+
     #[cfg(target_os = "macos")]
     mod on_disk {
         use super::super::*;
@@ -940,7 +1077,8 @@ mod tests {
             }
         }
 
-        /// A minimal launchable bundle whose Resources/version.txt holds `version`.
+        /// A minimal, ad-hoc signed, launchable bundle whose
+        /// Resources/version.txt holds `version`.
         fn make_bundle(path: &Path, version: &str) {
             std::fs::create_dir_all(path.join("Contents/MacOS")).unwrap();
             std::fs::create_dir_all(path.join("Contents/Resources")).unwrap();
@@ -954,10 +1092,16 @@ mod tests {
             .unwrap();
             std::fs::copy("/usr/bin/true", path.join("Contents/MacOS/app")).unwrap();
             std::fs::write(path.join("Contents/Resources/version.txt"), version).unwrap();
+            sign(path);
         }
 
         fn version_at(bundle: &Path) -> String {
             std::fs::read_to_string(bundle.join("Contents/Resources/version.txt")).unwrap()
+        }
+
+        /// Change a sealed resource: still runnable, no longer validly signed.
+        fn tamper(bundle: &Path) {
+            std::fs::write(bundle.join("Contents/Resources/version.txt"), "tampered").unwrap();
         }
 
         fn sign(bundle: &Path) {
@@ -975,17 +1119,19 @@ mod tests {
             std::fs::set_permissions(path, std::fs::Permissions::from_mode(mode)).unwrap();
         }
 
+        fn full_check(bundle: &Path) -> Option<String> {
+            launch_problem(bundle, true)
+        }
+
         #[test]
         fn the_launch_check_needs_a_runnable_executable_and_a_valid_signature() {
             let root = TempRoot::new();
             let bundle = root.0.join("Snaglet.app");
             make_bundle(&bundle, "new");
-            sign(&bundle);
             assert_eq!(launch_problem(&bundle, false), None);
             assert_eq!(launch_problem(&bundle, true), None);
 
-            // A sealed resource changed after signing: runnable, but not valid.
-            std::fs::write(bundle.join("Contents/Resources/version.txt"), "tampered").unwrap();
+            tamper(&bundle);
             assert_eq!(launch_problem(&bundle, false), None);
             assert!(launch_problem(&bundle, true)
                 .unwrap()
@@ -1043,7 +1189,7 @@ mod tests {
 
             copy.restore().unwrap();
             assert_eq!(version_at(&bundle), "old");
-            assert_eq!(launch_problem(&bundle, false), None);
+            assert_eq!(full_check(&bundle), None);
             let leftovers: Vec<_> = std::fs::read_dir(&root.0)
                 .unwrap()
                 .map(|entry| entry.unwrap().file_name())
@@ -1051,20 +1197,22 @@ mod tests {
             assert_eq!(leftovers, vec![std::ffi::OsString::from("Snaglet.app")]);
         }
 
-        /// Stands in for the plugin: replace the bundle with `version`, or
-        /// remove it and fail, or fail leaving it untouched.
+        /// Stands in for the plugin.
         enum Plugin {
+            /// Replaces the bundle with a signed `version`.
             Installs(&'static str),
+            /// Replaces the bundle with `version`, then breaks its seal.
+            InstallsBroken(&'static str),
+            /// Moves the app away and fails.
             FailsAfterMovingAway,
+            /// Fails and leaves the app untouched.
             FailsUntouched,
+            /// Fails after damaging the app's seal (runnable, not valid).
+            FailsAfterDamaging,
         }
 
-        fn run(
-            bundle: &Path,
-            copy: Option<SafetyCopy>,
-            plugin: Plugin,
-            new_ok: bool,
-        ) -> Result<(), InstallFailure> {
+        fn run(bundle: &Path, plugin: Plugin) -> Result<(), InstallFailure> {
+            let copy = SafetyCopy::take(bundle).expect("APFS clone");
             install_guarded(
                 bundle,
                 copy,
@@ -1074,13 +1222,23 @@ mod tests {
                         make_bundle(bundle, version);
                         Ok(())
                     }
+                    Plugin::InstallsBroken(version) => {
+                        std::fs::remove_dir_all(bundle).unwrap();
+                        make_bundle(bundle, version);
+                        tamper(bundle);
+                        Ok(())
+                    }
                     Plugin::FailsAfterMovingAway => {
                         std::fs::remove_dir_all(bundle).unwrap();
                         Err(UpdateError::failed("rename failed"))
                     }
                     Plugin::FailsUntouched => Err(UpdateError::failed("extract failed")),
+                    Plugin::FailsAfterDamaging => {
+                        tamper(bundle);
+                        Err(UpdateError::failed("rename failed"))
+                    }
                 },
-                |_| (!new_ok).then(|| "its code signature is not valid".to_string()),
+                full_check,
             )
         }
 
@@ -1089,10 +1247,9 @@ mod tests {
             let root = TempRoot::new();
             let bundle = root.0.join("Snaglet.app");
             make_bundle(&bundle, "old");
-            let copy = SafetyCopy::take(&bundle);
-            assert!(run(&bundle, copy, Plugin::Installs("new"), true).is_ok());
+            assert!(run(&bundle, Plugin::Installs("new")).is_ok());
             assert_eq!(version_at(&bundle), "new");
-            assert!(!previous_version_path(&bundle, 1).exists());
+            assert!(leftover_copies(&bundle).is_empty());
         }
 
         #[test]
@@ -1100,8 +1257,7 @@ mod tests {
             let root = TempRoot::new();
             let bundle = root.0.join("Snaglet.app");
             make_bundle(&bundle, "old");
-            let copy = SafetyCopy::take(&bundle);
-            let failure = run(&bundle, copy, Plugin::Installs("new"), false).unwrap_err();
+            let failure = run(&bundle, Plugin::InstallsBroken("new")).unwrap_err();
             assert_eq!(failure.previous, PreviousApp::InPlace);
             assert!(failure.error.message.contains("launch check"));
             assert_eq!(version_at(&bundle), "old");
@@ -1114,29 +1270,39 @@ mod tests {
             let bundle = root.0.join("Snaglet.app");
             make_bundle(&bundle, "old");
 
-            let copy = SafetyCopy::take(&bundle);
-            let failure = run(&bundle, copy, Plugin::FailsAfterMovingAway, true).unwrap_err();
+            let failure = run(&bundle, Plugin::FailsAfterMovingAway).unwrap_err();
             assert_eq!(failure.previous, PreviousApp::InPlace);
             assert_eq!(version_at(&bundle), "old");
 
-            let copy = SafetyCopy::take(&bundle);
-            let failure = run(&bundle, copy, Plugin::FailsUntouched, true).unwrap_err();
+            let failure = run(&bundle, Plugin::FailsUntouched).unwrap_err();
             assert_eq!(failure.previous, PreviousApp::InPlace);
             assert_eq!(failure.error.message, "extract failed");
-            assert!(!previous_version_path(&bundle, 1).exists());
+            assert!(leftover_copies(&bundle).is_empty());
         }
 
         #[test]
-        fn without_a_copy_what_is_in_place_is_read_from_disk() {
+        fn a_previous_app_that_fails_the_full_check_is_replaced_from_the_copy() {
             let root = TempRoot::new();
             let bundle = root.0.join("Snaglet.app");
             make_bundle(&bundle, "old");
-            let failure = run(&bundle, None, Plugin::FailsUntouched, true).unwrap_err();
+            let failure = run(&bundle, Plugin::FailsAfterDamaging).unwrap_err();
             assert_eq!(failure.previous, PreviousApp::InPlace);
+            assert_eq!(version_at(&bundle), "old");
+            assert_eq!(full_check(&bundle), None);
+        }
+
+        #[test]
+        fn without_a_copy_in_hand_what_is_in_place_is_read_from_disk() {
+            let root = TempRoot::new();
+            let bundle = root.0.join("Snaglet.app");
+            make_bundle(&bundle, "old");
             assert_eq!(previous_app(&bundle), PreviousApp::InPlace);
 
-            let failure = run(&bundle, None, Plugin::FailsAfterMovingAway, true).unwrap_err();
-            assert_eq!(failure.previous, PreviousApp::Lost);
+            let kept = previous_version_path(&bundle, 1);
+            std::fs::rename(&bundle, &kept).unwrap();
+            assert_eq!(previous_app(&bundle), PreviousApp::KeptAt(kept.clone()));
+
+            std::fs::remove_dir_all(&kept).unwrap();
             assert_eq!(previous_app(&bundle), PreviousApp::Lost);
         }
 
@@ -1149,7 +1315,7 @@ mod tests {
             let location = copy.location().to_path_buf();
             let failure = install_guarded(
                 &bundle,
-                Some(copy),
+                copy,
                 || {
                     std::fs::remove_dir_all(&bundle).unwrap();
                     // The folder stops accepting changes, so the copy cannot
@@ -1157,12 +1323,66 @@ mod tests {
                     chmod(&root.0, 0o555);
                     Err(UpdateError::failed("rename failed"))
                 },
-                |_| None,
+                full_check,
             );
             chmod(&root.0, 0o755);
             let failure = failure.unwrap_err();
             assert_eq!(failure.previous, PreviousApp::KeptAt(location.clone()));
             assert_eq!(version_at(&location), "old");
+        }
+
+        #[test]
+        fn startup_removes_only_leftover_copies_beside_a_working_app() {
+            let root = TempRoot::new();
+            let bundle = root.0.join("Snaglet.app");
+            make_bundle(&bundle, "running");
+            for n in [1, 2] {
+                make_bundle(&previous_version_path(&bundle, n), "old");
+            }
+            // Look-alikes that must stay: other names, a file, a link.
+            for name in [
+                "Snaglet (previous version).app.bak",
+                "Other (previous version).app",
+                "Snaglet (previous versions).app",
+            ] {
+                std::fs::create_dir(root.0.join(name)).unwrap();
+            }
+            std::fs::write(root.0.join("Snaglet (previous version 3).app"), "file").unwrap();
+            let elsewhere = root.0.join("elsewhere");
+            std::fs::create_dir(&elsewhere).unwrap();
+            std::os::unix::fs::symlink(&elsewhere, root.0.join("Snaglet (previous version 4).app"))
+                .unwrap();
+
+            let mut expected = vec![
+                previous_version_path(&bundle, 1),
+                previous_version_path(&bundle, 2),
+            ];
+            expected.sort();
+            assert_eq!(leftover_copies(&bundle), expected);
+            assert_eq!(remove_leftover_copies(&bundle), 2);
+            assert!(leftover_copies(&bundle).is_empty());
+            assert_eq!(version_at(&bundle), "running");
+            for name in [
+                "Snaglet (previous version).app.bak",
+                "Other (previous version).app",
+                "Snaglet (previous versions).app",
+                "Snaglet (previous version 3).app",
+                "Snaglet (previous version 4).app",
+                "elsewhere",
+            ] {
+                assert!(root.0.join(name).symlink_metadata().is_ok(), "{name}");
+            }
+        }
+
+        #[test]
+        fn startup_keeps_leftover_copies_while_the_running_app_fails_its_check() {
+            let root = TempRoot::new();
+            let bundle = root.0.join("Snaglet.app");
+            make_bundle(&bundle, "running");
+            make_bundle(&previous_version_path(&bundle, 1), "old");
+            tamper(&bundle);
+            assert_eq!(remove_leftover_copies(&bundle), 0);
+            assert_eq!(version_at(&previous_version_path(&bundle, 1)), "old");
         }
     }
 }

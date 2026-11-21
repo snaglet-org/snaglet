@@ -353,6 +353,15 @@ test('the preview build has no updater key or endpoint and a non-production iden
   );
 });
 
+test('only a build that can install updates tells its server to post update notices', () => {
+  // The server posts "update available" only with SNAGLET_UPDATE_NOTICES=1; the
+  // sidecar derives it from the same refusal the install command uses.
+  assert.match(
+    desktopSidecar,
+    /"SNAGLET_UPDATE_NOTICES",\s*if crate::self_update_refusal\(app\)\.is_none\(\)\s*\{\s*"1"\s*\}\s*else\s*\{\s*"0"\s*\}/
+  );
+});
+
 test('desktop shell has no plaintext provider-token filesystem commands', () => {
   for (const command of ['read_provider_token', 'write_provider_token', 'delete_provider_token']) {
     assert.doesNotMatch(desktopShell, new RegExp(command));

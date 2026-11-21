@@ -51,7 +51,7 @@ export const NotificationPopover: FC<{
       // offer nothing.
       const offeredVersion = appUpdateOfferVersion(notif);
       if (offeredVersion) {
-        offerAppUpdate(offeredVersion);
+        void offerAppUpdate(offeredVersion);
         onClose();
         return;
       }

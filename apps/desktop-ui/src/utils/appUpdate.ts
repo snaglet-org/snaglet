@@ -2,17 +2,19 @@
  * App updates in the UI: the one flow behind both the update notification and
  * Settings → Updates.
  *
- * `offerAppUpdate(version)` only asks: `AppUpdatePrompt` shows "Install and
- * restart?". Nothing is downloaded until `confirmAppUpdate()` (its Install
- * button) calls the shell's `install_app_update`
+ * `offerAppUpdate(version)` only asks: when this copy can install updates
+ * (`appUpdateUnsupportedReason`, the same check Settings → Updates uses),
+ * `AppUpdatePrompt` shows "Install and restart?"; otherwise a toast gives the
+ * reason and the release page. Nothing is downloaded until
+ * `confirmAppUpdate()` (its Install button) calls the shell's
+ * `install_app_update`
  * (apps/desktop/src-tauri/src/app_update.rs), which downloads, verifies,
  * installs and restarts. Each step shows in one toast and in Settings →
- * Updates; a failure shows the shell's reason and offers the release page. In
- * a browser, offering opens the release page instead.
+ * Updates; a failure shows the shell's reason and offers the release page.
  */
 
 import { useSyncExternalStore } from 'react';
-import { SNAGLET_REPOSITORY } from '@snaglet/shared/constants/release';
+import { SNAGLET_REPOSITORY, compareVersions } from '@snaglet/shared/constants/release';
 import { appUpdateApi } from './api';
 import { isTauriEnv } from './tauriEnv';
 import { showToast } from './toast';
@@ -39,9 +41,11 @@ interface AppUpdateState {
   running: boolean;
   /** The latest step or outcome, as the toast shows it. */
   message: string | null;
+  /** Why the last install attempt failed, kept until the next attempt. */
+  failure: string | null;
 }
 
-let state: AppUpdateState = { offer: null, running: false, message: null };
+let state: AppUpdateState = { offer: null, running: false, message: null, failure: null };
 const listeners = new Set<() => void>();
 
 function setState(next: Partial<AppUpdateState>): void {
@@ -135,7 +139,7 @@ async function installInPlace(): Promise<string> {
     settled = true;
     const failure = failureOf(error);
     const url = await releaseUrl;
-    setState({ message: failure.message });
+    setState({ message: failure.message, failure: failure.message });
     showToast(failure.message, {
       id: TOAST_ID,
       durationMs: RESULT_TOAST_MS,
@@ -148,20 +152,33 @@ async function installInPlace(): Promise<string> {
 }
 
 /**
- * Ask whether to install `version` (a release tag). While an update is
- * already running this shows its current step again instead; in a browser it
- * opens the release page.
+ * Ask whether to install `version` (a release tag), naming the latest known
+ * release instead when it is newer. While an update is already running this
+ * shows its current step again. Where this copy cannot install updates (a
+ * browser, a preview or development build, a folder it cannot replace) it
+ * shows the reason with the release page instead of asking.
  */
-export function offerAppUpdate(version: string): void {
+export async function offerAppUpdate(version: string): Promise<void> {
   if (running) {
     if (state.message) showStep(state.message);
     return;
   }
-  if (!isTauriEnv()) {
-    void releasePageUrl().then(openReleasePage);
+  const [reason, status] = await Promise.all([
+    appUpdateUnsupportedReason(),
+    appUpdateApi.status().catch(() => null),
+  ]);
+  if (reason) {
+    const url = status?.latest?.url ?? FALLBACK_RELEASES_URL;
+    showToast(reason, {
+      id: TOAST_ID,
+      durationMs: RESULT_TOAST_MS,
+      action: { label: 'Release page', run: () => void openReleasePage(url) },
+    });
     return;
   }
-  setState({ offer: version });
+  if (running) return;
+  const latest = status?.latest?.version;
+  setState({ offer: latest && compareVersions(latest, version) > 0 ? latest : version });
 }
 
 /** Later: close the prompt; nothing is downloaded. */
@@ -176,7 +193,7 @@ export function dismissAppUpdateOffer(): void {
 export function confirmAppUpdate(): Promise<string> {
   setState({ offer: null });
   if (!running) {
-    setState({ running: true, message: null });
+    setState({ running: true, message: null, failure: null });
     running = installInPlace().finally(() => {
       running = null;
       setState({ running: false });

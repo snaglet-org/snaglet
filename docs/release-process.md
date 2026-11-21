@@ -147,8 +147,8 @@ you pass `--allow-unsigned`, and an un-notarized build ships only with
 `--no-updater`: it is never offered as an in-app update. To rehearse signing
 without a certificate, pass `--identity - --skip-notarize`; the build then stays
 blocked from shipping. A tag with a pre-release suffix, such as `v1.2.0-rc.1`, is
-published as a GitHub pre-release, so installed apps never see it as the latest
-release.
+published as a GitHub pre-release without the in-app update files: installed
+apps only update to full releases and never see a pre-release as the latest.
 
 `--dry-run` does everything except publish. It does not build unless you also
 pass `--build`, and it signs the update with the real key unless you pass
@@ -162,10 +162,17 @@ user starts an update from the update notification or **Settings → Updates**
 and confirms with **Install**. The app then downloads the archive that file
 names (about 120 MB) and installs it only if the archive's signature matches
 `plugins.updater.pubkey`, the update public key in the same file, and the
-signature names the archive for the version offered. It keeps a copy of the
-previous version beside the app until the new one passes a launch check, and
-puts it back if that check fails. Only the production build updates itself:
-preview builds carry no key or endpoint, and development runs refuse.
+signature names the archive for the version offered. Before it stops anything,
+it makes a copy of the current version beside the app (`Snaglet (previous
+version).app`) and refuses to update when it cannot. It keeps that copy until
+the new version passes a launch check (its executable runs and
+`codesign --verify --deep --strict` passes), and puts it back if that check
+fails. A copy left behind by a quit or crash mid-install is removed at the next
+start, once the running app passes the same check. Only the production build
+updates itself or posts the update notice: preview builds carry no key or
+endpoint, and development runs refuse. Where an update cannot install, the
+notice and **Settings → Updates** give the reason and the release page instead
+of asking.
 
 `ship-desktop.mjs` adds three files to every release:
 
@@ -190,9 +197,19 @@ unpacks to a `Snaglet.app` that passes `codesign --verify --deep --strict`,
 key, and that the signature names the archive and verifies against the public
 key in `tauri.conf.json`. A wrong key fails here instead of on users' Macs.
 
+Before signing, the script also reads the published `latest.json` of the
+latest release and compares the key that signed it with the public key in
+`tauri.conf.json`. Installed copies trust the published key, so a different
+key stops the release. Pass `--rotate-update-key` only for a deliberate key
+change; see below. When there is no published `latest.json` (the first release
+with in-app updates, or a latest release shipped without them) the script says
+so and continues. When GitHub cannot be reached it stops; pass
+`--skip-key-continuity-check` to ship without the comparison.
+
 `--no-updater` ships a release without the three files. Installed copies cannot
-update to it: the update notification tells users to download it from the
-release page. Use it only when the private key is not available.
+update to it: they still show the update notice, but **Install** fails with a
+message that the release may not offer an in-app update, and offers the release
+page. Use it only when the private key is not available.
 
 If the private key is lost, no installed copy will accept another update signed
 by it. Make a new key pair with
@@ -200,7 +217,23 @@ by it. Make a new key pair with
 put the new public key in `tauri.conf.json`, and ship the next release with
 `--no-updater`: users install that release by hand once, and it trusts the new
 key. Say so in its release notes. Later releases ship normally and install
-from inside the app.
+from inside the app. (If you ship the key-change release with update files
+instead, pass `--rotate-update-key`; installed copies will refuse that update,
+so they still need the release page.)
+
+### Known limits of in-app updates
+
+- **Quit during an install.** Closing the window while an update installs does
+  not quit Snaglet: the install finishes and Snaglet relaunches. Quit from the
+  app menu cannot be refused: Snaglet hides its window and waits up to three
+  minutes for the swap to finish before it exits.
+- **Administrator prompt.** Snaglet refuses to update when your account cannot
+  write to the app or its folder. If macOS still refuses the plain rename (App
+  Management permission, a locked file), the updater asks for an administrator
+  password on the main thread. A quit from the app menu at that moment cannot
+  run that prompt, so the wait above runs out and Snaglet exits. Nothing has
+  been moved at that point: the rename was refused, so the previous app stays in
+  place.
 
 ## Documentation gate
 

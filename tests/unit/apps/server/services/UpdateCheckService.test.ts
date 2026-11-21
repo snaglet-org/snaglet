@@ -20,26 +20,28 @@ jest.mock('@snaglet/db/tables/settings', () => ({
 jest.mock('@server/services/ProviderCredentialService/credentials', () => ({
   getSecretByProviderId: jest.fn(async () => 'stored-token'),
 }));
-const mockListRecent = jest.fn();
+const mockListVisibleOfType = jest.fn();
 const mockDismiss = jest.fn();
 jest.mock('@server/services/NotificationService', () => ({
   notificationService: {
     create: (...args: unknown[]) => mockNotify(...args),
-    listRecent: (...args: unknown[]) => mockListRecent(...args),
+    listVisibleOfType: (...args: unknown[]) => mockListVisibleOfType(...args),
     dismiss: (...args: unknown[]) => mockDismiss(...args),
   },
 }));
 
 import { SNAGLET_REPOSITORY } from '@snaglet/shared/constants';
-import { appUpdateOfferVersion } from '@snaglet/shared/constants/release';
+import { appUpdateOfferVersion, compareVersions } from '@snaglet/shared/constants/release';
 import { logger } from '@server/config/logger';
-import { compareVersions, updateCheckService } from '@server/services/UpdateCheckService';
+import { updateCheckService } from '@server/services/UpdateCheckService';
 
 describe('packaged release checks', () => {
   const savedVersion = process.env.SNAGLET_APP_VERSION;
+  const savedNotices = process.env.SNAGLET_UPDATE_NOTICES;
   let value: unknown;
   beforeEach(() => {
     process.env.SNAGLET_APP_VERSION = '2.3.4';
+    process.env.SNAGLET_UPDATE_NOTICES = '1';
     value = null;
     mockNotify.mockReset();
     mockWriteState.mockClear();
@@ -52,6 +54,8 @@ describe('packaged release checks', () => {
     jest.restoreAllMocks();
     if (savedVersion === undefined) delete process.env.SNAGLET_APP_VERSION;
     else process.env.SNAGLET_APP_VERSION = savedVersion;
+    if (savedNotices === undefined) delete process.env.SNAGLET_UPDATE_NOTICES;
+    else process.env.SNAGLET_UPDATE_NOTICES = savedNotices;
   });
 
   it.each([
@@ -106,11 +110,32 @@ describe('packaged release checks', () => {
     }
   );
 
-  it('records the check time when GitHub answers with another error', async () => {
+  it("does not count a failed check as the day's check", async () => {
+    value = { lastCheckedAt: '2026-01-01T00:00:00.000Z', lastNotifiedVersion: null, latest: null };
     jest.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('', { status: 500 }));
     const result = await updateCheckService.checkNow();
-    expect(result.lastCheckedAt).not.toBeNull();
+    // Unchanged, so the next hourly tick retries instead of waiting a day.
+    expect(result.lastCheckedAt).toBe('2026-01-01T00:00:00.000Z');
+    expect(mockWriteState).not.toHaveBeenCalled();
     expect(result.lastError).toBe('GitHub answered with status 500.');
+  });
+
+  it('posts no notice from a build that cannot install updates, but still reports it', async () => {
+    process.env.SNAGLET_UPDATE_NOTICES = '0';
+    jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ tag_name: 'v2.3.5', html_url: 'https://example.com/v2.3.5' }),
+          { status: 200 }
+        )
+      );
+    const status = await updateCheckService.checkNow();
+    expect(status.updateAvailable).toBe(true);
+    expect(mockNotify).not.toHaveBeenCalled();
+    delete process.env.SNAGLET_UPDATE_NOTICES;
+    await updateCheckService.checkNow();
+    expect(mockNotify).not.toHaveBeenCalled();
   });
 
   it('says why a check failed until one succeeds', async () => {
@@ -202,7 +227,8 @@ describe('update notices after an update', () => {
   });
 
   it('dismisses offers for the running version or older, and nothing else', async () => {
-    mockListRecent.mockResolvedValue([
+    // Every still-showing app_update notice, not only the most recent page.
+    mockListVisibleOfType.mockResolvedValue([
       { id: 'old', type: 'app_update', title: 'Snaglet v1.0.0 is available' },
       { id: 'same', type: 'app_update', title: 'Snaglet v1.0.1 is available' },
       { id: 'newer', type: 'app_update', title: 'Snaglet v1.0.2 is available' },
@@ -211,11 +237,12 @@ describe('update notices after an update', () => {
     ]);
 
     expect(await updateCheckService.dismissSettledOffers()).toBe(2);
+    expect(mockListVisibleOfType).toHaveBeenCalledWith('app_update');
     expect(mockDismiss.mock.calls.map(([id]) => id)).toEqual(['old', 'same']);
   });
 
   it('does not throw when the notices cannot be read', async () => {
-    mockListRecent.mockRejectedValue(new Error('database is down'));
+    mockListVisibleOfType.mockRejectedValue(new Error('database is down'));
     await expect(updateCheckService.dismissSettledOffers()).resolves.toBe(0);
   });
 });

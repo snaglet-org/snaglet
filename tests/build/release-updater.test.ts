@@ -18,8 +18,10 @@ import test from 'node:test';
 import {
   assertUpdaterArchiveLayout,
   buildUpdaterManifest,
+  publicKeyId,
   readTarEntries,
   signedFileName,
+  updateKeyChange,
   UPDATER_TAR_ENV,
   UPDATER_TARGET,
   updaterArchiveName,
@@ -152,6 +154,32 @@ test('latest.json follows the plugin static format and points at the release ass
   const base = { repository: 'owner/repo', archiveName, notes: '', pubDate: new Date() };
   assert.throws(() => buildUpdaterManifest({ ...base, tag: '1.2.3', signature: 's' }), /tag/);
   assert.throws(() => buildUpdaterManifest({ ...base, tag: 'v1.2.3', signature: '' }), /signature/);
+});
+
+test('a change of update key since the published latest.json is caught', () => {
+  assert.equal(publicKeyId(productionPubkey), '485E18E68CB54523');
+  assert.equal(publicKeyId(FIXTURE_PUBKEY), '62258002F075CC4D');
+  const published = {
+    version: '1.0.1',
+    platforms: { 'darwin-aarch64': { signature: FIXTURE_SIGNATURE, url: 'https://x/y' } },
+  };
+  // Same key: nothing to report.
+  assert.equal(updateKeyChange(published, FIXTURE_PUBKEY), null);
+  // A release signed for another key: installed copies would refuse it.
+  assert.match(
+    updateKeyChange(published, productionPubkey) ?? '',
+    /Snaglet 1\.0\.1\) is signed with key 62258002F075CC4D, but tauri\.conf\.json trusts key 485E18E68CB54523/
+  );
+  assert.throws(
+    () => updateKeyChange({ version: '1.0.1', platforms: {} }, FIXTURE_PUBKEY),
+    /no platforms/
+  );
+  assert.throws(() =>
+    updateKeyChange(
+      { version: '1.0.1', platforms: { 'darwin-aarch64': { signature: 'not base64!' } } },
+      FIXTURE_PUBKEY
+    )
+  );
 });
 
 test('signing refuses to start without a key and password in the environment', () => {

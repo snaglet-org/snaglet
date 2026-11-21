@@ -12,7 +12,12 @@ vi.mock('@desktop/utils/api', () => ({
   appUpdateApi: { status: vi.fn(), checkNow: vi.fn() },
 }));
 const updateState = vi.hoisted(() => ({
-  current: { offer: null as string | null, running: false, message: null as string | null },
+  current: {
+    offer: null as string | null,
+    running: false,
+    message: null as string | null,
+    failure: null as string | null,
+  },
 }));
 vi.mock('@desktop/utils/appUpdate', () => ({
   offerAppUpdate: vi.fn(),
@@ -45,7 +50,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.clearAllMocks();
-  updateState.current = { offer: null, running: false, message: null };
+  updateState.current = { offer: null, running: false, message: null, failure: null };
 });
 
 describe('UpdatesView', () => {
@@ -88,6 +93,7 @@ describe('UpdatesView', () => {
       offer: null,
       running: true,
       message: 'Downloading Snaglet 1.0.1… 42%',
+      failure: null,
     };
     render(<UpdatesView />);
     expect(await screen.findByText('Downloading Snaglet 1.0.1… 42%')).toBeInTheDocument();
@@ -108,15 +114,48 @@ describe('UpdatesView', () => {
     expect(screen.queryByRole('button', { name: 'Install and restart' })).not.toBeInTheDocument();
   });
 
-  it('says why the last check failed', async () => {
+  it('says why the last check failed and keeps the known release as last known', async () => {
     vi.mocked(appUpdateApi.status).mockResolvedValue({
-      ...upToDate,
+      ...available,
       lastError: 'Snaglet couldn’t reach GitHub.',
     });
     render(<UpdatesView />);
     expect(
       await screen.findByText('Couldn’t check: Snaglet couldn’t reach GitHub.')
     ).toBeInTheDocument();
+    expect(screen.getByText('Last known release: Snaglet v1.0.1')).toBeInTheDocument();
+    expect(screen.queryByText('Snaglet v1.0.1 is available')).not.toBeInTheDocument();
+    expect(screen.getByText('Check failed')).toBeInTheDocument();
+    expect(screen.queryByText('Current')).not.toBeInTheDocument();
+    expect(screen.getByText(/^Last successful check /)).toBeInTheDocument();
+  });
+
+  it('shows a neutral state when the status cannot be loaded', async () => {
+    vi.mocked(appUpdateApi.status)
+      .mockRejectedValueOnce(new Error('Server unavailable'))
+      .mockResolvedValueOnce(upToDate);
+    const user = userEvent.setup();
+    render(<UpdatesView />);
+    expect(await screen.findByRole('heading', { name: 'Couldn’t load' })).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Server unavailable');
+    expect(screen.queryByText('Current')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /^Snaglet/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(await screen.findByRole('heading', { name: 'Snaglet 1.0.0' })).toBeInTheDocument();
+  });
+
+  it('keeps the last install failure visible until the next attempt', async () => {
+    vi.mocked(appUpdateApi.status).mockResolvedValue(available);
+    updateState.current = {
+      offer: null,
+      running: false,
+      message: 'The downloaded update failed its signature check.',
+      failure: 'The downloaded update failed its signature check.',
+    };
+    render(<UpdatesView />);
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Last install attempt failed: The downloaded update failed its signature check.'
+    );
   });
 
   it('checks now and shows the new result', async () => {

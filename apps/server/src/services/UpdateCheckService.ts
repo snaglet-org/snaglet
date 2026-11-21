@@ -7,12 +7,16 @@
  * Updates) skips the cadence but not the per-version dedupe, and runs at most
  * once a minute. The request is unauthenticated and never carries a stored
  * credential. Failures log at debug; the last one's reason is kept in memory
- * for the status.
+ * for the status, and a failed check does not count as the day's check.
+ *
+ * Only a build that can install updates (the desktop shell sets
+ * SNAGLET_UPDATE_NOTICES=1 for the released app) posts the notice; others
+ * still check, for Settings → Updates.
  */
 
 import { getErrorMessage } from '@snaglet/shared/utils';
 import { SNAGLET_REPOSITORY, appUpdateOfferTitle } from '@snaglet/shared/constants';
-import { appUpdateOfferVersion } from '@snaglet/shared/constants/release';
+import { appUpdateOfferVersion, compareVersions } from '@snaglet/shared/constants/release';
 import { logger } from '@server/config/logger';
 import { notificationService } from '@server/services/NotificationService';
 import { Settings } from '@snaglet/db/tables/settings';
@@ -68,35 +72,15 @@ interface UpdateStatus {
   lastError: string | null;
 }
 
+/** Whether this server may post "update available" notices. */
+function updateNoticesEnabled(): boolean {
+  return process.env.SNAGLET_UPDATE_NOTICES === '1';
+}
+
 function appVersion(): string {
   return (
     process.env.SNAGLET_APP_VERSION?.trim() || process.env.npm_package_version?.trim() || '0.1.0'
   );
-}
-
-/**
- * Loose semver compare on dot-separated numeric parts ("v" prefix tolerated,
- * pre-release suffixes compared lexically only when numerics tie). Returns
- * >0 when a is newer than b.
- */
-export function compareVersions(a: string, b: string): number {
-  const parse = (v: string) => {
-    const clean = v.trim().replace(/^v/i, '');
-    const [core, pre] = clean.split('-', 2);
-    const parts = core.split('.').map((p) => Number.parseInt(p, 10) || 0);
-    while (parts.length < 3) parts.push(0);
-    return { parts, pre: pre ?? null };
-  };
-  const pa = parse(a);
-  const pb = parse(b);
-  for (let i = 0; i < 3; i++) {
-    if (pa.parts[i] !== pb.parts[i]) return pa.parts[i] - pb.parts[i];
-  }
-  // Same numeric core: a release (no pre tag) outranks a pre-release.
-  if (pa.pre === pb.pre) return 0;
-  if (pa.pre === null) return 1;
-  if (pb.pre === null) return -1;
-  return pa.pre < pb.pre ? -1 : 1;
 }
 
 class UpdateCheckServiceClass {
@@ -126,7 +110,7 @@ class UpdateCheckServiceClass {
     const current = appVersion();
     let dismissed = 0;
     try {
-      for (const notice of await notificationService.listRecent()) {
+      for (const notice of await notificationService.listVisibleOfType('app_update')) {
         const offered = appUpdateOfferVersion(notice);
         if (offered === null || compareVersions(offered, current) > 0) continue;
         await notificationService.dismiss(notice.id);
@@ -192,13 +176,13 @@ class UpdateCheckServiceClass {
     try {
       const state = await this.readState();
       const release = await this.fetchLatestRelease();
-      // Leave lastCheckedAt alone so the next hourly tick retries instead of
-      // waiting a full day.
-      if (release === 'rate-limited') return this.status();
+      // A check that did not reach an answer leaves lastCheckedAt alone, so the
+      // next hourly tick retries instead of waiting a full day.
+      if (release === 'failed') return this.status();
       const now = new Date().toISOString();
 
       if (release === null) {
-        // No release yet (or fetch failed — already logged at debug).
+        // No release published yet.
         await this.writeState({ ...state, lastCheckedAt: now });
         return this.status();
       }
@@ -211,7 +195,7 @@ class UpdateCheckServiceClass {
         latest: release,
       };
 
-      if (newer && state.lastNotifiedVersion !== release.version) {
+      if (newer && updateNoticesEnabled() && state.lastNotifiedVersion !== release.version) {
         await notificationService.create({
           type: 'app_update',
           title: appUpdateOfferTitle(release.version),
@@ -228,7 +212,8 @@ class UpdateCheckServiceClass {
     }
   }
 
-  private async fetchLatestRelease(): Promise<LatestRelease | null | 'rate-limited'> {
+  /** The latest release, null when none is published, or 'failed' (reason in lastError). */
+  private async fetchLatestRelease(): Promise<LatestRelease | null | 'failed'> {
     const headers: Record<string, string> = {
       Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',
@@ -247,12 +232,12 @@ class UpdateCheckServiceClass {
       if (RATE_LIMITED_STATUSES.has(res.status)) {
         logger.debug(`${LOG_PREFIX} GitHub API ${res.status} for ${REPO}; retrying next tick`);
         this.lastError = 'GitHub is limiting requests right now. Try again later.';
-        return 'rate-limited';
+        return 'failed';
       }
       if (!res.ok) {
         logger.debug(`${LOG_PREFIX} GitHub API ${res.status} for ${REPO}`);
         this.lastError = `GitHub answered with status ${res.status}.`;
-        return null;
+        return 'failed';
       }
       this.lastError = null;
       const body = (await res.json()) as {
@@ -274,7 +259,7 @@ class UpdateCheckServiceClass {
       // Network down is an everyday laptop condition, not an error.
       logger.debug(`${LOG_PREFIX} fetch failed: ${getErrorMessage(err)}`);
       this.lastError = 'Snaglet couldn’t reach GitHub.';
-      return null;
+      return 'failed';
     }
   }
 

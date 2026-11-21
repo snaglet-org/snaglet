@@ -101,6 +101,13 @@
   color: var(--color-text-muted);
 }
 
+.failure {
+  margin: 8px 0 0;
+  color: var(--color-warning);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .progress {
   color: var(--color-text);
   font-family: var(--font-mono, monospace);

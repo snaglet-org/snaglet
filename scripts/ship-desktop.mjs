@@ -21,12 +21,20 @@
  *                    offered as an in-app update.
  *   --no-updater     Ship without the in-app update files. Installed copies
  *                    cannot update to this release; users download it by hand.
+ *   --rotate-update-key
+ *                    Publish update files although the published latest.json
+ *                    was signed with another key (installed copies will refuse
+ *                    this update). Without it, a key change stops the release.
+ *   --skip-key-continuity-check
+ *                    Do not read the published latest.json to compare keys
+ *                    (for when GitHub cannot be reached).
  *   --dry-run        Do everything except create the GitHub release. It does
  *                    not build (pass --build for that), and it signs the update
  *                    with the real key unless --no-updater is passed.
  *
  * A tag with a pre-release suffix (v1.2.0-rc.1) is published as a GitHub
- * pre-release, so it never becomes the "latest" release installed apps read.
+ * pre-release, so it never becomes the "latest" release installed apps read,
+ * and it ships without update files.
  *
  * What it ships:
  *   - Snaglet-<version>-macos-arm64.dmg  (compressed disk image with /Applications symlink)
@@ -59,8 +67,10 @@ import {
   UPDATER_TARGET,
   assertUpdaterArchiveLayout,
   buildUpdaterManifest,
+  publicKeyId,
   readTarEntries,
   signedFileName,
+  updateKeyChange,
   updaterArchiveName,
   updaterSigningProblem,
   updaterTarCreateArgs,
@@ -136,12 +146,16 @@ const dryRun = getFlag('--dry-run');
 // and the server's release check never offer one.
 const prerelease = version.includes('-');
 
-// updater signing: refuse before any long step when the key is missing
-const withUpdater = !getFlag('--no-updater');
-const NO_UPDATER_WARNING =
-  '\n⚠ --no-updater: this release has no in-app update files (latest.json, the signed archive).\n' +
-  '  Installed copies of Snaglet CANNOT update themselves to it. Every user must download it\n' +
-  '  by hand, and the update notification will send them to the release page.';
+// updater signing: refuse before any long step when the key is missing.
+// Installed apps only update to full releases, so a pre-release never gets
+// update files.
+const withUpdater = !getFlag('--no-updater') && !prerelease;
+const NO_UPDATER_WARNING = prerelease
+  ? '\nPre-release tag: shipping without in-app update files. Installed apps only update to full releases.'
+  : '\n⚠ --no-updater: this release has no in-app update files (latest.json, the signed archive).\n' +
+    '  Installed copies of Snaglet CANNOT update themselves to it: they still show the update\n' +
+    '  notice, but Install fails, says the release may not offer an in-app update, and offers\n' +
+    '  the release page. Every user must download it by hand.';
 const updaterPubkey = JSON.parse(readFileSync(TAURI_CONFIG, 'utf8')).plugins?.updater?.pubkey;
 if (withUpdater) {
   const problem = updaterSigningProblem(process.env);
@@ -160,8 +174,62 @@ if (withUpdater) {
   }
   if (!updaterPubkey) fail(`${TAURI_CONFIG} has no plugins.updater.pubkey to verify against.`);
   if (!existsSync(TAURI_CLI)) fail(`Tauri CLI not found at ${TAURI_CLI}. Run pnpm install.`);
+  if (getFlag('--skip-key-continuity-check')) {
+    console.log(
+      '\n⚠ --skip-key-continuity-check: not comparing the update key with the published one.'
+    );
+  } else {
+    await checkKeyContinuity();
+  }
 } else {
   console.log(NO_UPDATER_WARNING);
+}
+
+/**
+ * Installed copies trust the key that signed the update they last read. Read
+ * the published latest.json and stop when this release's key differs, unless
+ * the change is deliberate (--rotate-update-key).
+ */
+async function checkKeyContinuity() {
+  const url = `https://github.com/${REPO}/releases/latest/download/latest.json`;
+  const retry = 'Check the network and try again, or pass --skip-key-continuity-check.';
+  let response;
+  try {
+    response = await fetch(url);
+  } catch (error) {
+    fail(
+      `Could not read the published latest.json to compare update keys (${error.message}).\n${retry}`
+    );
+  }
+  if (response.status === 404) {
+    console.log(
+      '\nNo published latest.json: this is the first release with in-app updates (or the latest\n' +
+        'release shipped without them), so there is no earlier update key to compare.'
+    );
+    return;
+  }
+  if (!response.ok) {
+    fail(`Reading the published latest.json failed with status ${response.status}.\n${retry}`);
+  }
+  let change;
+  try {
+    change = updateKeyChange(await response.json(), updaterPubkey);
+  } catch (error) {
+    fail(`The published latest.json could not be read (${error.message}).\n${retry}`);
+  }
+  if (change === null) {
+    console.log(`  ✔ update key ${publicKeyId(updaterPubkey)} matches the published latest.json`);
+    return;
+  }
+  if (getFlag('--rotate-update-key')) {
+    console.log(`\n⚠ --rotate-update-key: ${change}`);
+    return;
+  }
+  fail(
+    `${change}\n` +
+      'If the key was lost or replaced on purpose, see "If the private key is lost" in\n' +
+      'docs/release-process.md: ship with --no-updater, or pass --rotate-update-key.'
+  );
 }
 
 // optionally build
@@ -360,22 +428,23 @@ async function stageUpdater() {
   // The app as an updated user will run it: unpacked from the archive. Only a
   // notarized build gets this far (see the Gatekeeper gate above).
   const unpacked = mkdtempSync(join(tmpdir(), 'snaglet-updater-verify-'));
+  // fail() exits at once, so the temp dir is removed before reporting.
+  let problem = null;
   try {
     runFile('tar', ['-xzf', archivePath, '-C', unpacked]);
     const app = join(unpacked, 'Snaglet.app');
     runFile('codesign', ['--verify', '--deep', '--strict', app], { capture: true });
     runFile('xcrun', ['stapler', 'validate', app], { capture: true });
     runFile('spctl', ['--assess', '--type', 'execute', app], { capture: true });
-    console.log(
-      '  ✔ update archive unpacks to a Snaglet.app that is signed, stapled, and accepted by Gatekeeper'
-    );
   } catch (error) {
-    fail(
-      `Snaglet.app unpacked from the update archive failed verification.\n${error.stderr ?? error.message ?? ''}`
-    );
+    problem = `Snaglet.app unpacked from the update archive failed verification.\n${error.stderr ?? error.message ?? ''}`;
   } finally {
     rmSync(unpacked, { recursive: true, force: true });
   }
+  if (problem) fail(problem);
+  console.log(
+    '  ✔ update archive unpacks to a Snaglet.app that is signed, stapled, and accepted by Gatekeeper'
+  );
 
   // The key comes from the environment; never echo the signer's output as-is.
   const secrets = [

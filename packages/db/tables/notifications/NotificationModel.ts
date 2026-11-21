@@ -41,6 +41,16 @@ class NotificationModelClass extends Model<NotificationRecord, CreateNotificatio
     );
   }
 
+  /** Every notification of one type that is still showing, newest first. */
+  async listVisibleOfType(type: NotificationType): Promise<NotificationRecord[]> {
+    return this.query<NotificationRecord>(
+      `SELECT * FROM notifications
+       WHERE NOT dismissed AND type = $1
+       ORDER BY created_at DESC`,
+      [type]
+    );
+  }
+
   async countUnread(): Promise<number> {
     const row = await this.queryOne<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM notifications

@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NotificationRecord } from '@snaglet/shared/types';
 
 const shell = vi.hoisted(() => ({ invoke: vi.fn() }));
@@ -32,6 +32,7 @@ vi.mock('@desktop/utils/api', async (importOriginal) => {
 import { NotificationPopover } from '@desktop/components/StatusBar/consumers/NotificationPopover';
 import { seedAgentWork } from '@desktop/utils/agentWorkState';
 import { dismissAppUpdateOffer } from '@desktop/utils/appUpdate';
+import { showToast } from '@desktop/utils/toast';
 import { AppUpdatePrompt } from './AppUpdatePrompt';
 
 const offer: NotificationRecord = {
@@ -47,7 +48,22 @@ const offer: NotificationRecord = {
   createdAt: new Date().toISOString(),
 };
 
-function renderWithPrompt() {
+/** Install calls the shell made so far (the support check is not one). */
+function installs(): unknown[] {
+  return shell.invoke.mock.calls.filter(([command]) => command === 'install_app_update');
+}
+
+/** This copy can update itself unless `reason` is given. */
+function shellSupports(reason?: string) {
+  shell.invoke.mockImplementation(async (command: string) => {
+    if (command === 'app_update_support' && reason) {
+      throw { kind: 'unsupported', message: reason };
+    }
+    return command === 'install_app_update' ? '1.0.1' : undefined;
+  });
+}
+
+async function renderWithPrompt() {
   render(
     <>
       <NotificationPopover notifications={[offer]} onClose={vi.fn()} />
@@ -55,12 +71,14 @@ function renderWithPrompt() {
     </>
   );
   fireEvent.click(screen.getByText(offer.title));
-  return screen.getByRole('dialog', { name: 'Snaglet v1.0.1 is available' });
+  return screen.findByRole('dialog', { name: 'Snaglet v1.0.1 is available' });
 }
 
 function thread(id: string) {
   return { id, kind: 'thread-run' as const, startedAt: '2026-11-20T10:00:00.000Z' };
 }
+
+beforeEach(() => shellSupports());
 
 afterEach(() => {
   act(() => {
@@ -68,43 +86,67 @@ afterEach(() => {
     seedAgentWork([]);
   });
   shell.invoke.mockReset();
+  vi.mocked(showToast).mockReset();
 });
 
 describe('AppUpdatePrompt', () => {
-  it('opens on the notification click and invokes nothing yet', () => {
-    const dialog = renderWithPrompt();
+  it('opens on the notification click and installs nothing yet', async () => {
+    const dialog = await renderWithPrompt();
     expect(dialog).toHaveTextContent('Install and restart?');
     expect(screen.getByRole('button', { name: 'Install' })).toBeEnabled();
-    expect(shell.invoke).not.toHaveBeenCalled();
+    expect(installs()).toHaveLength(0);
   });
 
-  it('closes on Later without invoking anything', () => {
-    renderWithPrompt();
+  it('closes on Later without installing anything', async () => {
+    await renderWithPrompt();
     fireEvent.click(screen.getByRole('button', { name: 'Later' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(shell.invoke).not.toHaveBeenCalled();
+    expect(installs()).toHaveLength(0);
   });
 
   it('starts the install once on Install', async () => {
-    shell.invoke.mockResolvedValue('1.0.1');
-    renderWithPrompt();
+    await renderWithPrompt();
     fireEvent.click(screen.getByRole('button', { name: 'Install' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    await waitFor(() => expect(shell.invoke).toHaveBeenCalledTimes(1));
-    expect(shell.invoke).toHaveBeenCalledWith('install_app_update', expect.anything());
+    await waitFor(() => expect(installs()).toHaveLength(1));
   });
 
-  it('says how many agents are working and that they will be stopped', () => {
+  it('says running work stops, counting working agents', async () => {
     act(() => seedAgentWork([thread('run-1'), thread('run-2')]));
-    expect(renderWithPrompt()).toHaveTextContent('2 agents are working. They will be stopped.');
+    expect(await renderWithPrompt()).toHaveTextContent(
+      'Anything still running stops, including 2 working agents.'
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Later' }));
 
     act(() => seedAgentWork([thread('run-1')]));
     fireEvent.click(screen.getByText(offer.title));
-    expect(screen.getByRole('dialog')).toHaveTextContent('1 agent is working. It will be stopped.');
+    expect(await screen.findByRole('dialog')).toHaveTextContent(
+      'Anything still running stops, including 1 working agent.'
+    );
   });
 
-  it('leaves the agents line out when none are working', () => {
-    expect(renderWithPrompt()).not.toHaveTextContent(/agents? (is|are) working/);
+  it('still says running work stops when no agent is working', async () => {
+    const dialog = await renderWithPrompt();
+    expect(dialog).toHaveTextContent('Anything still running stops.');
+    expect(dialog).not.toHaveTextContent(/working agent/);
+  });
+
+  it('does not ask where this copy cannot update; it gives the reason instead', async () => {
+    shellSupports('Snaglet Preview doesn’t install updates.');
+    render(
+      <>
+        <NotificationPopover notifications={[offer]} onClose={vi.fn()} />
+        <AppUpdatePrompt />
+      </>
+    );
+    fireEvent.click(screen.getByText(offer.title));
+    await waitFor(() =>
+      expect(showToast).toHaveBeenCalledWith(
+        'Snaglet Preview doesn’t install updates.',
+        expect.objectContaining({ action: expect.objectContaining({ label: 'Release page' }) })
+      )
+    );
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(installs()).toHaveLength(0);
   });
 });

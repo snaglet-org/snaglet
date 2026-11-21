@@ -7,23 +7,22 @@ import {
   useAppUpdateState,
 } from '@desktop/utils/appUpdate';
 
-function runningAgentsLine(count: number): string | null {
-  if (count === 0) return null;
-  return count === 1
-    ? '1 agent is working. It will be stopped.'
-    : `${count} agents are working. They will be stopped.`;
+/** Restarting stops agents, hooks and background jobs alike. */
+function stopsLine(agents: number): string {
+  if (agents === 0) return 'Anything still running stops.';
+  return `Anything still running stops, including ${agents === 1 ? '1 working agent' : `${agents} working agents`}.`;
 }
 
 /**
  * The question asked before an update installs, opened by `offerAppUpdate`
- * from the update notification or Settings → Updates. Install starts the
- * download; Later closes it and changes nothing. Mounted once at the app root.
+ * from the update notification or Settings → Updates; the title names the
+ * release that will be installed. Install starts the download; Later closes
+ * it and changes nothing. Mounted once at the app root.
  */
 export const AppUpdatePrompt: FC = () => {
   const { offer } = useAppUpdateState();
   const agents = countActiveAgentProcesses(useAgentWork());
   if (!offer) return null;
-  const agentsLine = runningAgentsLine(agents);
   return (
     <ConfirmModal
       title={`Snaglet ${offer} is available`}
@@ -34,7 +33,7 @@ export const AppUpdatePrompt: FC = () => {
       }}
       onCancel={dismissAppUpdateOffer}
     >
-      {agentsLine ? ['Install and restart?', agentsLine] : 'Install and restart?'}
+      {['Install and restart?', stopsLine(agents)]}
     </ConfirmModal>
   );
 };

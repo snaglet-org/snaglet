@@ -26,14 +26,32 @@ vi.mock('@tauri-apps/api/core', () => ({
 
 const RELEASE_URL = `https://github.com/${SNAGLET_REPOSITORY}/releases/tag/v9.9.9`;
 
-beforeEach(() => {
-  vi.mocked(appUpdateApi.status).mockResolvedValue({
+type Progress = { onmessage: (message: unknown) => void };
+
+function statusWithLatest(version: string) {
+  return {
     currentVersion: '1.0.0',
     lastCheckedAt: null,
-    latest: { version: 'v9.9.9', url: RELEASE_URL, publishedAt: null, name: null },
+    latest: { version, url: RELEASE_URL, publishedAt: null, name: null },
     updateAvailable: true,
     lastError: null,
+  };
+}
+
+/** The shell answers `app_update_support` with `support` and `install_app_update` with `install`. */
+function shellAnswers(
+  support: () => Promise<unknown>,
+  install?: (args: { onProgress: Progress }) => unknown
+) {
+  shell.invoke.mockImplementation(async (command: string, args: { onProgress: Progress }) => {
+    if (command === 'app_update_support') return support();
+    if (command === 'install_app_update') return install?.(args);
+    return undefined;
   });
+}
+
+beforeEach(() => {
+  vi.mocked(appUpdateApi.status).mockResolvedValue(statusWithLatest('v9.9.9'));
 });
 
 afterEach(() => {
@@ -55,21 +73,58 @@ function lastToast() {
   return calls[calls.length - 1];
 }
 
+function installs(): unknown[] {
+  return shell.invoke.mock.calls.filter(([command]) => command === 'install_app_update');
+}
+
 describe('offering an update', () => {
-  it('opens the latest release page in the browser shell', async () => {
+  it('gives the reason and the release page in the browser shell', async () => {
     const open = vi.spyOn(window, 'open').mockImplementation(() => null);
-    offerAppUpdate('v9.9.9');
+    const { result } = renderHook(() => useAppUpdateState());
+    await act(() => offerAppUpdate('v9.9.9'));
+    expect(result.current.offer).toBeNull();
+    const [message, options] = lastToast();
+    expect(message).toBe('The browser version doesn’t install updates.');
+    options?.action?.run();
     await vi.waitFor(() => expect(open).toHaveBeenCalledWith(RELEASE_URL, '_blank', 'noopener'));
   });
 
-  it('only asks in the desktop app: nothing is invoked until Install', () => {
+  it('only asks in the desktop app: nothing is installed until Install', async () => {
     vi.mocked(isTauriEnv).mockReturnValue(true);
+    shellAnswers(async () => undefined);
     const { result } = renderHook(() => useAppUpdateState());
-    act(() => offerAppUpdate('v1.0.1'));
-    expect(result.current.offer).toBe('v1.0.1');
+    await act(() => offerAppUpdate('v9.9.9'));
+    expect(result.current.offer).toBe('v9.9.9');
     act(() => dismissAppUpdateOffer());
     expect(result.current.offer).toBeNull();
-    expect(shell.invoke).not.toHaveBeenCalled();
+    expect(installs()).toHaveLength(0);
+  });
+
+  it('gives the shell’s reason instead of asking where this copy cannot update', async () => {
+    vi.mocked(isTauriEnv).mockReturnValue(true);
+    shellAnswers(async () => {
+      throw { kind: 'unsupported', message: 'Snaglet Preview doesn’t install updates.' };
+    });
+    const { result } = renderHook(() => useAppUpdateState());
+    await act(() => offerAppUpdate('v9.9.9'));
+    expect(result.current.offer).toBeNull();
+    const [message, options] = lastToast();
+    expect(message).toBe('Snaglet Preview doesn’t install updates.');
+    expect(options?.action?.label).toBe('Release page');
+    expect(installs()).toHaveLength(0);
+  });
+
+  it('names the latest known release when it is newer than the notice', async () => {
+    vi.mocked(isTauriEnv).mockReturnValue(true);
+    shellAnswers(async () => undefined);
+    const { result } = renderHook(() => useAppUpdateState());
+    vi.mocked(appUpdateApi.status).mockResolvedValue(statusWithLatest('v1.0.2'));
+    await act(() => offerAppUpdate('v1.0.1'));
+    expect(result.current.offer).toBe('v1.0.2');
+    act(() => dismissAppUpdateOffer());
+    vi.mocked(appUpdateApi.status).mockResolvedValue(statusWithLatest('v1.0.0'));
+    await act(() => offerAppUpdate('v1.0.1'));
+    expect(result.current.offer).toBe('v1.0.1');
   });
 });
 
@@ -77,14 +132,25 @@ describe('installing in the desktop app', () => {
   beforeEach(() => vi.mocked(isTauriEnv).mockReturnValue(true));
 
   it('shows each step in one toast while the shell installs', async () => {
-    shell.invoke.mockImplementation(async (command: string, args: Record<string, unknown>) => {
-      expect(command).toBe('install_app_update');
-      const progress = args.onProgress as { onmessage: (message: unknown) => void };
-      progress.onmessage({ phase: 'downloading', version: '1.0.1', downloaded: 50, total: 200 });
-      progress.onmessage({ phase: 'downloading', version: '1.0.1', downloaded: 3e6, total: null });
-      progress.onmessage({ phase: 'installing', version: '1.0.1' });
-      return '1.0.1';
-    });
+    shellAnswers(
+      async () => undefined,
+      ({ onProgress }) => {
+        onProgress.onmessage({
+          phase: 'downloading',
+          version: '1.0.1',
+          downloaded: 50,
+          total: 200,
+        });
+        onProgress.onmessage({
+          phase: 'downloading',
+          version: '1.0.1',
+          downloaded: 3e6,
+          total: null,
+        });
+        onProgress.onmessage({ phase: 'installing', version: '1.0.1' });
+        return '1.0.1';
+      }
+    );
     await expect(confirmAppUpdate()).resolves.toBe('updated to 1.0.1');
     expect(toasts()).toEqual([
       'Checking for the Snaglet update…',
@@ -98,30 +164,56 @@ describe('installing in the desktop app', () => {
     }
   });
 
-  it('shows the real reason and offers the release page when the update fails', async () => {
-    shell.invoke.mockImplementation(async (command: string) => {
-      if (command === 'install_app_update') {
+  it('shows the reason, offers the release page, and keeps the failure until the next try', async () => {
+    const { result } = renderHook(() => useAppUpdateState());
+    shellAnswers(
+      async () => undefined,
+      () => {
         throw {
           kind: 'signatureRejected',
           message: 'The downloaded update failed its signature check.',
         };
       }
-      return undefined;
-    });
-    await expect(confirmAppUpdate()).resolves.toBe(
-      'The downloaded update failed its signature check.'
     );
+    await act(async () => {
+      await expect(confirmAppUpdate()).resolves.toBe(
+        'The downloaded update failed its signature check.'
+      );
+    });
     const [message, options] = lastToast();
     expect(message).toBe('The downloaded update failed its signature check.');
     expect(options?.action?.label).toBe('Release page');
+    expect(result.current.failure).toBe('The downloaded update failed its signature check.');
     options?.action?.run();
     await vi.waitFor(() =>
       expect(shell.invoke).toHaveBeenCalledWith('open_url', { url: RELEASE_URL })
     );
+
+    // A new attempt clears it.
+    let finish: (version: string) => void = () => {};
+    shellAnswers(
+      async () => undefined,
+      () => new Promise<string>((resolve) => (finish = resolve))
+    );
+    let next: Promise<string> = Promise.resolve('');
+    act(() => {
+      next = confirmAppUpdate();
+    });
+    expect(result.current.failure).toBeNull();
+    await vi.waitFor(() => expect(installs()).toHaveLength(2));
+    await act(async () => {
+      finish('1.0.1');
+      await next;
+    });
   });
 
   it('says so without a release page when Snaglet is already up to date', async () => {
-    shell.invoke.mockRejectedValue({ kind: 'upToDate', message: 'Snaglet is up to date.' });
+    shellAnswers(
+      async () => undefined,
+      () => {
+        throw { kind: 'upToDate', message: 'Snaglet is up to date.' };
+      }
+    );
     await confirmAppUpdate();
     const [message, options] = lastToast();
     expect(message).toBe('Snaglet is up to date.');
@@ -129,11 +221,14 @@ describe('installing in the desktop app', () => {
   });
 
   it('keeps the outcome when a progress step arrives late', async () => {
-    let progress: { onmessage: (message: unknown) => void } | undefined;
-    shell.invoke.mockImplementation(async (_command: string, args: Record<string, unknown>) => {
-      progress = args.onProgress as typeof progress;
-      throw { kind: 'offline', message: 'Snaglet couldn’t reach GitHub.' };
-    });
+    let progress: Progress | undefined;
+    shellAnswers(
+      async () => undefined,
+      ({ onProgress }) => {
+        progress = onProgress;
+        throw { kind: 'offline', message: 'Snaglet couldn’t reach GitHub.' };
+      }
+    );
     await confirmAppUpdate();
     progress?.onmessage({ phase: 'installing', version: '1.0.1' });
     expect(lastToast()[0]).toBe('Snaglet couldn’t reach GitHub.');
@@ -141,11 +236,12 @@ describe('installing in the desktop app', () => {
 
   it('joins a running update and shows its progress again instead of asking', async () => {
     let finish: (version: string) => void = () => {};
-    let progress: { onmessage: (message: unknown) => void } | undefined;
-    shell.invoke.mockImplementation(
-      (_command: string, args: Record<string, unknown>) =>
+    let progress: Progress | undefined;
+    shellAnswers(
+      async () => undefined,
+      ({ onProgress }) =>
         new Promise<string>((resolve) => {
-          progress = args.onProgress as typeof progress;
+          progress = onProgress;
           finish = resolve;
         })
     );
@@ -154,7 +250,7 @@ describe('installing in the desktop app', () => {
     act(() => {
       first = confirmAppUpdate();
     });
-    await vi.waitFor(() => expect(shell.invoke).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(progress).toBeDefined());
     act(() =>
       progress?.onmessage({ phase: 'downloading', version: '1.0.1', downloaded: 1, total: 2 })
     );
@@ -162,7 +258,7 @@ describe('installing in the desktop app', () => {
     expect(result.current.message).toBe('Downloading Snaglet 1.0.1… 50%');
 
     vi.mocked(showToast).mockClear();
-    act(() => offerAppUpdate('v1.0.1'));
+    await act(() => offerAppUpdate('v1.0.1'));
     expect(result.current.offer).toBeNull();
     expect(lastToast()[0]).toBe('Downloading Snaglet 1.0.1… 50%');
 
@@ -170,7 +266,7 @@ describe('installing in the desktop app', () => {
     await act(async () => finish('1.0.1'));
     await expect(first).resolves.toBe('updated to 1.0.1');
     await expect(second).resolves.toBe('updated to 1.0.1');
-    expect(shell.invoke).toHaveBeenCalledTimes(1);
+    expect(installs()).toHaveLength(1);
     expect(result.current.running).toBe(false);
   });
 });
