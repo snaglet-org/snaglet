@@ -36,6 +36,7 @@ import {
   tokenFingerprint,
   type ClaudeCliAuth,
 } from '@server/services/ProviderChatService/providers/claudeCliAuth';
+import { resolveClaudeCliCommand } from '@server/services/ProviderChatService/providers/claudeCliLocation';
 
 const DEFAULT_LOGIN_TIMEOUT_MS = 5 * 60 * 1000;
 /** Import + live verification after the browser flow must finish in this long. */
@@ -43,8 +44,6 @@ const DEFAULT_COMPLETION_TIMEOUT_MS = 60_000;
 const KEYCHAIN_POLL_MS = 3_000;
 /** Bytes of raw output kept (in memory only) to spot a URL split across chunks. */
 const URL_SCAN_WINDOW = 4_096;
-/** The CLI's own binary name; an absolute path can be pinned for packaged installs. */
-const CLAUDE_CLI_COMMAND = process.env.SNAGLET_CLAUDE_CLI_PATH || 'claude';
 const CLAUDE_CLI_LOGIN_ARGS: readonly string[] = ['auth', 'login'];
 
 /** Hosts the CLI may hand us for browser authorization. Anything else is ignored. */
@@ -61,8 +60,10 @@ export const LOGIN_MESSAGES = {
   importFailed: 'Claude signed in, but Snaglet could not import the login. Try again.',
   importTimedOut: 'Claude signed in, but verifying the login took too long. Try again.',
   missingCli:
-    'Claude Code CLI not found. Install it (npm install -g @anthropic-ai/claude-code) and ' +
-    'make sure `claude` is on your PATH, then try again.',
+    'Claude Code CLI not found. Install it (curl -fsSL https://claude.ai/install.sh | bash, or ' +
+    'npm install -g @anthropic-ai/claude-code), check that `claude --version` works in a ' +
+    'terminal, then try again. If it is installed somewhere unusual, set ' +
+    'SNAGLET_CLAUDE_CLI_PATH to the claude binary and restart Snaglet.',
   spawnFailed:
     'Could not start Claude sign-in. Check that the Claude Code CLI runs from a terminal.',
 } as const;
@@ -160,7 +161,7 @@ export class ClaudeCodeLoginService {
       // CLAUDE_CONFIG_DIR set for the server stays out too: Snaglet reads the CLI's default
       // login (claudeCliAuth.ts).
       spawnLogin: () =>
-        spawn(CLAUDE_CLI_COMMAND, [...CLAUDE_CLI_LOGIN_ARGS], {
+        spawn(resolveClaudeCliCommand(), [...CLAUDE_CLI_LOGIN_ARGS], {
           stdio: ['ignore', 'pipe', 'pipe'],
           shell: false,
           env: buildCommandEnv(),

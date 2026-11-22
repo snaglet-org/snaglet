@@ -10,11 +10,10 @@
  */
 
 import { execFile } from 'child_process';
-import { homedir } from 'os';
-import { join } from 'path';
 import { getErrorMessage } from '@snaglet/shared/utils';
 import { logger } from '@server/config/logger';
 import { buildCommandEnv } from '@server/services/ToolService/lib/buildSafeEnv';
+import { claudeCliCandidates } from './claudeCliLocation';
 
 /** Presented when no installed CLI answers. Keep it at a recent release. */
 export const CLAUDE_CLI_FALLBACK_VERSION = '2.1.285';
@@ -32,28 +31,6 @@ export interface ClaudeCliVersionInfo {
   version: string;
   /** `detected` from an installed CLI, or the `fallback` constant. */
   source: 'detected' | 'fallback';
-}
-
-/** The CLI binary; an absolute path can be pinned for packaged installs. */
-function claudeCliCommand(): string {
-  return process.env.SNAGLET_CLAUDE_CLI_PATH || 'claude';
-}
-
-/**
- * Where to look. A desktop app launched from Finder does not inherit the
- * shell PATH, so the installer locations are tried after the PATH lookup.
- */
-function candidateCommands(): string[] {
-  const home = homedir();
-  return [
-    ...new Set([
-      claudeCliCommand(),
-      join(home, '.claude', 'local', 'claude'),
-      join(home, '.local', 'bin', 'claude'),
-      '/opt/homebrew/bin/claude',
-      '/usr/local/bin/claude',
-    ]),
-  ];
 }
 
 /** `2.1.285 (Claude Code)` → `2.1.285`; null when no semver is present. */
@@ -78,7 +55,7 @@ function runVersion(command: string): Promise<string> {
 }
 
 async function detect(): Promise<ClaudeCliVersionInfo> {
-  for (const command of candidateCommands()) {
+  for (const command of claudeCliCandidates()) {
     try {
       const version = parseClaudeCliVersion(await runVersion(command));
       if (version) {
