@@ -1761,7 +1761,10 @@ describe('AutomationService', () => {
       // The lid opens: the next look runs it.
       fullWake.mockResolvedValue(true);
       await setNextRun(a.scheduleId!, '1 second');
-      await tickUntil(async () => (await runsOf(a.scheduleId!)).length === 1);
+      await tickUntil(
+        async () =>
+          (await runsOf(a.scheduleId!)).length === 1 && dispatchMock.mock.calls.length === 1
+      );
       expect(dispatchMock).toHaveBeenCalledTimes(1);
     });
 
@@ -1785,7 +1788,10 @@ describe('AutomationService', () => {
       // It answers: the same day's run goes ahead.
       check.mockResolvedValue('ready');
       await setNextRun(a.scheduleId!, '1 second');
-      await tickUntil(async () => (await runsOf(a.scheduleId!)).length === 1);
+      await tickUntil(
+        async () =>
+          (await runsOf(a.scheduleId!)).length === 1 && dispatchMock.mock.calls.length === 1
+      );
       expect((await runsOf(a.scheduleId!))[0]).toMatchObject({ status: 'succeeded' });
       expect(dispatchMock).toHaveBeenCalledTimes(1);
     });
