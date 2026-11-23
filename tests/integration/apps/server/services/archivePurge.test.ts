@@ -219,7 +219,8 @@ describe('sweeping archived projects with many tables', () => {
     // over 3,000 of them.
     expect(lockPeaks.length).toBeGreaterThan(1);
     expect(Math.max(...lockPeaks)).toBeLessThan(1000);
-  });
+    // 260 real tables created and dropped: slow machines need more than the 5-second default.
+  }, 60_000);
 
   it('keeps what earlier transactions deleted when a later one fails, and finishes when run again', async () => {
     const early = containerId('earl');
