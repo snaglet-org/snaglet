@@ -1,5 +1,11 @@
 blank_issues_enabled: true
 contact_links:
+  - name: Ask a question
+    url: https://github.com/snaglet-org/snaglet/discussions/categories/q-a
+    about: For help with setup or usage, ask in Discussions.
+  - name: Share an idea
+    url: https://github.com/snaglet-org/snaglet/discussions/categories/ideas
+    about: For ideas that are still taking shape. Other people can add to them and vote.
   - name: Report a security vulnerability
     url: https://github.com/snaglet-org/snaglet/security/advisories/new
     about: Report security issues privately, not in a public issue. See SECURITY.md.
