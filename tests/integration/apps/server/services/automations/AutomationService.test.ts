@@ -1481,6 +1481,12 @@ describe('AutomationService', () => {
       scheduleService.start();
       try {
         await waitFor(check);
+        // A run row exists before its run finishes; let every started run settle.
+        await waitFor(
+          async () =>
+            (await sql(`SELECT 1 FROM public.schedule_runs WHERE status = 'running' LIMIT 1`))
+              .length === 0
+        );
       } finally {
         scheduleService.stop();
       }
@@ -1672,6 +1678,12 @@ describe('AutomationService', () => {
       scheduleService.start();
       try {
         await waitFor(check);
+        // A run row exists before its run finishes; let every started run settle.
+        await waitFor(
+          async () =>
+            (await sql(`SELECT 1 FROM public.schedule_runs WHERE status = 'running' LIMIT 1`))
+              .length === 0
+        );
       } finally {
         scheduleService.stop();
       }
@@ -1761,7 +1773,10 @@ describe('AutomationService', () => {
       // The lid opens: the next look runs it.
       fullWake.mockResolvedValue(true);
       await setNextRun(a.scheduleId!, '1 second');
-      await tickUntil(async () => (await runsOf(a.scheduleId!)).length === 1);
+      await tickUntil(
+        async () =>
+          (await runsOf(a.scheduleId!)).length === 1 && dispatchMock.mock.calls.length === 1
+      );
       expect(dispatchMock).toHaveBeenCalledTimes(1);
     });
 
@@ -1785,7 +1800,10 @@ describe('AutomationService', () => {
       // It answers: the same day's run goes ahead.
       check.mockResolvedValue('ready');
       await setNextRun(a.scheduleId!, '1 second');
-      await tickUntil(async () => (await runsOf(a.scheduleId!)).length === 1);
+      await tickUntil(
+        async () =>
+          (await runsOf(a.scheduleId!)).length === 1 && dispatchMock.mock.calls.length === 1
+      );
       expect((await runsOf(a.scheduleId!))[0]).toMatchObject({ status: 'succeeded' });
       expect(dispatchMock).toHaveBeenCalledTimes(1);
     });
