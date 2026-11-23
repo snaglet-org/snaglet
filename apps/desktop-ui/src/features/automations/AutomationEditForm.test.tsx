@@ -75,7 +75,12 @@ const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 const ONCE: AutomationWhen = { kind: 'once', at: '2030-01-02T09:30:00.000Z', tz: 'UTC' };
 
 async function openCalendarList(current: string) {
-  fireEvent.click(screen.getByRole('button', { name: `Calendar: ${current}` }));
+  const name = `Calendar: ${current}`;
+  // The form disables its controls while a save is in flight; a click then does nothing.
+  await waitFor(() =>
+    expect((screen.getByRole('button', { name }) as HTMLButtonElement).disabled).toBe(false)
+  );
+  fireEvent.click(screen.getByRole('button', { name }));
   return screen.findByRole('listbox', { name: 'Calendar' });
 }
 
