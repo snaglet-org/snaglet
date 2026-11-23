@@ -1481,6 +1481,12 @@ describe('AutomationService', () => {
       scheduleService.start();
       try {
         await waitFor(check);
+        // A run row exists before its run finishes; let every started run settle.
+        await waitFor(
+          async () =>
+            (await sql(`SELECT 1 FROM public.schedule_runs WHERE status = 'running' LIMIT 1`))
+              .length === 0
+        );
       } finally {
         scheduleService.stop();
       }
@@ -1672,6 +1678,12 @@ describe('AutomationService', () => {
       scheduleService.start();
       try {
         await waitFor(check);
+        // A run row exists before its run finishes; let every started run settle.
+        await waitFor(
+          async () =>
+            (await sql(`SELECT 1 FROM public.schedule_runs WHERE status = 'running' LIMIT 1`))
+              .length === 0
+        );
       } finally {
         scheduleService.stop();
       }
