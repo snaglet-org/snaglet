@@ -4,6 +4,22 @@ How a release is checked and built: the local gates, what the GitHub Actions
 workflows define, the desktop artifacts, signing and shipping, and the
 documentation gate.
 
+## Branches
+
+- **`staging`** is where work lands. Every pull request targets it.
+- **`main`** is what has been released. It changes only through a pull request
+  from `staging`, one per release.
+
+A release goes like this:
+
+1. Merge the pull requests for the release into `staging`.
+2. Open a pull request from `staging` to `main` and wait for its checks.
+3. Merge it with a merge commit, so `staging` and `main` keep the same history.
+4. Build, sign and publish from `main` (see [Signing and shipping](#signing-and-shipping)).
+
+An urgent fix follows the same path: a pull request to `staging`, then
+`staging` to `main`.
+
 ## Local gates
 
 These are the release checks. Run them at the root of a clean checkout:
@@ -35,7 +51,7 @@ pnpm test:e2e:app   # after pnpm build:desktop
 repository's Actions settings, so the local gates above are the checks to run before a pull
 request.
 
-`ci.yml` targets pushes and pull requests to `main` and defines these jobs:
+`ci.yml` targets pushes and pull requests to `main` and `staging` and defines these jobs:
 
 - **Source and package contracts** (Ubuntu): `pnpm format:check`,
   `pnpm lint:baseline` (ESLint and Knip may not exceed
