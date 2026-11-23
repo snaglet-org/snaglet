@@ -1,6 +1,6 @@
 {
   "name": "@snaglet/db",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "license": "MIT",
   "description": "Type-safe SQL data layer for managed and external PostgreSQL",
