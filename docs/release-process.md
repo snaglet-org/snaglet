@@ -15,10 +15,38 @@ A release goes like this:
 1. Merge the pull requests for the release into `staging`.
 2. Open a pull request from `staging` to `main` and wait for its checks.
 3. Merge it with a merge commit, so `staging` and `main` keep the same history.
-4. Build, sign and publish from `main` (see [Signing and shipping](#signing-and-shipping)).
+4. The merge is tagged with the version, for example `v1.0.1` (see [Tags](#tags)).
+5. Build, sign and publish that tag from `main` (see [Signing and shipping](#signing-and-shipping)).
+6. Raise the version on `staging` for the next release.
 
 An urgent fix follows the same path: a pull request to `staging`, then
 `staging` to `main`.
+
+### Tags
+
+The `Tag` workflow (`.github/workflows/tag.yml`) names each commit by the branch
+it landed on. The version comes from `package.json`.
+
+| Landed on | Tag                                 | Meaning                           |
+| --------- | ----------------------------------- | --------------------------------- |
+| `staging` | `v1.0.1-beta.1`, `v1.0.1-beta.2`, … | A candidate for the next release. |
+| `main`    | `v1.0.1`                            | The release.                      |
+
+A tag is only a name for a commit. It builds nothing and publishes nothing, and
+installed apps do not see it: they update from a published release (see
+[Signing and shipping](#signing-and-shipping)).
+
+After a release, raise the version on `staging` for the next one, in a pull
+request:
+
+```bash
+pnpm version:set 1.0.2
+```
+
+That writes the version to every `package.json`, the Tauri config and the
+desktop crate. Until it is raised, the `Tag` workflow fails on purpose with
+"already released: raise the version", because a tag never moves to a new
+commit.
 
 ## Local gates
 

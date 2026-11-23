@@ -1,0 +1,43 @@
+name: Tag
+
+# Names each commit that lands on a release branch: `v1.0.1` on main,
+# `v1.0.1-beta.N` on staging. The version comes from package.json.
+# A tag is only a name; building and publishing a release is a separate step.
+
+on:
+  push:
+    branches: [main, staging]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tag-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: Tag the landed commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Work out the tag
+        id: next
+        run: |
+          tag="$(node scripts/release/tags.mjs "${GITHUB_REF_NAME}")"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+      - name: Create and push the tag
+        if: steps.next.outputs.tag != ''
+        env:
+          TAG: ${{ steps.next.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${TAG}" -m "Snaglet ${TAG}"
+          git push origin "${TAG}"

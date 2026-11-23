@@ -1,6 +1,6 @@
 {
   "name": "@snaglet/theme",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Snaglet's color theme as data: the default palette, its token keys, and ready-made CSS and SCSS.",
   "license": "MIT",
