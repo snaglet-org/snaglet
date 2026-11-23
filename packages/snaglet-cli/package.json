@@ -1,6 +1,6 @@
 {
   "name": "@snaglet/cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "license": "MIT",
   "description": "Snaglet command line — run sandbox scripts that call Snaglet tools via the Tools SDK",

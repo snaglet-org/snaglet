@@ -1,6 +1,6 @@
 {
   "productName": "Snaglet",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "identifier": "com.snaglet.app",
   "build": {
     "beforeDevCommand": "node scripts/patch-tauri-port.mjs && pnpm -w run dev:desktop-ui",

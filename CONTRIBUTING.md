@@ -109,8 +109,13 @@ The rules live in `scripts/lib/docsGate.ts`.
 Use [Conventional Commits](https://www.conventionalcommits.org), for example
 `fix(socket): release active run lock on abort`.
 
-Before you open a pull request, bring your branch up to date with the default
-branch, run the checks above for what you touched, and update the docs.
+Open pull requests against `staging`, not `main`. Branch from `staging`, and
+before you open the pull request, bring your branch up to date with it, run the
+checks above for what you touched, and update the docs.
+
+`main` holds what has been released. Changes collect on `staging` and reach
+`main` together, in one pull request from `staging` to `main` per release (see
+[Release process](docs/release-process.md#branches)).
 
 ## Security
 

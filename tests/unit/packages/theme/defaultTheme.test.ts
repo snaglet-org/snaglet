@@ -143,9 +143,13 @@ describe('generated files', () => {
       exports: Record<string, unknown>;
       files: string[];
     };
+    // Every workspace package carries the release version (pnpm version:set).
+    const root = JSON.parse(
+      readFileSync(path.join(PACKAGE_DIR, '..', '..', 'package.json'), 'utf8')
+    ) as { version: string };
     expect(pkg).toMatchObject({
       name: '@snaglet/theme',
-      version: '1.0.0',
+      version: root.version,
       private: true,
       license: 'MIT',
     });
