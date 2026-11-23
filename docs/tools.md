@@ -19,14 +19,95 @@ On the agent's **Capabilities** tab, **Tools** has three modes. A thread can ove
 
 | Mode           | Meaning                                                                  |
 | -------------- | ------------------------------------------------------------------------ |
-| **All**        | Every tool runs. Only a bare deny entry naming a tool blocks it.         |
+| **All**        | Every tool runs, except what the deny list blocks.                       |
 | **Allow list** | Listed tools run. Others ask you, or are refused when nobody can answer. |
 | **Deny list**  | Everything runs except what the deny list names.                         |
 
-- Deny beats allow. An entry names a tool by id.
+- Deny beats allow, and the deny list applies in every mode. An entry names a tool by id.
 - Shell, file, git and SQL entries can take a specifier: `shell(git:*)`, `file(/srv/app/**)`,
   `database_execute(select:*)`.
 - `tool` and `get_current_datetime` are always available.
+
+### Command rules
+
+A deny list is a guard against mistakes, not a sandbox. **Allow list** mode is the firm
+control: it runs only what you list and asks about the rest.
+
+An allow rule such as `shell(git:*)` covers a command that starts with `git` and runs nothing
+else, so `git status && rm x` still asks. It does let through whatever that program runs
+itself: `shell(git:*)` allows `git -c alias.x='!rm -r dir' x`, and `shell(find:*)` allows
+`find . -exec rm {} +`.
+
+A deny rule such as `shell(rm -r:*)` is checked against every command a line runs, not only
+the first:
+
+- each part of a chain, pipeline or subshell (`;`, `&&`, `||`, `|`, `&`, new lines, `( )`,
+  `{ }`), and the commands inside `$(…)`, backticks and `<(…)`;
+- the script given to `sh -c` or `bash -c`, a plain `eval`, and the action of a `trap`;
+- any word that names the program, in any case, so `/bin/rm`, `RM`, `sudo rm`, `env X=1 rm`,
+  `xargs rm` and `find … -exec rm` all count. So does `git rm -r`, which the rule refuses too.
+
+Flags match as a set: `rm -r:*` also refuses `rm -rf`, `rm -fr`, `rm -r -f`, `rm x -r`,
+`rm -R` and `rm --recursive`. A rule needs all its flags: deny `rm -r:*`, not `rm -rf:*`.
+Words after a bare `--` are file names, not flags. Other words in the rule must appear in the
+same order. Text inside a quoted argument, such as `git commit -m "drop the rm -r step"`, is
+not a command, and neither is a heredoc given to a program that reads it as data: `cat`,
+`tee`, `git`, `gh`, `jq`, `yq`, `kubectl`, `psql`, `mysql`, `sqlite3`, `python`, `node`,
+`ruby`, `perl` or `php`. A rule that names only a program, such as `rm:*`, refuses more: any
+line that mentions `rm` as a word, and any line where a variable could be `rm`, such as
+`echo $HOME`.
+
+With a command deny rule, a command that cannot be checked is refused, and the refusal says
+why. Common examples:
+
+- a program held in a variable or produced by a command: `$EDITOR x`, `"$@"`,
+  `exec "$SHELL" -l`, `eval "$(pyenv init -)"`, and `$HOME/bin/x` too (`~/bin/x` and
+  `"$HOME/bin/x"` are fine);
+- a variable, glob or brace pattern after the program that could be one of the rule's flags:
+  `rm "$f"`, `rm {-r,-f} dir` (but `rm -f -- "$f"` is fine), and a variable that could be the
+  program, with the rule's flags after it (`sudo $X -r dir`);
+- a shell reading its input: `curl … | sh`, `bash`, `bash <<'EOF'`, `source` or `.` of input
+  or of a file only known when it runs (`. /dev/stdin`, `source "$F"`, or any file in a line
+  that pipes or redirects input), and `xargs` feeding a shell or a program with no words of
+  its own (`xargs nice`; `xargs echo`, `wc`, `kill`, `grep`, `cat`, `ls`, `stat`, `du`, `head`
+  and `tail` are fine). In a line that pipes or redirects input, sh or bash named as a word
+  counts, unless the program only looks at names (`grep`, `which`, `type`, `brew install`,
+  `man` and a few more), and so does any other shell named with no script (`nice zsh`);
+- a heredoc given to any other program, such as `ssh host <<'EOF'` or `sudo tee`, a heredoc
+  line that ends with `\`, and any heredoc inside `$(…)`, backticks or `<(…)`, such as
+  `git commit -m "$(cat <<'EOF' … EOF)"`, because shells disagree on where it ends. Give the
+  text to the program directly instead: `git commit -F - <<'EOF'` or
+  `gh pr create --body-file - <<'EOF'`;
+- zsh, fish, dash and other shells given a `-c` script or reading their input, and a **shell**
+  setting other than sh or bash;
+- `find -exec {}`, `-execdir {}`, `-ok {}` and `-okdir {}`, which run each path found;
+- arithmetic (`$((…))`, `((…))`), `$'…'` quoting, a brace pattern as the program
+  (`{rm,-r,dir}`), extended globs, `alias`, a `trap` of text only known when it runs,
+  `hash -p`, `env -S`, `parallel`, `case`, any mention of `PS4`, `BASH_ENV`, `ENV` or
+  `PROMPT_COMMAND` (they can make the shell run text later, even when set by `read` or
+  `printf -v`), a `#` comment inside `$(…)` or `<(…)`, an `xargs` option this check does not
+  know, an unclosed quote or heredoc, a carriage return, a NUL byte, scripts nested more than 3
+  deep, and lines over 64 KB or with very many words.
+
+A deny rule cannot stop:
+
+- a script file the agent writes and then runs (`bash cleanup.sh`, `source cleanup.sh`,
+  `zsh cleanup.zsh`);
+- code in another language: `python -c`, `node -e`, `awk`, `perl`, or a heredoc given to one,
+  or to `psql`, `mysql` or `sqlite3`, whose own commands can start a shell;
+- other ways to delete: `find -delete`, `git clean`, `rsync --delete`, `npx rimraf`,
+  `npm run clean`, or another tool;
+- a renamed copy or link of the program (`cp /bin/rm ./d`);
+- an alias, function, variable or `PATH` set up in an earlier call;
+- text the shell or another program evaluates later, such as a command passed as one quoted
+  string to `ssh`, `watch`, `su -c`, `script` or a `git -c alias`, or a program and its flags
+  held in variables or a brace list and handed to another program (`pnpm exec {rm,-r,dir}`,
+  `nice $CMD`);
+- values built at run time that the shell evaluates as arithmetic (`let`, `[[ … -eq … ]]`,
+  `${s:n}`, array subscripts), and text put into shell variables by `printf -v` or `read`
+  (including a variable whose name is built at run time);
+- a shell started by another program (`script`, `su`, `tmux`), whose later input is read here
+  with sh rules.
 
 ## Asking first
 
@@ -131,6 +212,8 @@ Server paths are relative to `apps/server/src/services/`.
 
 - `ToolService/lib/agentToolPolicy.ts` is the one policy source. `toolVisibility.ts` decides which
   tools an agent may use, and `toolPermission.ts` applies deny rules and specifiers per call.
+  A command deny rule reads every command in a shell line through `shellScript.ts` and
+  `commandDenyRule.ts`.
 - Ask-first resolves in `AgentToolResolver.ts`. The guarded set for new agents is
   `ToolService/lib/guardedTools.ts`.
 - Chat asks a person. `/api/tools/execute` with an agent id refuses a call that would ask (403).

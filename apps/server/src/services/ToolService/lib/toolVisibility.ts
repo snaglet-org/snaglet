@@ -3,9 +3,10 @@
  * and the one gate for calls nobody can be asked about.
  *
  * Visibility is the tool-level half of tool access: an allow-list agent sees
- * only the tools its list names, a deny-list agent loses only the tools a bare
- * deny names, a subagent helper never gets SUBAGENT_DENIED_TOOL_IDS, and a live
- * MCP tool follows its server's enablement instead. Entries name a tool by id
+ * only the tools its list names, a deny-list or All agent loses only the
+ * tools a bare deny names (or whose every op is denied), a subagent helper
+ * never gets SUBAGENT_DENIED_TOOL_IDS, and a live MCP tool follows its
+ * server's enablement instead. Entries name a tool by id
  * or display name through ruleNamesTool, like every other access path.
  * AgentToolResolver filters every agent's tool set with `isToolVisible` (so
  * chat, schedules, tool(op:search) and the action gateway see the same set), and
@@ -90,7 +91,6 @@ export function isToolVisible(
   // Search and the clock are safe platform primitives. Every tool-capable
   // agent needs them advertised even when its policy is otherwise restrictive.
   if (isAlwaysAvailableTool(tool.id)) return true;
-  if (access.mode === 'all') return true;
   // A live MCP tool is gated by its server's enablement for the agent, applied
   // when the agent's tool set is resolved (resolveAgentTools), not by the
   // allow list. A bare deny naming it still blocks it per call.
@@ -106,6 +106,7 @@ export function isToolVisible(
       return identifiersMatch(toolId, tool, activeToolIds, 'allow');
     });
   }
+  // All and deny-list mode: the deny list applies in every mode.
   if (access.denyList.length === 0) return true;
   // Only a bare deny entry removes the tool entirely. A specifier'd deny
   // (e.g. `shell_exec(rm:*)`) leaves the tool visible and is enforced per-call.

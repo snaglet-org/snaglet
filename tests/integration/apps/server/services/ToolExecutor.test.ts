@@ -537,8 +537,16 @@ describe('ToolExecutor', () => {
       }
       return toolExecutor.execute({ name, input }, makeAgentTool());
     };
+    // Under a command deny rule a bare `bash` is refused: it runs commands
+    // from its input. The session (as one started earlier would be) is opened
+    // ungated here, and every write into it still goes through the gate.
     const startBash = async () => {
-      const r = await gated('shell', { op: 'run', cmd: 'bash', workdir: dir, yield_time_ms: 300 });
+      const refused = await gated('shell', { op: 'run', cmd: 'bash', workdir: dir });
+      expect(refused.error).toMatch(/`bash` with no script runs commands from its input/);
+      const r = await toolExecutor.execute(
+        { name: 'shell', input: { op: 'run', cmd: 'bash', workdir: dir, yield_time_ms: 300 } },
+        makeAgentTool()
+      );
       const id = Number(/session ID (\d+)/.exec(r.output)?.[1]);
       expect(id).toBeGreaterThan(0);
       return id;
@@ -580,6 +588,29 @@ describe('ToolExecutor', () => {
       }
       await settle();
       await expect(stat(path.join(dir, 'ran.txt'))).rejects.toThrow();
+    });
+
+    it('a write that leaves a quote open is refused before it reaches the shell', async () => {
+      const id = await startBash();
+      try {
+        // Had it landed, bash would read the next write as the rest of this
+        // string, while the gate read that write on its own.
+        const open = await gated('shell', { op: 'write', session_id: id, chars: 'echo "\n' });
+        expect(open.success).toBe(false);
+        expect(open.error).toMatch(/could not be checked .* \(a quote is left open\)/);
+        // bash never got the quote, so this line runs as its own command.
+        const ok = await gated('shell', {
+          op: 'write',
+          session_id: id,
+          chars: 'echo fine > ok.txt\n',
+          yield_time_ms: 300,
+        });
+        expect(ok.success).toBe(true);
+        await settle();
+        expect(await readFile(path.join(dir, 'ok.txt'), 'utf8')).toBe('fine\n');
+      } finally {
+        await gated('shell', { op: 'write', session_id: id, chars: 'exit\n' });
+      }
     });
 
     it('a denied command is refused with background: true too, before anything runs', async () => {

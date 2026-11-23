@@ -41,6 +41,14 @@ A deny that names a command (`shell_exec(rm:*)`, `write_stdin(rm:*)`, …) appli
 shell op, both `run` and `write`, because it is about the command. Bare denies and every
 allow stay scoped to their own op.
 
+A command deny rule is checked against every command a line would run (each part of a chain,
+`$(…)`, `sh -c '…'`, a program given by path or after `sudo`), and a write is read as one
+script. A rule needs all its flags: deny `rm -r:*`, not `rm -rf:*`. A command the rule
+cannot check, such as one whose program is in a variable, is refused with the reason. If a
+command is refused, do not rephrase it to get around the rule; ask the user. One exception: a
+heredoc inside `$(…)`, backticks or `<(…)` is always refused, so give that text to the program
+directly, as in `git commit -F - <<'EOF'` or `gh pr create --body-file - <<'EOF'`.
+
 These ids work as aliases: `exec_command` → `run`, `shell_exec` → `run`
 (`command` → `cmd`, `cwd` → `workdir`, and it still waits for the command to finish),
 `write_stdin` → `write`.

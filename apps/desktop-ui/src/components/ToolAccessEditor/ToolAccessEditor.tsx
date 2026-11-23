@@ -195,27 +195,10 @@ function describeUnmatched(
 }
 
 /**
- * True when a stored deny entry still blocks in All mode. Chat dispatch and the
- * headless gate (`/api/tools/execute`, the action gateway) check a bare deny
- * naming the called tool by its id, display name or a definition name (any
- * case) in every mode (the server's bareDenyEntryFor); visibility and the
- * permission engine skip All mode, so nothing else applies there.
- */
-function blocksInAllMode(entry: string, tools: readonly ToolOption[]): boolean {
-  const rule = parseRule(entry);
-  if (rule.specifier !== null) return false;
-  const lower = rule.toolId.toLowerCase();
-  return tools.some(
-    (tool) =>
-      !ALWAYS_AVAILABLE_TOOL_IDS.has(tool.id) &&
-      [tool.id, tool.name, ...(tool.aliases ?? [])].some((name) => name.toLowerCase() === lower)
-  );
-}
-
-/**
  * How one "Also blocked (deny list)" row reads: the tool it blocks with the
- * main list's reading (an op, a rule), or why it has no effect. In All mode
- * only chat dispatch's whole-tool check applies, so it reads as the whole tool.
+ * main list's reading (an op, a rule), or why it has no effect. The server
+ * applies the deny list in every mode (the permission engine, chat dispatch
+ * and `/api/tools/execute`), so an entry blocks in All mode as it does here.
  */
 function describeAlsoBlocked(
   text: string,
@@ -225,20 +208,18 @@ function describeAlsoBlocked(
 ): Pick<UnmatchedEntry, 'label' | 'hint'> {
   if (view.unmatched !== null) return describeUnmatched(text, view, tools);
   const name = tools.find((t) => t.id === view.toolId)?.name ?? view.toolId;
-  if (mode === 'all') {
-    return {
-      label: `blocks ${name}`,
-      hint: `All mode still refuses ${name} when an agent calls it, in a thread or from a script: a deny entry naming a tool, with no rule, applies in every mode.`,
-    };
-  }
   const detail = view.scope
     ? ` · ${view.scope.key}: ${view.scope.label}`
     : view.specifier
       ? ` · ${view.specifier}`
       : '';
+  const whole = view.scope === null && view.specifier === null;
   return {
     label: `blocks ${name}${detail}`,
-    hint: 'The deny list still applies in allow-list mode: a call this entry matches is refused, even when the tool is allowed.',
+    hint:
+      mode === 'all'
+        ? `All mode still refuses ${name} ${whole ? 'when an agent calls it' : 'calls this entry matches'}, in a thread or from a script: the deny list applies in every mode.`
+        : 'The deny list still applies in allow-list mode: a call this entry matches is refused, even when the tool is allowed.',
   };
 }
 
@@ -521,10 +502,9 @@ export const ToolAccessEditor: FC<ToolAccessEditorProps> = ({
     return [...buckets.entries()].sort(([a], [b]) => a.localeCompare(b));
   }, [tools, search]);
 
-  // Stored deny entries that still apply outside deny-list mode (see
-  // blocksInAllMode and describeAlsoBlocked), one row per distinct entry, so
-  // a deny that blocks is never hidden by the mode. Entries that apply in no
-  // way in this mode are left out: they are inactive until the mode changes.
+  // Stored deny entries, which apply in every mode (see describeAlsoBlocked),
+  // one row per distinct entry, so a deny that blocks is never hidden by the
+  // mode.
   const alsoBlocked = useMemo<UnmatchedEntry[]>(() => {
     const mode = pending.mode;
     if (mode === 'deny_list' || tools.length === 0) return [];
@@ -534,7 +514,6 @@ export const ToolAccessEditor: FC<ToolAccessEditorProps> = ({
       const text = formatRule(parseRule(entry));
       if (seen.has(text)) continue;
       const view = viewEntry(entry, catalog, 'deny');
-      if (mode === 'all' && (view.unmatched !== null || !blocksInAllMode(entry, tools))) continue;
       seen.add(text);
       out.push({ text, rowToolId: null, ...describeAlsoBlocked(text, view, tools, mode) });
     }

@@ -153,10 +153,18 @@ describe('bare denies hold in every mode, as chat dispatch reads them', () => {
     }
   );
 
-  it('All mode: a rule, or an old id outside the definition names, does nothing', () => {
+  it('All mode: a rule or an old id applies to the calls it matches, as in the other modes', () => {
     const run = { op: 'run', cmd: 'rm -rf /tmp/a' };
-    expect(gate(allMode('shell(rm:*)'), SHELL, run).decision).toBe('allow');
-    expect(gate(allMode('exec_command'), SHELL, run).decision).toBe('allow');
+    expect(gate(allMode('shell(rm:*)'), SHELL, run)).toMatchObject({
+      decision: 'deny',
+      rule: 'shell(rm:*)',
+    });
+    expect(gate(allMode('shell(rm:*)'), SHELL, { op: 'run', cmd: 'ls' }).decision).toBe('allow');
+    // exec_command is shell(op:run): it blocks run, not write.
+    expect(gate(allMode('exec_command'), SHELL, run).decision).toBe('deny');
+    expect(gate(allMode('exec_command'), SHELL, { op: 'write', session_id: 1 }).decision).toBe(
+      'allow'
+    );
     expect(gate(allMode('other_tool'), SHELL, run).decision).toBe('allow');
   });
 
@@ -201,5 +209,21 @@ describe('doc history family visibility and headless access', () => {
     expect(isToolVisible(row, a, new Set(['doc']))).toBe(true);
     expect(gate(a, row, { op: 'restore' }).decision).toBe('allow');
     expect(gate(a, row, { op: 'delete' }).decision).toBe('ask');
+  });
+});
+
+describe('All mode hides what the deny list removes, as deny-list mode does', () => {
+  it('hides a tool whose every op is denied, and one a bare deny names', () => {
+    const allOps = access({ mode: 'all', denyList: ['memory_save', 'memory_forget'] });
+    expect(isToolVisible(MEMORY, allOps, ACTIVE)).toBe(false);
+    expect(isToolVisible(MEMORY, access({ mode: 'all', denyList: ['memory'] }), ACTIVE)).toBe(
+      false
+    );
+    // One op denied: the tool stays, and that op is refused per call.
+    const oneOp = access({ mode: 'all', denyList: ['memory_forget'] });
+    expect(isToolVisible(MEMORY, oneOp, ACTIVE)).toBe(true);
+    expect(gate(oneOp, MEMORY, { op: 'delete' }).decision).toBe('deny');
+    expect(gate(oneOp, MEMORY, { op: 'create' }).decision).toBe('allow');
+    expect(isToolVisible(MEMORY, access({ mode: 'all' }), ACTIVE)).toBe(true);
   });
 });

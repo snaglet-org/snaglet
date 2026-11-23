@@ -473,11 +473,13 @@ Some of the main ones:
 1. Open the agent from the **Agents** view.
 2. Go to the **Capabilities** tab, then **Tools**.
 3. Pick a mode:
-   - **All**: every tool.
+   - **All**: every tool, except what the deny list blocks.
    - **Allow list**: only the tools you list run freely. Anything else asks you first in a chat, and is refused where nobody can answer.
    - **Deny list**: everything except the tools you list.
 
-A deny entry always wins. A thread can override an agent's tool access on the **Agents** tab of the thread's settings.
+A deny entry always wins, in every mode. A thread can override an agent's tool access on the **Agents** tab of the thread's settings.
+
+On **Shell** you can deny one command instead of the whole tool: add a rule such as \`rm -r:*\` to the deny list. It is checked against every command the agent's line would run, including commands chained with \`;\` or \`&&\`, run through \`sudo\` or \`sh -c\`, or given by path. Flags match as a set, so \`rm -r:*\` also refuses \`rm -rf\`, \`rm -R\` and \`rm --recursive\`. A rule needs all its flags: deny \`rm -r:*\`, not \`rm -rf:*\`. With such a rule, a command that cannot be checked is refused, such as one whose program is in a variable, or a script piped into a shell. A deny list is a guard against mistakes, not a sandbox: an agent can still delete files through a script it writes and runs, another language such as Python, another command such as \`find -delete\`, or another tool. For a firm limit, use **Allow list**.
 
 ## Ask before running
 
