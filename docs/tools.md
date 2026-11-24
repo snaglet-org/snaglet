@@ -30,84 +30,80 @@ On the agent's **Capabilities** tab, **Tools** has three modes. A thread can ove
 
 ### Command rules
 
-A deny list is a guard against mistakes, not a sandbox. **Allow list** mode is the firm
-control: it runs only what you list and asks about the rest.
+A shell entry can name a command: `shell(git:*)` means commands that start with `git`.
 
-An allow rule such as `shell(git:*)` covers a command that starts with `git` and runs nothing
-else, so `git status && rm x` still asks. It does let through whatever that program runs
-itself: `shell(git:*)` allows `git -c alias.x='!rm -r dir' x`, and `shell(find:*)` allows
-`find . -exec rm {} +`.
+A deny list is a guard against mistakes, not a sandbox. For firm control use **Allow list**
+mode: it runs only what you list and asks about the rest.
 
-A deny rule such as `shell(rm -r:*)` is checked against every command a line runs, not only
-the first:
+#### Allow rules
 
-- each part of a chain, pipeline or subshell (`;`, `&&`, `||`, `|`, `&`, new lines, `( )`,
-  `{ }`), and the commands inside `$(…)`, backticks and `<(…)`;
-- the script given to `sh -c` or `bash -c`, a plain `eval`, and the action of a `trap`;
-- any word that names the program, in any case, so `/bin/rm`, `RM`, `sudo rm`, `env X=1 rm`,
-  `xargs rm` and `find … -exec rm` all count. So does `git rm -r`, which the rule refuses too.
+`shell(git:*)` allows a line that starts with `git` and runs nothing else.
 
-Flags match as a set: `rm -r:*` also refuses `rm -rf`, `rm -fr`, `rm -r -f`, `rm x -r`,
-`rm -R` and `rm --recursive`. A rule needs all its flags: deny `rm -r:*`, not `rm -rf:*`.
-Words after a bare `--` are file names, not flags. Other words in the rule must appear in the
-same order. Text inside a quoted argument, such as `git commit -m "drop the rm -r step"`, is
-not a command, and neither is a heredoc given to a program that reads it as data: `cat`,
-`tee`, `git`, `gh`, `jq`, `yq`, `kubectl`, `psql`, `mysql`, `sqlite3`, `python`, `node`,
-`ruby`, `perl` or `php`. A rule that names only a program, such as `rm:*`, refuses more: any
-line that mentions `rm` as a word, and any line where a variable could be `rm`, such as
-`echo $HOME`.
+- `git status && rm x` still asks, because it also runs `rm`.
+- Whatever the program runs itself is allowed. `shell(git:*)` allows
+  `git -c alias.x='!rm -r dir' x`, and `shell(find:*)` allows `find . -exec rm {} +`.
 
-With a command deny rule, a command that cannot be checked is refused, and the refusal says
-why. Common examples:
+#### Deny rules
 
-- a program held in a variable or produced by a command: `$EDITOR x`, `"$@"`,
-  `exec "$SHELL" -l`, `eval "$(pyenv init -)"`, and `$HOME/bin/x` too (`~/bin/x` and
-  `"$HOME/bin/x"` are fine);
-- a variable, glob or brace pattern after the program that could be one of the rule's flags:
-  `rm "$f"`, `rm {-r,-f} dir` (but `rm -f -- "$f"` is fine), and a variable that could be the
-  program, with the rule's flags after it (`sudo $X -r dir`);
-- a shell reading its input: `curl … | sh`, `bash`, `bash <<'EOF'`, `source` or `.` of input
-  or of a file only known when it runs (`. /dev/stdin`, `source "$F"`, or any file in a line
-  that pipes or redirects input), and `xargs` feeding a shell or a program with no words of
-  its own (`xargs nice`; `xargs echo`, `wc`, `kill`, `grep`, `cat`, `ls`, `stat`, `du`, `head`
-  and `tail` are fine). In a line that pipes or redirects input, sh or bash named as a word
-  counts, unless the program only looks at names (`grep`, `which`, `type`, `brew install`,
-  `man` and a few more), and so does any other shell named with no script (`nice zsh`);
-- a heredoc given to any other program, such as `ssh host <<'EOF'` or `sudo tee`, a heredoc
-  line that ends with `\`, and any heredoc inside `$(…)`, backticks or `<(…)`, such as
-  `git commit -m "$(cat <<'EOF' … EOF)"`, because shells disagree on where it ends. Give the
-  text to the program directly instead: `git commit -F - <<'EOF'` or
-  `gh pr create --body-file - <<'EOF'`;
-- zsh, fish, dash and other shells given a `-c` script or reading their input, and a **shell**
-  setting other than sh or bash;
-- `find -exec {}`, `-execdir {}`, `-ok {}` and `-okdir {}`, which run each path found;
-- arithmetic (`$((…))`, `((…))`), `$'…'` quoting, a brace pattern as the program
-  (`{rm,-r,dir}`), extended globs, `alias`, a `trap` of text only known when it runs,
-  `hash -p`, `env -S`, `parallel`, `case`, any mention of `PS4`, `BASH_ENV`, `ENV` or
-  `PROMPT_COMMAND` (they can make the shell run text later, even when set by `read` or
-  `printf -v`), a `#` comment inside `$(…)` or `<(…)`, an `xargs` option this check does not
-  know, an unclosed quote or heredoc, a carriage return, a NUL byte, scripts nested more than 3
-  deep, and lines over 64 KB or with very many words.
+`shell(rm -r:*)` is checked against every command a line runs, not only the first.
 
-A deny rule cannot stop:
+| The rule also catches                       | Example                                                  |
+| ------------------------------------------- | -------------------------------------------------------- |
+| Any part of a chain, pipeline or group      | `ls && rm -r dir`, `(rm -r dir)`                         |
+| Commands inside `$(…)`, backticks or `<(…)` | `echo $(rm -r dir)`                                      |
+| A script given to another shell             | `sh -c`, `bash -c`, `eval`, `trap`                       |
+| The program run through another program     | `sudo rm`, `env X=1 rm`, `xargs rm`, `find -exec rm`     |
+| Another path or letter case                 | `/bin/rm`, `RM`                                          |
+| A subcommand with the same name             | `git rm -r`                                              |
+| The flags in any order or spelling          | `rm -rf`, `rm -fr`, `rm x -r`, `rm -R`, `rm --recursive` |
 
-- a script file the agent writes and then runs (`bash cleanup.sh`, `source cleanup.sh`,
-  `zsh cleanup.zsh`);
-- code in another language: `python -c`, `node -e`, `awk`, `perl`, or a heredoc given to one,
-  or to `psql`, `mysql` or `sqlite3`, whose own commands can start a shell;
-- other ways to delete: `find -delete`, `git clean`, `rsync --delete`, `npx rimraf`,
-  `npm run clean`, or another tool;
-- a renamed copy or link of the program (`cp /bin/rm ./d`);
-- an alias, function, variable or `PATH` set up in an earlier call;
-- text the shell or another program evaluates later, such as a command passed as one quoted
-  string to `ssh`, `watch`, `su -c`, `script` or a `git -c alias`, or a program and its flags
-  held in variables or a brace list and handed to another program (`pnpm exec {rm,-r,dir}`,
-  `nice $CMD`);
-- values built at run time that the shell evaluates as arithmetic (`let`, `[[ … -eq … ]]`,
-  `${s:n}`, array subscripts), and text put into shell variables by `printf -v` or `read`
-  (including a variable whose name is built at run time);
-- a shell started by another program (`script`, `su`, `tmux`), whose later input is read here
-  with sh rules.
+Writing a deny rule:
+
+- **Name as few flags as you can.** A rule matches only when all its flags are present, so deny
+  `rm -r:*`, not `rm -rf:*`.
+- **Give the program a flag or a word.** A bare `rm:*` refuses any line that mentions `rm` as a
+  word, and any line where a variable could be `rm`, such as `echo $HOME`.
+- **Quoted text is not a command.** `git commit -m "drop the rm -r step"` runs. So does a
+  heredoc given to a program that reads it as data: `cat`, `tee`, `git`, `gh`, `jq`, `yq`,
+  `kubectl`, `psql`, `mysql`, `sqlite3`, `python`, `node`, `ruby`, `perl` or `php`.
+- Words after a bare `--` are file names, not flags. Other words in the rule must appear in the
+  same order.
+
+#### Commands that cannot be checked
+
+With a command deny rule set, a command that cannot be read for certain is refused, and the
+refusal says why. The common cases:
+
+| Refused                                                | Example                                                 | Use instead                  |
+| ------------------------------------------------------ | ------------------------------------------------------- | ---------------------------- |
+| The program is in a variable or comes from a command   | `$EDITOR x`, `"$@"`, `$HOME/bin/x`                      | `~/bin/x`, `"$HOME/bin/x"`   |
+| A variable or pattern could be one of the rule's flags | `rm "$f"`, `rm {-r,-f} dir`                             | `rm -f -- "$f"`              |
+| A shell reads its input                                | `curl … \| sh`, `bash <<'EOF'`, `source "$F"`           | Run the commands directly    |
+| A heredoc inside `$(…)`, backticks or `<(…)`           | `git commit -m "$(cat <<'EOF' … EOF)"`                  | `git commit -F - <<'EOF'`    |
+| A heredoc given to a program that may run it           | `ssh host <<'EOF'`                                      |                              |
+| A shell other than sh or bash                          | `zsh -c '…'`, or another **shell** setting              | sh or bash                   |
+| `find` running each path it finds                      | `find … -exec {}`, `-execdir {}`, `-ok {}`              |                              |
+| `xargs` feeding a shell or a bare wrapper              | `xargs sh`, `xargs nice`                                | `xargs` with a named program |
+| Syntax that hides what runs                            | `$((…))`, `$'…'`, `case`, `alias`, `env -S`, `parallel` |                              |
+| Input that is broken or too large                      | An unclosed quote, a carriage return, lines over 64 KB  |                              |
+
+For a pull request body, `gh pr create --body-file - <<'EOF'` works the same way as
+`git commit -F -`.
+
+#### What a deny rule cannot stop
+
+- **A script file** the agent writes and then runs: `bash cleanup.sh`, `source cleanup.sh`.
+- **Another language:** `python -c`, `node -e`, `awk`, `perl`, or a heredoc given to one. The
+  same goes for `psql`, `mysql` and `sqlite3`, whose own commands can start a shell.
+- **Another way to do the same thing:** `find -delete`, `git clean`, `rsync --delete`,
+  `npx rimraf`, `npm run clean`, or another tool.
+- **A renamed copy or link** of the program: `cp /bin/rm ./d`.
+- **Something set up in an earlier call:** an alias, function, variable or `PATH`.
+- **Text that is run later:** a command passed as one quoted string to `ssh`, `watch`, `su -c`
+  or `script`, or held in a variable and handed to another program (`nice $CMD`).
+- **Values built while the command runs:** arithmetic in `let` or `[[ … -eq … ]]`, and text put
+  into variables by `printf -v` or `read`.
+- **A shell started by another program:** `script`, `su`, `tmux`.
 
 ## Asking first
 
