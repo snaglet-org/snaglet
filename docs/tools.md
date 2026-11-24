@@ -35,6 +35,29 @@ A shell entry can name a command: `shell(git:*)` means commands that start with 
 A deny list is a guard against mistakes, not a sandbox. For firm control use **Allow list**
 mode: it runs only what you list and asks about the rest.
 
+How a shell command is decided:
+
+```mermaid
+flowchart TD
+  A[Agent sends a shell command] --> B{Any command deny rule?}
+  B -- No --> M
+  B -- Yes --> C{Can every command in the line be read?}
+  C -- No --> R1[Refused: cannot be checked]
+  C -- Yes --> D{Does any command match a deny rule?}
+  D -- Yes --> R2[Refused: names the rule]
+  D -- No --> M{Tools mode}
+  M -- All --> OK[Allowed]
+  M -- Deny list --> OK
+  M -- Allow list --> E{Starts with an allowed command and runs nothing else?}
+  E -- Yes --> OK
+  E -- No --> F{Is someone there to answer?}
+  F -- Yes --> ASK[Asks you]
+  F -- No --> R3[Refused]
+  OK --> G{Set to ask first, and not in Trusted mode?}
+  G -- Yes --> ASK
+  G -- No --> RUN[Runs]
+```
+
 #### Allow rules
 
 `shell(git:*)` allows a line that starts with `git` and runs nothing else.
