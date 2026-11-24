@@ -221,7 +221,8 @@ export type OpVerdict =
  * Decide whether one call of canonical `toolId` is permitted by its bare deny
  * rules and by alias-scoped allow rules (narrow allow, broad deny; see the
  * module header). Returns allow when no allow rule is scoped, so a tool-wide
- * allow keeps its meaning; the caller's guard engine still runs after it.
+ * allow keeps its meaning; the caller's guard engine still runs after it. The
+ * deny list applies in every mode; only allow_list reads the allow list.
  */
 export function evaluateOpAccess(
   access: { mode: string; allowList: readonly string[]; denyList: readonly string[] },
@@ -229,7 +230,6 @@ export function evaluateOpAccess(
   op: string | null,
   options: OpRuleOptions = {}
 ): OpVerdict {
-  if (access.mode === 'all') return { decision: 'allow' };
   const targets = (list: readonly string[]) =>
     list.map((entry) => scopeRule(entry, options)).filter((rule) => rule.toolId === toolId);
 

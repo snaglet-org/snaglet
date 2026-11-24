@@ -1,13 +1,12 @@
 /**
  * ToolAccessEditor — deny entries outside deny-list mode.
  *
- * Switching mode keeps both lists, and the server still reads the deny list
- * outside deny-list mode: in allow-list mode the permission engine and chat
- * dispatch refuse whatever a deny entry matches (deny > allow), and in All
- * mode chat dispatch still refuses a bare deny naming a tool. Those entries
- * show under "Also blocked (deny list)", each removable on its own. Allow
- * entries in deny-list mode and deny entries All mode ignores apply nowhere,
- * so they are not shown. Opening the editor saves nothing.
+ * Switching mode keeps both lists, and the server reads the deny list in
+ * every mode: the permission engine and chat dispatch refuse whatever a deny
+ * entry matches (deny > allow), in allow-list and All mode alike. Those
+ * entries show under "Also blocked (deny list)", each removable on its own.
+ * Allow entries in deny-list mode apply nowhere, so they are not shown.
+ * Opening the editor saves nothing.
  */
 
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
@@ -137,13 +136,13 @@ describe('ToolAccessEditor — Also blocked (deny list)', () => {
     expect(onSave).toHaveBeenCalledWith(config('deny_list', ['shell', 'search'], []));
   });
 
-  it('in All mode shows only bare deny entries naming a tool, which chat still refuses', () => {
+  it('in All mode shows every deny entry, read as the server applies it', () => {
     render(
       <ToolAccessEditor
         value={config(
           'all',
           ['search'],
-          ['bash', 'shell(rm:*)', 'exec_command', 'sandbox_run', 'now', 'Search']
+          ['bash', 'shell(rm -rf:*)', 'exec_command', 'sandbox_run', 'now', 'Search']
         )}
         tools={TOOLS}
         onSave={vi.fn()}
@@ -154,14 +153,20 @@ describe('ToolAccessEditor — Also blocked (deny list)', () => {
     expect(within(group).getByText('bash')).toBeInTheDocument();
     expect(within(group).getByText('blocks Shell')).toHaveAttribute(
       'title',
-      expect.stringContaining('All mode still refuses Shell')
+      expect.stringContaining('All mode still refuses Shell when an agent calls it')
     );
     expect(within(group).getByText('Search')).toBeInTheDocument();
     expect(within(group).getByText('blocks Search')).toBeInTheDocument();
-    // A rule, an old id, a removed id and an always-available tool apply nowhere in All mode.
-    for (const inactive of ['shell(rm:*)', 'exec_command', 'sandbox_run', 'now']) {
-      expect(within(group).queryByText(inactive)).toBeNull();
-    }
+    // A command rule and an old id block what they match, in All mode too.
+    expect(within(group).getByText('shell(rm -rf:*)')).toBeInTheDocument();
+    expect(within(group).getByText('blocks Shell · rm -rf:*')).toHaveAttribute(
+      'title',
+      expect.stringContaining('All mode still refuses Shell calls this entry matches')
+    );
+    expect(within(group).getByText('blocks Shell · ops: run')).toBeInTheDocument();
+    // An entry with no effect says why, as in allow-list mode.
+    expect(within(group).getByText('removed from Snaglet')).toBeInTheDocument();
+    expect(within(group).getByText('has no effect — always available')).toBeInTheDocument();
     expect(screen.getByText(/except what the deny list below still blocks/i)).toBeInTheDocument();
   });
 
@@ -180,17 +185,20 @@ describe('ToolAccessEditor — Also blocked (deny list)', () => {
     await advance(500);
 
     expect(onSave).toHaveBeenCalledWith(config('all', ['search'], ['shell(rm:*)']));
+    expect(within(alsoBlocked()!).queryByText('bash')).toBeNull();
+    expect(within(alsoBlocked()!).getByText('blocks Shell · rm:*')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove shell(rm:*) from the deny list' }));
+    await advance(500);
+
+    expect(onSave).toHaveBeenLastCalledWith(config('all', ['search'], []));
     expect(alsoBlocked()).toBeNull();
     expect(screen.getByText(/^All tools are callable\./)).toBeInTheDocument();
   });
 
-  it('shows no group in All mode when no deny entry applies', () => {
+  it('shows no group in All mode when the deny list is empty', () => {
     render(
-      <ToolAccessEditor
-        value={config('all', [], ['shell(rm:*)', 'sandbox_run'])}
-        tools={TOOLS}
-        onSave={vi.fn()}
-      />
+      <ToolAccessEditor value={config('all', ['shell'], [])} tools={TOOLS} onSave={vi.fn()} />
     );
 
     expect(alsoBlocked()).toBeNull();

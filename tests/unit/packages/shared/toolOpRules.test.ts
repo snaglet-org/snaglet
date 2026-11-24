@@ -82,9 +82,14 @@ describe('evaluateOpAccess — no silent narrowing', () => {
 });
 
 describe('evaluateOpAccess — inert by default', () => {
-  it('mode all always allows', () => {
-    const access = { mode: 'all', allowList: [], denyList: ['memory_forget'] };
-    expect(evaluateOpAccess(access, 'memory', 'delete', opts).decision).toBe('allow');
+  it('mode all applies only the deny list', () => {
+    const access = { mode: 'all', allowList: ['memory_save'], denyList: ['memory_forget'] };
+    expect(evaluateOpAccess(access, 'memory', 'delete', opts).decision).toBe('deny');
+    // The allow list is not read in mode all: a scoped allow narrows nothing.
+    expect(evaluateOpAccess(access, 'memory', 'search', opts).decision).toBe('allow');
+    expect(evaluateOpAccess({ ...access, denyList: [] }, 'memory', 'delete', opts).decision).toBe(
+      'allow'
+    );
   });
   it('rules for other tools do not affect this one', () => {
     expect(evaluateOpAccess(allow('memory_save'), 'file', 'read', opts).decision).toBe('allow');

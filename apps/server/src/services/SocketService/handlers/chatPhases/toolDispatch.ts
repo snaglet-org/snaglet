@@ -446,11 +446,11 @@ export async function dispatchToolCalls(
       continue;
     }
 
-    // Call-time permission guard for the dangerous "computer" tools. No-op for
-    // mode:all agents and non-guarded tools, except a bare deny naming the tool,
-    // which holds in every mode (bareDenyEntryFor; the headless gate on
-    // /api/tools/execute reads it the same way). `deny` blocks now; `ask` forces
-    // the human confirmation flow below (an interactive thread can always prompt).
+    // Call-time permission guard. A bare deny naming the tool refuses it first
+    // (bareDenyEntryFor; the headless gate on /api/tools/execute reads it the
+    // same way); the engine then applies the deny list in every mode, and the
+    // allow list in allow_list mode. `deny` blocks now, before any prompt, even
+    // for a trusted agent; `ask` forces the human confirmation flow below.
     const permissionAccess = canonicalizeDenyRules(input.toolAccess, agentTool);
     const bareDeny = bareDenyEntryFor(input.toolAccess.denyList, agentTool.tool) !== undefined;
     const permission = bareDeny

@@ -19,14 +19,121 @@ On the agent's **Capabilities** tab, **Tools** has three modes. A thread can ove
 
 | Mode           | Meaning                                                                  |
 | -------------- | ------------------------------------------------------------------------ |
-| **All**        | Every tool runs. Only a bare deny entry naming a tool blocks it.         |
+| **All**        | Every tool runs, except what the deny list blocks.                       |
 | **Allow list** | Listed tools run. Others ask you, or are refused when nobody can answer. |
 | **Deny list**  | Everything runs except what the deny list names.                         |
 
-- Deny beats allow. An entry names a tool by id.
+- Deny beats allow, and the deny list applies in every mode. An entry names a tool by id.
 - Shell, file, git and SQL entries can take a specifier: `shell(git:*)`, `file(/srv/app/**)`,
   `database_execute(select:*)`.
 - `tool` and `get_current_datetime` are always available.
+
+### Command rules
+
+A shell entry can name a command: `shell(git:*)` means commands that start with `git`.
+
+A deny list is a guard against mistakes, not a sandbox. For firm control use **Allow list**
+mode: it runs only what you list and asks about the rest.
+
+In the screenshot, Patty is in **Trusted mode** with a **Deny list** that holds one Shell rule,
+`rm -r:*`. Everything else runs without asking.
+
+![An agent's Tools settings: Trusted mode, Deny list, and the Shell rule rm -r:*](./images/tool-deny-rule.png)
+
+How a shell command is decided:
+
+```mermaid
+flowchart TD
+  A[Agent sends a shell command] --> T{Is Shell enabled for all agents in the Tools view?}
+  T -- No --> R0[Refused: the tool is disabled]
+  T -- Yes --> B{Any command deny rule?}
+  B -- No --> M
+  B -- Yes --> C{Can every command in the line be read?}
+  C -- No --> R1[Refused: cannot be checked]
+  C -- Yes --> D{Does any command match a deny rule?}
+  D -- Yes --> R2[Refused: names the rule]
+  D -- No --> M{Tools mode}
+  M -- All --> OK[Allowed]
+  M -- Deny list --> OK
+  M -- Allow list --> E{Starts with an allowed command and runs nothing else?}
+  E -- Yes --> OK
+  E -- No --> F{Is someone there to answer?}
+  F -- Yes --> ASK[Asks you]
+  F -- No --> R3[Refused]
+  OK --> G{Set to ask first, and not in Trusted mode?}
+  G -- Yes --> ASK
+  G -- No --> RUN[Runs]
+```
+
+#### Allow rules
+
+`shell(git:*)` allows a line that starts with `git` and runs nothing else.
+
+- `git status && rm x` still asks, because it also runs `rm`.
+- Whatever the program runs itself is allowed. `shell(git:*)` allows
+  `git -c alias.x='!rm -r dir' x`, and `shell(find:*)` allows `find . -exec rm {} +`.
+
+#### Deny rules
+
+`shell(rm -r:*)` is checked against every command a line runs, not only the first.
+
+| The rule also catches                       | Example                                                  |
+| ------------------------------------------- | -------------------------------------------------------- |
+| Any part of a chain, pipeline or group      | `ls && rm -r dir`, `(rm -r dir)`                         |
+| Commands inside `$(…)`, backticks or `<(…)` | `echo $(rm -r dir)`                                      |
+| A script given to another shell             | `sh -c`, `bash -c`, `eval`, `trap`                       |
+| The program run through another program     | `sudo rm`, `env X=1 rm`, `xargs rm`, `find -exec rm`     |
+| Another path or letter case                 | `/bin/rm`, `RM`                                          |
+| A subcommand with the same name             | `git rm -r`                                              |
+| The flags in any order or spelling          | `rm -rf`, `rm -fr`, `rm x -r`, `rm -R`, `rm --recursive` |
+
+Writing a deny rule:
+
+- **Name as few flags as you can.** A rule matches only when all its flags are present, so deny
+  `rm -r:*`, not `rm -rf:*`.
+- **Give the program a flag or a word.** A bare `rm:*` refuses any line that mentions `rm` as a
+  word, and any line where a variable could be `rm`, such as `echo $HOME`.
+- **Quoted text is not a command.** `git commit -m "drop the rm -r step"` runs. So does a
+  heredoc given to a program that reads it as data: `cat`, `tee`, `git`, `gh`, `jq`, `yq`,
+  `kubectl`, `psql`, `mysql`, `sqlite3`, `python`, `node`, `ruby`, `perl` or `php`.
+- Words after a bare `--` are file names, not flags. Other words in the rule must appear in the
+  same order.
+
+#### Commands that cannot be checked
+
+With a command deny rule set, a command that cannot be read for certain is refused, and the
+refusal says why. The common cases:
+
+| Refused                                                | Example                                                 | Use instead                  |
+| ------------------------------------------------------ | ------------------------------------------------------- | ---------------------------- |
+| The program is in a variable or comes from a command   | `$EDITOR x`, `"$@"`, `$HOME/bin/x`                      | `~/bin/x`, `"$HOME/bin/x"`   |
+| A variable or pattern could be one of the rule's flags | `rm "$f"`, `rm {-r,-f} dir`                             | `rm -f -- "$f"`              |
+| A shell reads its input                                | `curl … \| sh`, `bash <<'EOF'`, `source "$F"`           | Run the commands directly    |
+| A heredoc inside `$(…)`, backticks or `<(…)`           | `git commit -m "$(cat <<'EOF' … EOF)"`                  | `git commit -F - <<'EOF'`    |
+| A heredoc given to a program that may run it           | `ssh host <<'EOF'`                                      |                              |
+| A shell other than sh or bash                          | `zsh -c '…'`, or another **shell** setting              | sh or bash                   |
+| `find` running each path it finds                      | `find … -exec {}`, `-execdir {}`, `-ok {}`              |                              |
+| `xargs` feeding a shell or a bare wrapper              | `xargs sh`, `xargs nice`                                | `xargs` with a named program |
+| Syntax that hides what runs                            | `$((…))`, `$'…'`, `case`, `alias`, `env -S`, `parallel` |                              |
+| Input that is broken or too large                      | An unclosed quote, a carriage return, lines over 64 KB  |                              |
+
+For a pull request body, `gh pr create --body-file - <<'EOF'` works the same way as
+`git commit -F -`.
+
+#### What a deny rule cannot stop
+
+- **A script file** the agent writes and then runs: `bash cleanup.sh`, `source cleanup.sh`.
+- **Another language:** `python -c`, `node -e`, `awk`, `perl`, or a heredoc given to one. The
+  same goes for `psql`, `mysql` and `sqlite3`, whose own commands can start a shell.
+- **Another way to do the same thing:** `find -delete`, `git clean`, `rsync --delete`,
+  `npx rimraf`, `npm run clean`, or another tool.
+- **A renamed copy or link** of the program: `cp /bin/rm ./d`.
+- **Something set up in an earlier call:** an alias, function, variable or `PATH`.
+- **Text that is run later:** a command passed as one quoted string to `ssh`, `watch`, `su -c`
+  or `script`, or held in a variable and handed to another program (`nice $CMD`).
+- **Values built while the command runs:** arithmetic in `let` or `[[ … -eq … ]]`, and text put
+  into variables by `printf -v` or `read`.
+- **A shell started by another program:** `script`, `su`, `tmux`.
 
 ## Asking first
 
@@ -131,6 +238,8 @@ Server paths are relative to `apps/server/src/services/`.
 
 - `ToolService/lib/agentToolPolicy.ts` is the one policy source. `toolVisibility.ts` decides which
   tools an agent may use, and `toolPermission.ts` applies deny rules and specifiers per call.
+  A command deny rule reads every command in a shell line through `shellScript.ts` and
+  `commandDenyRule.ts`.
 - Ask-first resolves in `AgentToolResolver.ts`. The guarded set for new agents is
   `ToolService/lib/guardedTools.ts`.
 - Chat asks a person. `/api/tools/execute` with an agent id refuses a call that would ask (403).

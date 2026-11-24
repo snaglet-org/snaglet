@@ -1,12 +1,13 @@
 /**
  * toolPermission: call-time permission checks for the "computer" tools (shell,
- * file write/edit/patch, raw SQL), enforced only in ToolAccessConfig modes
- * 'allow_list' and 'deny_list' ('all' is the trusted tier). Entries are rules
- * with an optional specifier: `shell_exec(git:*)` (command prefix),
- * `file_write(/proj/**)` (path glob), `database_execute(select:*)` (SQL type);
- * a bare entry matches any call. Precedence: deny > allow > default, which is
- * 'ask' for allow_list (denied when headless) and 'allow' for deny_list. An
- * allow prefix never covers a chained command; paths resolve before matching.
+ * file write/edit/patch, raw SQL). Entries are rules with an optional
+ * specifier: `shell_exec(git:*)` (command prefix), `file_write(/proj/**)`
+ * (path glob), `database_execute(select:*)` (SQL type); a bare entry matches
+ * any call. Precedence: deny > allow > default, which is 'ask' for allow_list
+ * (denied when headless) and 'allow' for deny_list. The deny list applies in
+ * every mode; mode 'all' checks nothing else. An allow prefix never covers a
+ * chained command; a command deny rule is also checked against every command
+ * a shell line runs (commandDenyRule.ts); paths resolve before matching.
  */
 
 import path from 'path';
@@ -31,6 +32,8 @@ import {
   type ParsedRule,
 } from '@snaglet/shared/utils';
 import { isAlwaysAvailableTool } from './alwaysAvailableTools';
+import { matchDenyCommand } from './commandDenyRule';
+import { HEREDOC_IN_SUBSTITUTION } from './shellScript';
 
 // The rule grammar (which tools are guarded, parsing, formatting) is shared with
 // the UI editor — re-export so server-side importers keep their import path.
@@ -40,6 +43,18 @@ type PermissionDecision = 'allow' | 'deny' | 'ask';
 
 /** Tools that run shell commands and share the git command-specifier namespace. */
 const SHELL_TOOL_IDS: ReadonlySet<string> = new Set(['shell', 'shell_exec', 'exec_command']);
+
+/**
+ * The `shell` settings whose syntax command deny rules read: sh or bash, by
+ * name or in /bin or /usr/bin. Another `shell` is refused under such a rule.
+ */
+const READABLE_SHELL = /^(?:(?:\/usr)?\/bin\/)?(?:ba)?sh$/;
+
+/** Ends every refusal of a command by a deny rule, but one (HEREDOC_HINT). */
+const ASK_USER = ' Do not rephrase the command to get around the rule; ask the user.';
+/** Ends the refusal of a heredoc inside a substitution, which any command rule refuses. */
+const HEREDOC_HINT =
+  " The same text can be given to the program directly, for example `git commit -F - <<'EOF'` or `gh pr create --body-file - <<'EOF'`.";
 
 /**
  * Ops of a guarded op tool that carry no guarded argument. shell(op:write)
@@ -99,6 +114,23 @@ function shellTargets(i: Record<string, unknown>): string[] {
     const sessionId = Number(i.session_id);
     const pending = Number.isInteger(sessionId) ? getShellSessionPendingLine(sessionId) : '';
     out.push(...stdinCommandLines(pending, str(i.chars)).lines);
+  }
+  return out;
+}
+
+/**
+ * The scripts a shell call runs, as command deny rules read them: `cmd`, and
+ * for op:write the session's unfinished line with `chars` after it, read
+ * whole (shellTargets splits it into lines for the prefix rules).
+ */
+function shellScripts(toolId: string, i: Record<string, unknown>): string[] {
+  const out: string[] = [];
+  const cmd = str(i.cmd ?? i.command).trim();
+  if (cmd) out.push(cmd);
+  if (toolId === 'shell' && i.chars !== undefined && i.chars !== null && str(i.chars) !== '') {
+    const sessionId = Number(i.session_id);
+    const pending = Number.isInteger(sessionId) ? getShellSessionPendingLine(sessionId) : '';
+    out.push(pending + str(i.chars));
   }
   return out;
 }
@@ -171,8 +203,8 @@ function stripEnvAssignments(cmd: string): string {
  * command is matched as written, so a leading env assignment (`LD_PRELOAD=…`)
  * falls through to ask. Deny rules ignore chaining and strip leading env
  * assignments, so `FOO=bar rm …` is still caught by `deny shell_exec(rm:*)`.
- * Deny matching is best-effort: an absolute argv0 (`/bin/rm`) still evades a
- * `rm:*` deny, so prefer allow lists.
+ * For the shell tools a deny rule is also checked against every command the
+ * line runs (commandDenyRule.ts, in evaluateToolPermission).
  */
 export function matchCommand(specifier: string, command: string, allowContext: boolean): boolean {
   const spec = specifier.trim();
@@ -498,7 +530,8 @@ export function evaluateToolPermission(
   input: Record<string, unknown>,
   options?: ToolPermissionOptions
 ): PermissionVerdict {
-  if (baseAccess.mode === 'all') return { decision: 'allow' };
+  // Mode 'all' applies the deny list and nothing else.
+  if (baseAccess.mode === 'all' && baseAccess.denyList.length === 0) return { decision: 'allow' };
   const resolveForActiveCatalog = (id: string) =>
     options?.activeToolIds?.has(id) ? { id } : resolveToolId(id);
   const toolResolution = resolveForActiveCatalog(toolId);
@@ -583,10 +616,18 @@ export function evaluateToolPermission(
       return {
         decision: 'deny',
         rule: formatRule(hit),
-        reason: `Blocked by tool-access policy: ${describe(kind, target)} matches deny rule ${formatRule(hit)}.`,
+        reason: `Blocked by tool-access policy: ${describe(kind, kind === 'command' ? clip(target) : target)} matches deny rule ${formatRule(hit)}.${kind === 'command' ? ASK_USER : ''}`,
       };
     }
   }
+  // A command deny rule also reads each shell line whole: every command in it.
+  if (kind === 'command' && SHELL_TOOL_IDS.has(canonicalToolId)) {
+    const commandRules = denyRules.filter((r) => r.specifier !== null);
+    const refusal = commandRuleRefusal(commandRules, canonicalToolId, transformedInput, callOp);
+    if (refusal) return refusal;
+  }
+  // Mode 'all' reads the deny list only.
+  if (access.mode === 'all') return { decision: 'allow' };
 
   // Allow only when every target is explicitly permitted.
   const allTargetsAllowed = targets.every((target) =>
@@ -606,6 +647,58 @@ export function evaluateToolPermission(
     reason: `Not covered by an allow rule: ${describe(kind, firstTarget ?? targets[0] ?? '')}.`,
     ...(canonicalToolId === 'shell' && callOp === 'write' ? { submittedLines: args } : {}),
   };
+}
+
+/**
+ * The refusal, if any, of command deny rules that read a shell call whole: a
+ * `shell` other than sh or bash cannot be read; otherwise the first rule that
+ * matches a command in the line, else the first that cannot check it.
+ */
+function commandRuleRefusal(
+  rules: ParsedRule[],
+  toolId: string,
+  input: Record<string, unknown>,
+  op: string | null
+): PermissionVerdict | null {
+  if (rules.length === 0) return null;
+  const unreadable = (rule: string, why: string, script: string): PermissionVerdict => ({
+    decision: 'deny',
+    rule,
+    reason: `Blocked by tool-access policy: this command could not be checked against deny rule ${rule} (${why}): \`${clip(script)}\`.${why === HEREDOC_IN_SUBSTITUTION ? HEREDOC_HINT : ASK_USER}`,
+  });
+  const scripts = shellScripts(toolId, input);
+  const shellBin = op === 'write' ? '' : str(input.shell).trim();
+  if (shellBin && !READABLE_SHELL.test(shellBin)) {
+    const why = `it runs in \`${clip(shellBin)}\`, whose syntax this check does not read`;
+    return unreadable(formatRule(rules[0]!), why, scripts[0] ?? '');
+  }
+  let unsure: PermissionVerdict | null = null;
+  for (const script of scripts) {
+    for (const r of rules) {
+      const found = matchDenyCommand(r.specifier!, script);
+      if (!found) continue;
+      const rule = formatRule(r);
+      if ('unreadable' in found) {
+        unsure ??= unreadable(rule, found.unreadable, script);
+        continue;
+      }
+      const subject = `Blocked by tool-access policy: command \`${clip(script)}\``;
+      const whole = normalizeCommand(found.part) === normalizeCommand(script);
+      return {
+        decision: 'deny',
+        rule,
+        reason: whole
+          ? `${subject} matches deny rule ${rule}.${ASK_USER}`
+          : `${subject} runs \`${clip(found.part)}\`, which matches deny rule ${rule}.${ASK_USER}`,
+      };
+    }
+  }
+  return unsure;
+}
+
+/** Long commands are clipped in refusals; the start is enough to recognize them. */
+function clip(text: string): string {
+  return text.length > 200 ? `${text.slice(0, 199)}…` : text;
 }
 
 function describe(kind: GuardKind, target: string): string {

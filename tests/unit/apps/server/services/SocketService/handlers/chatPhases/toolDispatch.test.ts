@@ -549,11 +549,14 @@ describe('dispatchToolCalls — display names read as every path reads them', ()
     );
   });
 
-  it('All mode: a bare deny naming the tool still blocks it; a rule does not', async () => {
+  it('All mode: a bare deny naming the tool blocks it, and a rule blocks what it matches', async () => {
     await dispatchToolCalls(shellInput({ mode: 'all', allowList: [], denyList: ['SHELL'] }));
     expect(executeMock).not.toHaveBeenCalled();
     await dispatchToolCalls(shellInput({ mode: 'all', allowList: [], denyList: ['shell(ls)'] }));
+    expect(executeMock).not.toHaveBeenCalled();
+    await dispatchToolCalls(shellInput({ mode: 'all', allowList: [], denyList: ['shell(rm:*)'] }));
     expect(executeMock).toHaveBeenCalledTimes(1);
+    expect(waitForConfirmation).not.toHaveBeenCalled();
   });
 
   it.each(['Shell', 'SHELL'])(
