@@ -35,11 +35,18 @@ A shell entry can name a command: `shell(git:*)` means commands that start with 
 A deny list is a guard against mistakes, not a sandbox. For firm control use **Allow list**
 mode: it runs only what you list and asks about the rest.
 
+In the screenshot, Patty is in **Trusted mode** with a **Deny list** that holds one Shell rule,
+`rm -r:*`. Everything else runs without asking.
+
+![An agent's Tools settings: Trusted mode, Deny list, and the Shell rule rm -r:*](./images/tool-deny-rule.png)
+
 How a shell command is decided:
 
 ```mermaid
 flowchart TD
-  A[Agent sends a shell command] --> B{Any command deny rule?}
+  A[Agent sends a shell command] --> T{Is Shell enabled for all agents in the Tools view?}
+  T -- No --> R0[Refused: the tool is disabled]
+  T -- Yes --> B{Any command deny rule?}
   B -- No --> M
   B -- Yes --> C{Can every command in the line be read?}
   C -- No --> R1[Refused: cannot be checked]
