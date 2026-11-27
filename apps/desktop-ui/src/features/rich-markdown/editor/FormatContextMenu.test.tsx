@@ -183,6 +183,27 @@ describe('format context menu', () => {
     expect(ed.value()).toBe('see site');
   });
 
+  it('Open link leads the menu on a web link and opens it in the browser', async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const ed = await mountRichEditor('see [site](https://example.org/) and [notes](./notes.md)');
+    const anchor = (href: string) => ed.box.querySelector<HTMLAnchorElement>(`a[href="${href}"]`)!;
+
+    fireEvent.contextMenu(anchor('https://example.org/'), { clientX: 40, clientY: 40 });
+    expect(menuItems().map(labelOf).slice(0, 2)).toEqual(['Open link', 'Text']);
+    pick('Open link');
+    expect(menu()).not.toBeInTheDocument();
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(open).toHaveBeenCalledWith('https://example.org/', '_blank', 'noopener');
+
+    // A relative link and plain text have nothing to open outside the app.
+    fireEvent.contextMenu(anchor('./notes.md'), { clientX: 40, clientY: 40 });
+    expect(menuItems().map(labelOf)).not.toContain('Open link');
+    fireEvent.keyDown(menu()!, { key: 'Escape' });
+    openMenu(ed.box);
+    expect(menuItems().map(labelOf)).not.toContain('Open link');
+    open.mockRestore();
+  });
+
   it('Cut and Copy need a selection', async () => {
     const ed = await mountRichEditor('text');
     ed.caretAt('text', 1);

@@ -116,7 +116,9 @@ describe('open-link modifier', () => {
     vi.spyOn(navigator, 'platform', 'get').mockReturnValue('MacIntel');
     expect(hasOpenLinkModifier({ metaKey: true, ctrlKey: false })).toBe(true);
     expect(hasOpenLinkModifier({ metaKey: false, ctrlKey: true })).toBe(false);
-    expect(openLinkHint('https://example.org/')).toBe('⌘-click to open https://example.org/');
+    expect(openLinkHint('https://example.org/')).toBe(
+      'Right-click or ⌘-click to open https://example.org/'
+    );
   });
 
   it('is Ctrl elsewhere', () => {
@@ -124,7 +126,9 @@ describe('open-link modifier', () => {
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Windows NT 10.0)');
     expect(hasOpenLinkModifier({ metaKey: false, ctrlKey: true })).toBe(true);
     expect(hasOpenLinkModifier({ metaKey: true, ctrlKey: false })).toBe(false);
-    expect(openLinkHint('https://example.org/')).toBe('Ctrl-click to open https://example.org/');
+    expect(openLinkHint('https://example.org/')).toBe(
+      'Right-click or Ctrl-click to open https://example.org/'
+    );
   });
 });
 

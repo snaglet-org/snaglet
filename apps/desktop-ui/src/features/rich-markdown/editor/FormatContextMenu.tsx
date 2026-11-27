@@ -1,6 +1,6 @@
-// Right-click format menu for the rich editor: turn the blocks under the
-// selection into another block type, format the selected text, or cut, copy
-// and paste. The app's context menus replace the webview's own, so the
+// Right-click format menu for the rich editor: open the web link under the
+// pointer, turn the blocks under the selection into another block type,
+// format the selected text, or cut, copy and paste. The app's context menus replace the webview's own, so the
 // clipboard actions live here too.
 
 import {
@@ -16,9 +16,11 @@ import {
 import type { Editor } from '@tiptap/react';
 
 import { ContextMenu, type ContextMenuProps } from '@desktop/components/ContextMenu';
+import { launchExternalUrl } from '@desktop/utils/externalLinks';
 import { shortcutLabel } from '@desktop/utils/platform';
 import { EditorPopover, EditorPopoverHeader, type EditorPopoverAnchor } from './EditorPopover';
 import { BLOCK_FORMATS, INLINE_FORMATS, type FormatMenuItem } from './formatMenuItems';
+import { externalLinkAt } from './linkOpen';
 import styles from './FormatContextMenu.module.scss';
 
 type MenuItems = ContextMenuProps['items'];
@@ -121,7 +123,12 @@ export function useFormatContextMenu(
   editor: Editor | null,
   disabled: boolean
 ): { onContextMenu: (event: MouseEvent) => void; element: ReactNode } {
-  const [menuAt, setMenuAt] = useState<{ x: number; y: number } | null>(null);
+  const [menuAt, setMenuAt] = useState<{
+    x: number;
+    y: number;
+    /** The web link that was right-clicked, if any. */
+    linkUrl: string | null;
+  } | null>(null);
   const [linkAnchor, setLinkAnchor] = useState<EditorPopoverAnchor>(null);
 
   const onContextMenu = useCallback(
@@ -130,7 +137,11 @@ export function useFormatContextMenu(
       if (!(event.target instanceof Node) || !editor.view.dom.contains(event.target)) return;
       event.preventDefault();
       setLinkAnchor(null);
-      setMenuAt({ x: event.clientX, y: event.clientY });
+      setMenuAt({
+        x: event.clientX,
+        y: event.clientY,
+        linkUrl: externalLinkAt(editor.view, event.target),
+      });
     },
     [disabled, editor]
   );
@@ -159,8 +170,10 @@ export function useFormatContextMenu(
       onSelect: () => format.run(editor),
     });
     const empty = editor.state.selection.empty;
+    const { linkUrl } = menuAt;
     const items: MenuItems = [
-      ...BLOCK_FORMATS.map((format) => toItem(format)),
+      ...(linkUrl ? [{ label: 'Open link', onSelect: () => launchExternalUrl(linkUrl) }] : []),
+      ...BLOCK_FORMATS.map((format, i) => toItem(format, i === 0 && linkUrl !== null)),
       ...INLINE_FORMATS.map((format, i) => toItem(format, i === 0)),
       { label: 'Link…', checked: editor.isActive('link'), onSelect: openLinkPrompt },
       {

@@ -136,7 +136,7 @@ Formatting keys are in [Keyboard Shortcuts](onboarding:keyboard-shortcuts).
 - Type \`@\` to insert a chip that links to a doc, thread, table, table row, agent or file. Click a chip to preview what it links to.
 - Drag items from the Workspace tree into a doc to insert chips.
 - Select text, or hover a heading, to copy a link to that exact part of the doc.
-- **Cmd-click** a web link to open it.
+- Right-click a web link and pick **Open link** to open it. **Cmd-click** opens it too.
 
 **Try it:** click any of these chips to preview it.
 

@@ -7,7 +7,8 @@
  * anchor clicks go to the shell's `open_url` command instead (which only opens
  * `http(s):` and `mailto:`; see apps/desktop/src-tauri/src/links.rs). Relative
  * and same-origin links stay in Snaglet. Links in editable text are left alone so
- * a click places the caret (the editor opens them on ⌘-click); read-only
+ * a click places the caret (the editor opens them on ⌘-click or from its
+ * right-click menu); read-only
  * islands inside an editor open on a plain click.
  */
 import { isMacPlatform } from './platform';
@@ -49,9 +50,9 @@ export function hasOpenLinkModifier(event: Pick<MouseEvent, 'metaKey' | 'ctrlKey
   return isMacPlatform() ? event.metaKey : event.ctrlKey;
 }
 
-/** Hover hint for a link in editable text, e.g. "⌘-click to open https://example.org/". */
+/** Hover hint for a link in editable text, e.g. "Right-click or ⌘-click to open https://example.org/". */
 export function openLinkHint(url: string): string {
-  return `${isMacPlatform() ? '⌘' : 'Ctrl'}-click to open ${url}`;
+  return `Right-click or ${isMacPlatform() ? '⌘' : 'Ctrl'}-click to open ${url}`;
 }
 
 /**
