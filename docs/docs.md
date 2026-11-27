@@ -36,7 +36,9 @@ Docs are Markdown pages with a rich editor and autosave. You and your agents edi
 - Select text, or hover a heading, to copy a link to that part.
 - Link a heading in the same doc as `[Next steps](#h=next-steps)`: lowercase words joined by `-`,
   punctuation dropped. GitHub's `#next-steps` works too.
-- **Cmd-click** (**Ctrl-click** on Windows) opens a web link, or follows a heading link in raw
+- Right-click a web link and pick **Open link** to open it in your browser; **Link…** in the same
+  menu changes its address. A plain click places the caret, so you can edit the link's text.
+- **Cmd-click** (**Ctrl-click** on Windows) opens a web link too, or follows a heading link in raw
   Markdown.
 
 ## Transclusions

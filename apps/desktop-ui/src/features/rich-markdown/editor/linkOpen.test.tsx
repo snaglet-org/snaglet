@@ -133,7 +133,9 @@ describe('LinkOpen in an editable doc', () => {
       '<p><a href="https://example.org/">site</a> <a href="./notes.md">notes</a></p>'
     );
     const hint = link(editor, 'https://example.org/').querySelector('[title]');
-    expect(hint?.getAttribute('title')).toBe('Ctrl-click to open https://example.org/');
+    expect(hint?.getAttribute('title')).toBe(
+      'Right-click or Ctrl-click to open https://example.org/'
+    );
     expect(link(editor, './notes.md').querySelector('[title]')).toBeNull();
     const marks = editor.getJSON().content?.[0]?.content?.[0]?.marks;
     expect(marks).toEqual([

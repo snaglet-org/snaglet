@@ -19,14 +19,18 @@ interface LinkOpenOptions {
 
 const linkOpenKey = new PluginKey<DecorationSet>('linkOpen');
 
-/** The external URL a ⌘/Ctrl-click on a link in this editor's text opens, or null. */
-function modClickUrl(view: EditorView, event: MouseEvent): string | null {
-  if (event.button !== 0 || !hasOpenLinkModifier(event)) return null;
-  const target = event.target;
+/** The external URL of the editable link at `target` in this editor, or null. */
+export function externalLinkAt(view: EditorView, target: EventTarget | null): string | null {
   if (!(target instanceof Element)) return null;
   const anchor = target.closest('a[href]');
   if (!anchor || !view.dom.contains(anchor) || !inEditableText(anchor)) return null;
   return externalUrl(anchor.getAttribute('href') ?? '', window.location.origin);
+}
+
+/** The external URL a ⌘/Ctrl-click on a link in this editor's text opens, or null. */
+function modClickUrl(view: EditorView, event: MouseEvent): string | null {
+  if (event.button !== 0 || !hasOpenLinkModifier(event)) return null;
+  return externalLinkAt(view, event.target);
 }
 
 /** A hover hint over every external link in the doc. Decorations, not
@@ -46,6 +50,7 @@ function linkHints(doc: PMNode): DecorationSet {
  * LinkOpen — ⌘-click (Ctrl-click off macOS) on a web or mail link in the
  * rich editor opens it in the system browser. A plain click still places the
  * caret, so link text stays editable, and hovering a link says how to open it.
+ * The format menu's Open link item (a right-click on the link) opens it too.
  *
  * Only `http(s):` / `mailto:` links off the app's origin open. Node refs are
  * chips, not links, and relative links stay put. Links in read-only islands

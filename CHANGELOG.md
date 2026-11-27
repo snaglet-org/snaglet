@@ -5,6 +5,10 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version
 numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+- Right-click a web link in a doc and pick **Open link** to open it in your browser.
+
 ## [1.0.0] - 2026-11-18
 
 First release of Snaglet: a desktop app where you and a team of AI agents share one workspace,
